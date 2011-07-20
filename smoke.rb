@@ -1,41 +1,49 @@
 #!/usr/bin/env ruby
 
-require 'rspec'
+TEST_CASE = ARGV[0]
+APPLICATION = ARGV[1]
 
-TEST_CASE = ARGV.shift
-APPLICATION = ARGV.shift
+tests = Dir.glob("#{TEST_CASE}/*.in").collect do |input_file|
+  name = input_file[/(?<=#{TEST_CASE}\/).*(?=\.in)/]
+  input = IO.read(input_file).strip
 
-RSpec::Matchers.define :be_one_of do |potential_values|
-  potential_value_count = potential_values.length
-  match do |actual|
-    raise 'No outputs provided.' if potential_value_count == 0
-    next potential_values[0] == actual if potential_value_count == 1
-    potential_values.include? actual
+  output_files = Dir.glob "#{TEST_CASE}/#{name}.out*"
+  potential_outputs = output_files.collect do |output_file|
+    IO.read(output_file).strip
   end
 
-  failure_message_for_should do |actual|
-    next 'no outputs provided' if potential_value_count == 0
-    next "expected #{actual.inspect} to be #{potential_values[0].inspect}" if potential_value_count == 1
-    "expected #{actual.inspect} to be one of #{potential_values.inspect}"
-  end
+  [name, input, potential_outputs]
 end
 
-describe TEST_CASE do
-  Dir.glob "#{TEST_CASE}/*.in" do |input_file|
-    test = input_file[/(?<=#{TEST_CASE}\/).*(?=\.in)/]
-    input = IO.read(input_file).strip
-    output_files = Dir.glob "#{TEST_CASE}/#{test}.out*"
-    potential_outputs = output_files.collect do |output_file|
-      IO.read(output_file).strip
-    end
-
-    it "handles the #{test} case" do
-      IO.popen APPLICATION, 'r+' do |io|
-        io.write IO.read(input_file).strip
-        io.read.strip.should be_one_of potential_outputs 
-      end
-    end
-  end
+def succeeded message
+  puts "\033[32m#{message}\033[0m"
 end
 
-RSpec::Core::Runner.run ['--color']
+@failures = 0
+def failed message
+  puts "\033[31m#{message}\033[0m"
+  @failures += 1
+end
+
+tests.each do |name, input, potential_outputs|
+  failed "#{name}: no outputs provided" if potential_outputs.length == 0
+
+  output = IO.popen APPLICATION, 'r+' do |io|
+    io.write input
+    io.read.strip
+  end
+
+  unless potential_outputs.include? output
+    next failed "#{name}:\n  output: #{output.inspect}\n  expected: #{potential_outputs[0].inspect}" if potential_outputs.length == 1
+    next failed "#{name}:\n  output: #{output.inspect}\n  expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')} or #{potential_outputs[-1]}"
+  end
+
+  succeeded name
+end
+
+puts
+if @failures > 0
+  failed "#{tests.length} tests, #{@failures} failures"
+else
+  succeeded "#{tests.length} tests, #{@failures} failures"
+end

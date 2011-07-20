@@ -21,7 +21,7 @@ end
 def run_tests tests, application
   tests.each do |name, input, potential_outputs|
     puts name
-    failed "no outputs provided" if potential_outputs.length == 0
+    next failed "no outputs provided" if potential_outputs.length == 0
 
     output = IO.popen application, 'r+' do |io|
       io.write input

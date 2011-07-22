@@ -6,7 +6,7 @@ RESET = "\033[0m"
 
 def read_tests test_case
   Dir.glob("#{test_case}/*.in").collect do |input_file|
-    name = input_file[/(?<=#{test_case}\/).*(?=\.in)/]
+    name = input_file[(test_case.length + 1)...(input_file.length - 3)]
     input = IO.read(input_file).strip
 
     output_files = Dir.glob "#{test_case}/#{name}.out*"

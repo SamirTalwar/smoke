@@ -25,6 +25,7 @@ def run_tests tests, application
 
     output = IO.popen application, 'r+' do |io|
       io.write input
+      io.close_write
       io.read.strip.inspect
     end
 

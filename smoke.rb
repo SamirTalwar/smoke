@@ -4,6 +4,32 @@ GREEN = "\033[32m"
 RED = "\033[31m"
 RESET = "\033[0m"
 
+def escape_arg arg
+  '"' + arg.gsub('"', '\"') + '"'
+end
+
+def run_application_using_stdin application, input
+  IO.popen application, 'r+' do |io|
+    io.write input
+    io.close_write
+    io.read.strip.inspect
+  end
+end
+
+def run_application_using_command_line_args application, input
+  IO.popen "#{application} #{escape_arg(input)}", 'r+' do |io|
+    io.read.strip.inspect
+  end
+end
+
+def run_application_using_separated_command_line_args application, input
+  IO.popen "#{application} #{input.split.collect { |arg| escape_arg arg }.join(' ')}", 'r+' do |io|
+    io.read.strip.inspect
+  end
+end
+
+alias :run_application :run_application_using_stdin
+
 def read_tests test_case
   Dir.glob("#{test_case}/*.in").collect do |input_file|
     name = input_file[(test_case.length + 1)...(input_file.length - 3)]
@@ -23,11 +49,7 @@ def run_tests tests, application
     puts name
     next failed "no outputs provided" if potential_outputs.length == 0
 
-    output = IO.popen application, 'r+' do |io|
-      io.write input
-      io.close_write
-      io.read.strip.inspect
-    end
+    output = run_application application, input
 
     next failed "program exited with status code #{$?}" if $?.exitstatus > 0
 
@@ -75,6 +97,14 @@ def failed *messages
   @failures += 1
 end
 
+case ARGV[0]
+  when '--args'
+    alias :run_application :run_application_using_command_line_args
+    ARGV.shift
+  when '--separated-args'
+    alias :run_application :run_application_using_separated_command_line_args 
+    ARGV.shift
+end
 
 run_tests(read_tests(ARGV[0]), ARGV[1])
 print_summary

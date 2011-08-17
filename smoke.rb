@@ -55,13 +55,10 @@ def run_tests tests, application
 
     unless potential_outputs.include? output
       if potential_outputs.length == 1
-        next failed "output:   #{output}",
-                    "expected: #{potential_outputs[0]}"
+        next failed "input:    #{input.inspect}", "output:   #{output}", "expected: #{potential_outputs[0]}"
       end
 
-      next failed "output:   #{output}",
-                  "expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')}" +
-                        " or #{potential_outputs[-1]}"
+      next failed "input:    #{input.inspect}", "output:   #{output}", "expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')} or #{potential_outputs[-1]}"
     end
 
     succeeded 'succeeded'

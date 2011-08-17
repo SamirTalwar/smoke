@@ -29,12 +29,17 @@ def run_tests tests, application
       io.read.strip.inspect
     end
 
+    next failed "program exited with status code #{$?}" if $?.exitstatus > 0
+
     unless potential_outputs.include? output
       if potential_outputs.length == 1
-        next failed "output:   #{output}", "expected: #{potential_outputs[0]}"
+        next failed "output:   #{output}",
+                    "expected: #{potential_outputs[0]}"
       end
 
-      next failed "output:   #{output}", "expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')} or #{potential_outputs[-1]}"
+      next failed "output:   #{output}",
+                  "expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')}" +
+                        " or #{potential_outputs[-1]}"
     end
 
     succeeded 'succeeded'

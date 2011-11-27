@@ -1,3 +1,3 @@
 #!/usr/bin/env ruby
 
-puts gets.ord.to_s(16).upcase
+puts gets.chars.collect { |char| char.ord.to_s(16) }.join.upcase

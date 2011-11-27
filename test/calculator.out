@@ -2,9 +2,11 @@ addition
 [32m  succeeded[0m
 division
 [32m  succeeded[0m
+multiple-digits
+[32m  succeeded[0m
 multiplication
 [32m  succeeded[0m
 subtraction
 [32m  succeeded[0m
 
-[32m4 tests, 0 failures[0m
+[32m5 tests, 0 failures[0m

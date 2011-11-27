@@ -2,5 +2,5 @@
 
 for test in `ls test/*.in`
 do
-    bin/smoke --separated-args `cat $test` > test/`basename $test .in`.out
+    bin/smoke `cat $test` > test/`basename $test .in`.out
 done

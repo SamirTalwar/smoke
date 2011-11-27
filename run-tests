@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./smoke.rb --separated-args test './smoke.rb --separated-args'

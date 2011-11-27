@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo Enter input:
+cat > $1.in
+
+echo Enter output:
+cat > $1.out

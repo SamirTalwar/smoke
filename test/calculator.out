@@ -1,5 +1,9 @@
 addition
 [32m  succeeded[0m
+complex
+[31m  input:    "(8 + 2i) + (7 - 4i)"
+  output:   "2"
+  expected: "15 - 2i"[0m
 division
 [32m  succeeded[0m
 multiple-digits
@@ -17,4 +21,4 @@ three-numbers
   output:   "12"
   expected: "24"[0m
 
-[31m7 tests, 2 failures[0m
+[31m8 tests, 3 failures[0m

@@ -99,7 +99,7 @@ case ARGV[0]
     alias :run_application :run_application_using_command_line_args
     ARGV.shift
   when '--separated-args'
-    alias :run_application :run_application_using_separated_command_line_args 
+    alias :run_application :run_application_using_separated_command_line_args
     ARGV.shift
 end
 

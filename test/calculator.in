@@ -1,1 +1,1 @@
-fixtures/calculator fixtures/calculator.rb
+--separated-args fixtures/calculator fixtures/calculator.rb

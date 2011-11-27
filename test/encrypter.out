@@ -1,0 +1,14 @@
+color
+[31m  input:    "this is a \e[32mgreen\e[0m word"
+  output:   "guvf vf n \e[32mterra\e[0m jbeq"
+  expected: "uijt jt b \e[32mhsffo\e[0m xpse"[0m
+lines
+[31m  input:    "one\ntwo\nthree\nfour"
+  output:   "bar\ngjb\nguerr\nsbhe"
+  expected: "pof\nuxp\nuisff\ngpvs"[0m
+word
+[31m  input:    "word"
+  output:   "jbeq"
+  expected: "xpse"[0m
+
+[31m3 tests, 3 failures[0m

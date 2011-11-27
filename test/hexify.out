@@ -1,8 +1,10 @@
 character
 [32m  succeeded[0m
+multiple-lines
+[32m  succeeded[0m
 sentence
 [32m  succeeded[0m
 word
 [32m  succeeded[0m
 
-[32m3 tests, 0 failures[0m
+[32m4 tests, 0 failures[0m

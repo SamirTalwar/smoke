@@ -1,7 +1,3 @@
-addition-2
-[31m  input:    "5 + 7 + 12"
-  output:   "12"
-  expected: "24"[0m
 addition
 [32m  succeeded[0m
 division
@@ -16,5 +12,9 @@ parens
   expected: "18"[0m
 subtraction
 [32m  succeeded[0m
+three-numbers
+[31m  input:    "5 + 7 + 12"
+  output:   "12"
+  expected: "24"[0m
 
 [31m7 tests, 2 failures[0m

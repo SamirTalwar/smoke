@@ -12,19 +12,19 @@ def run_application_using_stdin application, input
   IO.popen application, 'r+' do |io|
     io.write input
     io.close_write
-    io.read.strip.inspect
+    io.read.strip
   end
 end
 
 def run_application_using_command_line_args application, input
   IO.popen "#{application} #{escape_arg(input)}", 'r+' do |io|
-    io.read.strip.inspect
+    io.read.strip
   end
 end
 
 def run_application_using_separated_command_line_args application, input
   IO.popen "#{application} #{input.split.collect { |arg| escape_arg arg }.join(' ')}", 'r+' do |io|
-    io.read.strip.inspect
+    io.read.strip
   end
 end
 
@@ -36,33 +36,43 @@ def read_tests test_case
     input = IO.read(input_file).strip
 
     output_files = Dir.glob "#{test_case}/#{name}.out*"
-    potential_outputs = output_files.collect do |output_file|
-      IO.read(output_file).strip.inspect
+    expected = output_files.collect do |output_file|
+      IO.read(output_file).strip
     end
 
-    [name, input, potential_outputs]
+    [name, input, expected]
   end
 end
 
 def run_tests tests, application
-  tests.each do |name, input, potential_outputs|
+  tests.each do |name, input, expected|
     puts name
-    next failed "no outputs provided" if potential_outputs.length == 0
+    next failed "no outputs provided" if expected.length == 0
 
     output = run_application application, input
 
     next failed "program exited with status code #{$?}" if $?.exitstatus > 0
 
-    unless potential_outputs.include? output
-      if potential_outputs.length == 1
-        next failed "input:    #{input.inspect}", "output:   #{output}", "expected: #{potential_outputs[0]}"
+    unless expected.include? output
+      expected = expected.collect { |e| highlight(RED, e) }
+      if expected.length == 1
+        next failed "input:    #{highlight RED, input}",
+                    "output:   #{highlight RED, output}",
+                    "expected: #{expected[0]}"
       end
 
-      next failed "input:    #{input.inspect}", "output:   #{output}", "expected: #{potential_outputs[0...potential_outputs.length - 1].join(', ')} or #{potential_outputs[-1]}"
+      next failed "input:    #{highlight RED, input}",
+                  "output:   #{highlight RED, output}",
+                  "expected: #{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"
     end
 
     succeeded 'succeeded'
   end
+end
+
+def highlight reset_color, text
+  highlighted = text.include?("\e") ? (RESET + text + reset_color) : text
+  '"' + highlighted.gsub("\n", '\n') + '"'
 end
 
 def print_summary

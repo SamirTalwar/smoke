@@ -1,7 +1,7 @@
 color
-[31m  input:    "this is a \e[32mgreen\e[0m word"
-  output:   "guvf vf n \e[32mterra\e[0m jbeq"
-  expected: "uijt jt b \e[32mhsffo\e[0m xpse"[0m
+[31m  input:    "[0mthis is a [32mgreen[0m word[31m"
+  output:   "[0mguvf vf n [32mterra[0m jbeq[31m"
+  expected: "[0muijt jt b [32mhsffo[0m xpse[31m"[0m
 lines
 [31m  input:    "one\ntwo\nthree\nfour"
   output:   "bar\ngjb\nguerr\nsbhe"

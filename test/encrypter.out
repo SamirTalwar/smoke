@@ -3,9 +3,18 @@ color
   output:   [0mguvf vf n [32mterra[0m jbeq[31m
   expected: [0muijt jt b [32mhsffo[0m xpse[31m[0m
 lines
-[31m  input:    one\ntwo\nthree\nfour
-  output:   bar\ngjb\nguerr\nsbhe
-  expected: pof\nuxp\nuisff\ngpvs[0m
+[31m  input:    one
+            two
+            three
+            four
+  output:   bar
+            gjb
+            guerr
+            sbhe
+  expected: pof
+            uxp
+            uisff
+            gpvs[0m
 word
 [31m  input:    word
   output:   jbeq

@@ -54,25 +54,20 @@ def run_tests tests, application
     next failed "program exited with status code #{$?}" if $?.exitstatus > 0
 
     unless expected.include? output
-      expected = expected.collect { |e| highlight(RED, e) }
+      expected = expected.collect { |e| highlight(e) }
       if expected.length == 1
-        next failed "input:    #{highlight RED, input}",
-                    "output:   #{highlight RED, output}",
+        next failed "input:    #{highlight input}",
+                    "output:   #{highlight output}",
                     "expected: #{expected[0]}"
       end
 
-      next failed "input:    #{highlight RED, input}",
-                  "output:   #{highlight RED, output}",
+      next failed "input:    #{highlight input}",
+                  "output:   #{highlight output}",
                   "expected: #{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"
     end
 
     succeeded 'succeeded'
   end
-end
-
-def highlight reset_color, text
-  highlighted = text.include?("\e") ? (RESET + text + reset_color) : text
-  highlighted.gsub("\n", '\n')
 end
 
 def print_summary
@@ -102,6 +97,11 @@ end
 def failed *messages
   puts red messages.collect { |message| '  ' + message }.join "\n"
   @failures += 1
+end
+
+def highlight text
+  highlighted = text.include?("\e") ? (RESET + text + RED) : text
+  highlighted.gsub("\n", "\n            ")
 end
 
 case ARGV[0]

@@ -72,7 +72,7 @@ end
 
 def highlight reset_color, text
   highlighted = text.include?("\e") ? (RESET + text + reset_color) : text
-  '"' + highlighted.gsub("\n", '\n') + '"'
+  highlighted.gsub("\n", '\n')
 end
 
 def print_summary

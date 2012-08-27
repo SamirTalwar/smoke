@@ -4,12 +4,14 @@ GREEN = "\e[32m"
 RED = "\e[31m"
 RESET = "\e[0m"
 
-def escape_arg arg
-  '"' + arg.gsub('"', '\"') + '"'
+SPECIAL = '#;&."\',\\/`:!*?$*(){}[]><|~'.chars
+
+def escape args
+  args.chars.collect { |c| SPECIAL.include?(c) ? '\\' + c : c }.join
 end
 
 def run_application application, args, input
-  IO.popen "#{application} #{args.split.collect { |arg| escape_arg arg }.join(' ')}", 'r+' do |io|
+  IO.popen "#{application} #{escape args}", 'r+' do |io|
     io.write input
     io.close_write
     io.read.strip

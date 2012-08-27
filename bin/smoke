@@ -8,62 +8,55 @@ def escape_arg arg
   '"' + arg.gsub('"', '\"') + '"'
 end
 
-def run_application_using_stdin application, input
-  IO.popen application, 'r+' do |io|
+def run_application application, args, input
+  IO.popen "#{application} #{args.split.collect { |arg| escape_arg arg }.join(' ')}", 'r+' do |io|
     io.write input
     io.close_write
     io.read.strip
   end
 end
 
-def run_application_using_command_line_args application, input
-  IO.popen "#{application} #{escape_arg(input)}", 'r+' do |io|
-    io.read.strip
-  end
-end
-
-def run_application_using_separated_command_line_args application, input
-  IO.popen "#{application} #{input.split.collect { |arg| escape_arg arg }.join(' ')}", 'r+' do |io|
-    io.read.strip
-  end
-end
-
-alias :run_application :run_application_using_stdin
-
 def read_tests test_case
-  Dir.glob("#{test_case}/*.in").sort.collect do |input_file|
-    name = input_file[(test_case.length + 1)...(input_file.length - 3)]
-    input = IO.read(input_file).strip
+  in_files = Dir.glob("#{test_case}/*.in").collect { |file| [File.basename(file, '.in'), :input, file] }
+  args_files = Dir.glob("#{test_case}/*.args").collect { |file| [File.basename(file, '.args'), :args, file] }
+  tests = (in_files + args_files).group_by { |name, type, file| name }.collect { |name, files|
+    [name, files.collect { |name, type, file| [type, IO.read(file).strip] }]
+  }.sort_by { |name, _| name }
+
+  tests.collect { |name, types|
+    potential_args = types.find { |type, contents| type == :args }
+    args = potential_args ? potential_args[1] : ''
+    potential_input = types.find { |type, contents| type == :input }
+    input = potential_input ? potential_input[1] : ''
 
     output_files = Dir.glob "#{test_case}/#{name}.out*"
     expected = output_files.collect do |output_file|
       IO.read(output_file).strip
     end
 
-    [name, input, expected]
-  end
+    [name, args, input, expected]
+  }
 end
 
 def run_tests tests, application
-  tests.each do |name, input, expected|
+  tests.each do |name, args, input, expected|
     puts name
     next failed "no outputs provided" if expected.length == 0
 
-    output = run_application application, input
+    output = run_application application, args, input
 
     next failed "program exited with status code #{$?}" if $?.exitstatus > 0
 
     unless expected.include? output
       expected = expected.collect { |e| highlight(e) }
-      if expected.length == 1
-        next failed "input:    #{highlight input}",
-                    "output:   #{highlight output}",
-                    "expected: #{expected[0]}"
-      end
+      info = []
+      info << ['args', highlight(args)] unless args.empty?
+      info << ['input', highlight(input)] unless input.empty?
+      info << ['output', highlight(output)]
+      info << ['expected', expected.length == 1 ? expected[0]
+                             : "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
 
-      next failed "input:    #{highlight input}",
-                  "output:   #{highlight output}",
-                  "expected: #{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"
+      next failed *(info.collect { |name, value| Kernel.format '%-9s %s', (name + ':'), value })
     end
 
     succeeded 'succeeded'
@@ -102,15 +95,6 @@ end
 def highlight text
   highlighted = text.include?("\e") ? (RESET + text + RED) : text
   highlighted.gsub("\n", "\n            ")
-end
-
-case ARGV[0]
-  when '--args'
-    alias :run_application :run_application_using_command_line_args
-    ARGV.shift
-  when '--separated-args'
-    alias :run_application :run_application_using_separated_command_line_args
-    ARGV.shift
 end
 
 run_tests(read_tests(ARGV[0]), ARGV[1])

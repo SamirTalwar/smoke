@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for test in `ls test/*.in`
+for test in `find test -name '*.args'`
 do
-    bin/smoke `cat $test` > test/`basename $test .in`.out
+    bin/smoke `cat $test` > test/`basename $test .args`.out
 done

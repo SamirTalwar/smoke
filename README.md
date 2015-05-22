@@ -15,7 +15,7 @@ Why?
 ----
 We let our interview candidates write code in whatever they like: Java, C#,
 Python, Ruby&hellip; we've not had a Brainfuck answer yet, but I think I'd just
-put him through on sheer awesomeness. I needed a test framework that could
+put them through on sheer awesomeness. I needed a test framework that could
 handle any language under the sun. And some we only let out at night (I'm
 looking at you, Scala).
 
@@ -37,7 +37,7 @@ So in order to run tests against an application, you simply invoke Smoke with
 the directory containing the tests, and the command required to invoke the
 application.
 
-    ./smoke.rb tests/calculator 'ruby calculator.rb'
+    smoke tests/calculator 'ruby calculator.rb'
 
 In your test directory, you'll have a bunch of sample inputs along with
 expected outputs. So for our hypothetical calculator, you might have a
@@ -54,9 +54,10 @@ and the output you expect:
 That's it. Add as many tests as you like, and you'll get red or green responses
 (along with expected and actual output if it went wrong) for every one.
 
-You can also pass the `--args` parameter to pass the input into the application
-as a command-line argument rather than over STDIN. Use the `--separated-args`
-parameter to split the input on whitespace and pass each segment in as a
-separate argument.
+If you want to push stuff through command-line arguments instead, put them in
+a file ending in *.args* instead. For example, renaming *addition.in* to
+*addition.args* will mean that *ruby calculator.rb 2 + 2* will be invoked, with
+no standard input supplied. You can combine standard input and command-line
+arguments.
 
 Enjoy. Any feedback is welcome.

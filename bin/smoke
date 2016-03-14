@@ -6,9 +6,11 @@ RESET = "\e[0m"
 
 SPECIAL = '#;&."\',\\/`:!*?$*(){}[]><|~'.chars
 
-def escape args
-  args.chars.collect { |c| SPECIAL.include?(c) ? '\\' + c : c }.join
-end
+FILE_TYPES = {
+  args: { extension: '.args' },
+  input: { extension: '.in' },
+  output: { extension: /^\.out.*/ }
+}
 
 def run_application application, args, input
   IO.popen "#{application} #{escape args}", 'r+' do |io|
@@ -19,25 +21,26 @@ def run_application application, args, input
 end
 
 def read_tests test_case
-  in_files = Dir.glob("#{test_case}/*.in").collect { |file| [File.basename(file, '.in'), :input, file] }
-  args_files = Dir.glob("#{test_case}/*.args").collect { |file| [File.basename(file, '.args'), :args, file] }
-  tests = (in_files + args_files).group_by { |name, type, file| name }.collect { |name, files|
-    [name, files.collect { |name, type, file| [type, IO.read(file).strip] }]
-  }.sort_by { |name, _| name }
-
-  tests.collect { |name, types|
-    potential_args = types.find { |type, contents| type == :args }
-    args = potential_args ? potential_args[1] : ''
-    potential_input = types.find { |type, contents| type == :input }
-    input = potential_input ? potential_input[1] : ''
-
-    output_files = Dir.glob "#{test_case}/#{name}.out*"
-    expected = output_files.collect do |output_file|
-      IO.read(output_file).strip
-    end
-
-    [name, args, input, expected]
-  }
+  Dir.glob("#{test_case}/*.*")
+    .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
+    .group_by { |name, extension, file| name }
+    .sort_by { |name, _| name }
+    .collect { |name, files|
+      categorized_files = files
+        .collect { |_, extension, file| [look_up_extension(extension), file] }
+        .reject { |type, file| type.nil? }
+        .collect { |type, file| [type, IO.read(file).strip] }
+        .group_by { |type, file| type }
+        .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
+        .to_h
+      [name, categorized_files]
+    }
+    .collect { |name, files|
+      args = (files[:args] || [''])[0]
+      input = (files[:input] || [''])[0]
+      expected = files[:output] || []
+      [name, args, input, expected]
+    }
 end
 
 def run_tests tests, application
@@ -92,6 +95,22 @@ end
 def failed *messages
   puts red messages.collect { |message| '  ' + message }.join "\n"
   @failures += 1
+end
+
+def look_up_extension(extension)
+  type, _ = FILE_TYPES.find { |_, configuration|
+    case configuration[:extension]
+    when String
+      extension == configuration[:extension]
+    when Regexp
+      extension =~ configuration[:extension]
+    end
+  }
+  type
+end
+
+def escape args
+  args.chars.collect { |c| SPECIAL.include?(c) ? '\\' + c : c }.join
 end
 
 def highlight text

@@ -67,7 +67,7 @@ def run_tests tests, application
       info += add_if(!error.empty? || !expected_error.empty?, error, expected_error, 'error')
       info += add_if(status != expected_status, status, expected_status, 'status')
 
-      next failed *(info.collect { |name, value| Kernel.format '%-17s %s', (name + ':'), value })
+      next failed(*(info.collect { |key, value| Kernel.format '%-17s %s', (key + ':'), value }))
     end
 
     succeeded 'succeeded'

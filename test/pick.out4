@@ -3,8 +3,8 @@ args
 in
 [32m  succeeded[0m
 wrong
-[31m  args:     uno dos tres quatro cinqo
-  output:   quatro
-  expected: one, two, three, four or five[0m
+[31m  args:             uno dos tres quatro cinqo
+  actual output:    quatro
+  expected output:  one, two, three, four or five[0m
 
 [31m3 tests, 1 failures[0m

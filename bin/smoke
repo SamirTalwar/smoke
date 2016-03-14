@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'open3'
+
 GREEN = "\e[32m"
 RED = "\e[31m"
 RESET = "\e[0m"
@@ -9,14 +11,16 @@ SPECIAL = '#;&."\',\\/`:!*?$*(){}[]><|~'.chars
 FILE_TYPES = {
   args: { extension: '.args' },
   input: { extension: '.in' },
-  output: { extension: /^\.out.*/ }
+  output: { extension: /^\.out.*/ },
+  error: { extension: /^\.err.*/ },
+  status: { extension: /^\.status/ },
 }
 
 def run_application application, args, input
-  IO.popen "#{application} #{escape args}", 'r+' do |io|
-    io.write input
-    io.close_write
-    io.read.strip
+  Open3.popen3 "#{application} #{escape args}" do |stdin, stdout, stderr, wait_threads|
+    stdin.write input
+    stdin.close_write
+    [stdout.read.strip, stderr.read.strip, wait_threads.value.exitstatus]
   end
 end
 
@@ -38,33 +42,49 @@ def read_tests test_case
     .collect { |name, files|
       args = (files[:args] || [''])[0]
       input = (files[:input] || [''])[0]
-      expected = files[:output] || []
-      [name, args, input, expected]
+      expected_output = files[:output] || []
+      expected_error = files[:error] || []
+      expected_status = (files[:status] || ['0'])[0].to_i
+      [name, args, input, expected_output, expected_error, expected_status]
     }
 end
 
 def run_tests tests, application
-  tests.each do |name, args, input, expected|
+  tests.each do |name, args, input, expected_output, expected_error, expected_status|
     puts name
-    next failed "no outputs provided" if expected.length == 0
+    next failed "no outputs provided" if expected_output.empty? and expected_error.empty?
 
-    output = run_application application, args, input
+    output, error, status = run_application application, args, input
 
-    next failed "program exited with status code #{$?}" if $?.exitstatus > 0
-
-    unless expected.include? output
-      expected = expected.collect { |e| highlight(e) }
+    unless (expected_output.empty? || expected_output.include?(output)) and
+           (expected_error.empty? || expected_error.include?(error)) and
+           status == expected_status
+      expected_output = expected_output.collect { |e| highlight(e) }
       info = []
       info << ['args', highlight(args)] unless args.empty?
       info << ['input', highlight(input)] unless input.empty?
-      info << ['output', highlight(output)]
-      info << ['expected', expected.length == 1 ? expected[0]
-                             : "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
+      info += add_if(!output.empty? || !expected_output.empty?, output, expected_output, 'output')
+      info += add_if(!error.empty? || !expected_error.empty?, error, expected_error, 'error')
+      info += add_if(status != expected_status, status, expected_status, 'status')
 
-      next failed *(info.collect { |name, value| Kernel.format '%-9s %s', (name + ':'), value })
+      next failed *(info.collect { |name, value| Kernel.format '%-17s %s', (name + ':'), value })
     end
 
     succeeded 'succeeded'
+  end
+end
+
+def add_if(condition, actual, expected, name)
+  if condition
+    [
+      ["actual #{name}", highlight(actual.to_s)],
+      ["expected #{name}",
+       expected.length == 1 ?
+         expected[0] :
+         "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
+    ]
+  else
+    []
   end
 end
 
@@ -115,7 +135,7 @@ end
 
 def highlight text
   highlighted = text.include?("\e") ? (RESET + text + RED) : text
-  highlighted.gsub("\n", "\n            ")
+  highlighted.gsub("\n", "\n" + (' ' * 20))
 end
 
 run_tests(read_tests(ARGV[0]), ARGV[1])

@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
+BASE = 'a'.ord
+
 def rotate char
-  base = 'a'.ord
-  ((char.ord - base + 13) % 26 + base).chr
+  ((char.ord - BASE + 13) % 26 + BASE).chr
 end
 
 def rot13 string
@@ -14,7 +15,7 @@ def rot13 string
     end
 
     if in_escape
-      in_escape = false if char == "m"
+      in_escape = false if char == 'm'
       next char
     end
 

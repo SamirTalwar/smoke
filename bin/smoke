@@ -63,9 +63,9 @@ def run_tests tests, application
       info = []
       info << ['args', highlight(args)] unless args.empty?
       info << ['input', highlight(input)] unless input.empty?
+      info += add_if(status != expected_status, status, [expected_status], 'status')
       info += add_if(!output.empty? || !expected_output.empty?, output, expected_output, 'output')
       info += add_if(!error.empty? || !expected_error.empty?, error, expected_error, 'error')
-      info += add_if(status != expected_status, status, expected_status, 'status')
 
       next failed(*(info.collect { |key, value| Kernel.format '%-17s %s', (key + ':'), value }))
     end
@@ -140,3 +140,4 @@ end
 
 run_tests(read_tests(ARGV[0]), ARGV[1])
 print_summary
+exit 1 if @failures > 0

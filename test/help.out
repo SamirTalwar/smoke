@@ -1,0 +1,3 @@
+Usage: smoke [options] TEST-DIRECTORY COMMAND
+    -c, --[no-]color                 Color output
+    -h, --help                       Help me

@@ -17,18 +17,6 @@ FILE_TYPES = {
   status: { extension: /^\.status/ },
 }
 
-@options = {
-  color: $stdout.isatty
-}
-
-OptionParser.new { |opts|
-  opts.banner = 'Usage: smoke [options]'
-
-  opts.on '-c', '--[no-]color', 'Color output' do |color|
-    @options[:color] = color
-  end
-}.parse!
-
 def run_application application, args, input
   Open3.popen3 "#{application} #{escape args}" do |stdin, stdout, stderr, wait_threads|
     stdin.write input
@@ -159,6 +147,36 @@ def highlight text
   highlighted.gsub("\n", "\n" + (' ' * 20))
 end
 
-run_tests(read_tests(ARGV[0]), ARGV[1])
+def parse_options
+  options = {
+    color: $stdout.isatty
+  }
+
+  immediate_exit_code = 0
+
+  parser = OptionParser.new { |opts|
+    opts.banner = 'Usage: smoke [options] TEST-DIRECTORY COMMAND'
+
+    opts.on '-c', '--[no-]color', 'Color output' do |color|
+      options[:color] = color
+    end
+
+    opts.on '-h', '--help', 'Help me' do |color|
+      puts opts
+      exit immediate_exit_code
+    end
+  }
+
+  parser.parse!
+
+  if ARGV.length != 2
+    immediate_exit_code = 2
+    parser.parse!(%w{--help})
+  end
+  [options, ARGV]
+end
+
+@options, @args = parse_options
+run_tests(read_tests(@args[0]), @args[1])
 print_summary
 exit 1 if @failures > 0

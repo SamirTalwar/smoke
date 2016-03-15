@@ -43,8 +43,8 @@ def read_tests test_case
     .collect { |name, files|
       args = (files[:args] || [''])[0]
       input = (files[:input] || [''])[0]
-      expected_output = files[:output] || []
-      expected_error = files[:error] || []
+      expected_output = files[:output] || ['']
+      expected_error = files[:error] || ['']
       expected_status = (files[:status] || ['0'])[0].to_i
       [name, args, input, expected_output, expected_error, expected_status]
     }
@@ -57,16 +57,13 @@ def run_tests tests, application
 
     output, error, status = run_application application, args, input
 
-    unless (expected_output.empty? || expected_output.include?(output)) and
-           (expected_error.empty? || expected_error.include?(error)) and
-           status == expected_status
-      expected_output = expected_output.collect { |e| highlight(e) }
+    unless status == expected_status and expected_output.include?(output) and expected_error.include?(error)
       info = []
       info << ['args', highlight(args)] unless args.empty?
       info << ['input', highlight(input)] unless input.empty?
-      info += add_if(status != expected_status, status, [expected_status], 'status')
-      info += add_if(!output.empty? || !expected_output.empty?, output, expected_output, 'output')
-      info += add_if(!error.empty? || !expected_error.empty?, error, expected_error, 'error')
+      info += add_unless(status == expected_status, status, [highlight(expected_status.to_s)], 'status')
+      info += add_unless(expected_output.include?(output), output, highlighted_array(expected_output), 'output')
+      info += add_unless(expected_error.include?(error), error, highlighted_array(expected_error), 'error')
 
       next failed(*(info.collect { |key, value| Kernel.format '%-17s %s', (key + ':'), value }))
     end
@@ -75,18 +72,16 @@ def run_tests tests, application
   end
 end
 
-def add_if(condition, actual, expected, name)
-  if condition
-    [
-      ["actual #{name}", highlight(actual.to_s)],
-      ["expected #{name}",
-       expected.length == 1 ?
-         expected[0] :
-         "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
-    ]
-  else
-    []
-  end
+def add_unless(condition, actual, expected, name)
+  return [] if condition
+
+  [
+    ["actual #{name}", highlight(actual.to_s)],
+    ["expected #{name}",
+     expected.length == 1 ?
+       expected[0] :
+       "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
+  ]
 end
 
 def print_summary
@@ -142,8 +137,12 @@ def escape args
   args.chars.collect { |c| SPECIAL.include?(c) ? '\\' + c : c }.join
 end
 
+def highlighted_array array
+  array.collect { |value| highlight(value) }
+end
+
 def highlight text
-  highlighted = text.include?("\e") ? (RESET + text + RED) : text
+  highlighted = (!@options[:color] && text.include?("\e")) ? (RESET + text + RED) : text
   highlighted.gsub("\n", "\n" + (' ' * 20))
 end
 

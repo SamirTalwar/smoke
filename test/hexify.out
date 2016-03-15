@@ -1,10 +1,10 @@
 character
-[32m  succeeded[0m
+  succeeded
 multiple-lines
-[32m  succeeded[0m
+  succeeded
 sentence
-[32m  succeeded[0m
+  succeeded
 word
-[32m  succeeded[0m
+  succeeded
 
-[32m4 tests, 0 failures[0m
+4 tests, 0 failures

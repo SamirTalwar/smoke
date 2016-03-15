@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'open3'
+require 'optparse'
 
 GREEN = "\e[32m"
 RED = "\e[31m"
@@ -15,6 +16,18 @@ FILE_TYPES = {
   error: { extension: /^\.err.*/ },
   status: { extension: /^\.status/ },
 }
+
+@options = {
+  color: $stdout.isatty
+}
+
+OptionParser.new { |opts|
+  opts.banner = 'Usage: smoke [options]'
+
+  opts.on '-c', '--[no-]color', 'Color output' do |color|
+    @options[:color] = color
+  end
+}.parse!
 
 def run_application application, args, input
   Open3.popen3 "#{application} #{escape args}" do |stdin, stdout, stderr, wait_threads|
@@ -98,11 +111,19 @@ def print_summary
 end
 
 def green string
-  "#{GREEN}#{string}#{RESET}"
+  if @options[:color]
+    "#{GREEN}#{string}#{RESET}"
+  else
+    string
+  end
 end
 
 def red string
-  "#{RED}#{string}#{RESET}"
+  if @options[:color]
+    "#{RED}#{string}#{RESET}"
+  else
+    string
+  end
 end
 
 @successes = 0

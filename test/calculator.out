@@ -1,28 +1,28 @@
 addition
-[32m  succeeded[0m
+  succeeded
 complex
-[31m  args:             (8 + 2i) + (7 - 4i)
+  args:             (8 + 2i) + (7 - 4i)
   actual output:    2
-  expected output:  15 - 2i[0m
+  expected output:  15 - 2i
 division
-[32m  succeeded[0m
+  succeeded
 infix-words-error
-[31m  args:             3 to-the-power-of 3
+  args:             3 to-the-power-of 3
   actual error:     fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
-  expected error:   ./fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)[0m
+  expected error:   ./fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
 multiple-digits
-[32m  succeeded[0m
+  succeeded
 multiplication
-[32m  succeeded[0m
+  succeeded
 parens
-[31m  args:             (6 + 3) * 2
+  args:             (6 + 3) * 2
   actual output:    3
-  expected output:  18[0m
+  expected output:  18
 subtraction
-[32m  succeeded[0m
+  succeeded
 three-numbers
-[31m  args:             5 + 7 + 12
+  args:             5 + 7 + 12
   actual output:    12
-  expected output:  24[0m
+  expected output:  24
 
-[31m9 tests, 4 failures[0m
+9 tests, 4 failures

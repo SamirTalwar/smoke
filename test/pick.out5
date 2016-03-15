@@ -1,10 +1,10 @@
 args
-[32m  succeeded[0m
+  succeeded
 in
-[32m  succeeded[0m
+  succeeded
 wrong
-[31m  args:             uno dos tres quatro cinqo
+  args:             uno dos tres quatro cinqo
   actual output:    cinqo
-  expected output:  one, two, three, four or five[0m
+  expected output:  one, two, three, four or five
 
-[31m3 tests, 1 failures[0m
+3 tests, 1 failures

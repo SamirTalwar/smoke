@@ -1,63 +1,70 @@
-Smoke
-=====
+# Smoke
 
-We had a problem at work. It was a pretty nice problem to have. We were getting
-too many job applicants and we needed to screen them quickly. So we put some
-tests online and pointed the <del>guinea pigs</del> <ins>candidates</ins> at
-'em.
+*An integration test framework for console applications.*
 
-We quickly found we had another problem: it was taking a lot of developer time
-to decide whether we should bring in the furballs for real-life interviews. So
-one night, while more than a little tipsy, I wrote *Smoke*: an integration test
-framework for console applications.
+## Writing Test Cases
 
-Why?
-----
-We let our interview candidates write code in whatever they like: Java, C#,
-Python, Ruby&hellip; we've not had a Brainfuck answer yet, but I think I'd just
-put them through on sheer awesomeness. I needed a test framework that could
-handle any language under the sun. And some we only let out at night (I'm
-looking at you, Scala).
+A test case consists of *input* and *expected output*. It is constructed of a number of files with the same name and different extensions.
 
-I have to stress that this is not a replacement for looking over people's code.
-I've put people through that failed every one of my test cases because they
-understood the problem and mostly solved it. Similarly, someone that passes
-every case but writes Python like people wrote C in the 80s makes me very sad,
-despite all the green output from Smoke.
+Input can come in two forms: *standard input* and *command-line arguments*.
 
-How?
-----
-At first, I thought about ways to crowbar RSpec into running application tests.
-This was a stupid idea. Eventually I decided the only thing every language has
-in common is the command-line: every language can pretty easily support
-standard input and output (with the obvious exception of Java, which makes
-everything difficult).
+  * Standard input is specified by naming the file with the extension `.in`.
+  * Command-line arguments are specified with the `.args` extension.
 
-So in order to run tests against an application, you simply invoke Smoke with
-the directory containing the tests, and the command required to invoke the
-application.
+Outputs that can be observed by Smoke consist of *standard output*, *standard error* and the *exit status* of the program.
 
-    smoke tests/calculator 'ruby calculator.rb'
+  * Expected standard output is specified with the `.out` extension. Alternatively, multiple possible expected outputs can be specified by using an extension that starts with `.out`—for example, `.out-one`, `.out2` and `.outc`. If there are multiple outputs, a match with any of them will be considered a success.
+  * Expected standard error uses the `.err` extension, but otherwise works in exactly the same way as expected standard output.
+  * The expected exit status is a file with the `.status` extension. It contains a single number between `0` and `255`.
 
-In your test directory, you'll have a bunch of sample inputs along with
-expected outputs. So for our hypothetical calculator, you might have a
-simple input:
+At least one of standard output and standard error must be specified, though it can be empty. If no exit status is specified, it will be assumed to be `0`.
 
-### addition.in
+### Example: Calculator
+
+Our simplest calculator test case consists of two files:
+
+**test/addition.in**:
+
     2 + 2
 
-and the output you expect:
+**test/addition.out**:
 
-### addition.out
     4
 
-That's it. Add as many tests as you like, and you'll get red or green responses
-(along with expected and actual output if it went wrong) for every one.
+That's it.
 
-If you want to push stuff through command-line arguments instead, put them in
-a file ending in *.args* instead. For example, renaming *addition.in* to
-*addition.args* will mean that *ruby calculator.rb 2 + 2* will be invoked, with
-no standard input supplied. You can combine standard input and command-line
-arguments.
+We might want to assert that certain things fail. For example, postfix notation should fail because the second token is expected to be an operator. In this example, our calculator is expected to produce a semi-reasonable error message and exit with a status of `2` to signify a parsing error.
+
+**test/postfix-notation-fails.in**
+
+    5 3 *
+
+**test/postfix-notation-fails.err**
+
+    "3" is not a valid operator.
+
+**test/postfix-notation-fails.status**
+
+    2
+
+## Running Tests
+
+In order to run tests against an application, you simply invoke Smoke with the directory containing the tests, and the command required to invoke the application.
+
+    smoke test 'ruby bin/calculator.rb'
+
+Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails.
+
+Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
 
 Enjoy. Any feedback is welcome.
+
+## Origins
+
+We had a problem at work. It was a pretty nice problem to have. We were getting too many job applicants and we needed to screen them quickly. So we put some tests online and pointed the <del>guinea pigs</del> <ins>candidates</ins> at 'em.
+
+We quickly found we had another problem: it was taking a lot of developer time to decide whether we should bring in the furballs for real-life interviews. So one night, while more than a little tipsy, I wrote *Smoke*.
+
+We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby&hellip; I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running application tests. This was a stupid idea. Eventually I decided the only thing every language has in common is the command-line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
+
+I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.

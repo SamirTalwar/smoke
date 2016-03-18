@@ -1,27 +1,27 @@
 addition
 [32m  succeeded[0m
 complex
-[31m  args:             (8 + 2i) + (7 - 4i)
+[31m  input:            (8 + 2i) + (7 - 4i)
   actual output:    2
   expected output:  15 - 2i[0m
 division
 [32m  succeeded[0m
 infix-words-error
-[31m  args:             3 to-the-power-of 3
-  actual error:     fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
+[31m  input:            3 to-the-power-of 3
+  actual error:     fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
   expected error:   ./fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)[0m
 multiple-digits
 [32m  succeeded[0m
 multiplication
 [32m  succeeded[0m
 parens
-[31m  args:             (6 + 3) * 2
+[31m  input:            (6 + 3) * 2
   actual output:    3
   expected output:  18[0m
 subtraction
 [32m  succeeded[0m
 three-numbers
-[31m  args:             5 + 7 + 12
+[31m  input:            5 + 7 + 12
   actual output:    12
   expected output:  24[0m
 

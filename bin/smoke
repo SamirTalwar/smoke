@@ -82,12 +82,19 @@ def add_unless(condition, actual, expected, name)
   [actual_output] + expected_output
 end
 
+def pluralize(count, singular, plural)
+  count == 1 ? singular : plural
+end
+
 def print_summary
   puts
-  if @failures > 0
-    puts red "#{@successes + @failures} tests, #{@failures} failures"
+  count = @successes + @failures
+  test_summary = "#{count} #{pluralize(count, 'test', 'tests')}"
+  failure_summary = "#{@failures} #{pluralize(@failures, 'failure', 'failures')}"
+  if @failures == 0
+    puts green "#{test_summary}, #{failure_summary}"
   else
-    puts green "#{@successes + @failures} tests, #{@failures} failures"
+    puts red "#{test_summary}, #{failure_summary}"
   end
 end
 

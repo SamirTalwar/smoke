@@ -65,7 +65,7 @@ def run_tests tests, application
       info += add_unless(expected_output.include?(output), output, highlighted_array(expected_output), 'output')
       info += add_unless(expected_error.include?(error), error, highlighted_array(expected_error), 'error')
 
-      next failed(*(info.collect { |key, value| Kernel.format '%-17s %s', (key + ':'), value }))
+      next failed(*(info.collect { |key, value| Kernel.format('%-17s %s', (key + ':'), value) }))
     end
 
     succeeded 'succeeded'
@@ -75,13 +75,12 @@ end
 def add_unless(condition, actual, expected, name)
   return [] if condition
 
-  [
-    ["actual #{name}", highlight(actual.to_s)],
-    ["expected #{name}",
-     expected.length == 1 ?
-       expected[0] :
-       "#{expected[0...expected.length - 1].join(', ')} or #{expected[-1]}"]
-  ]
+  actual_output = ["actual #{name}", highlight(actual.to_s)]
+  expected_prefix = "expected #{name}"
+  subsequent_prefixes = (1...expected.length).collect { Kernel.format("%#{expected_prefix.length}s", 'or') }
+  expected_prefixes = [expected_prefix] + subsequent_prefixes
+  expected_output = expected_prefixes.zip(expected)
+  [actual_output] + expected_output
 end
 
 def print_summary

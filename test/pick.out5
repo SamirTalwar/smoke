@@ -5,6 +5,10 @@ in
 wrong
   args:             uno dos tres quatro cinqo
   actual output:    cinqo
-  expected output:  one, two, three, four or five
+  expected output:  one
+               or:  two
+               or:  three
+               or:  four
+               or:  five
 
 3 tests, 1 failures

@@ -12,9 +12,9 @@ SPECIAL = '#;&."\',\\/`:!*?$*(){}[]><|~'.chars
 FILE_TYPES = {
   args: { extension: '.args' },
   input: { extension: '.in' },
-  output: { extension: /^\.out.*/ },
-  error: { extension: /^\.err.*/ },
-  status: { extension: /^\.status/ },
+  output: { extension: /^\.out/ },
+  error: { extension: /^\.err/ },
+  status: { extension: '.status' },
 }
 
 def run_application application, args, input

@@ -9,7 +9,7 @@ A test case consists of *input* and *expected output*. It is constructed of a nu
 Input can come in two forms: *standard input* and *command-line arguments*.
 
   * Standard input is specified by naming the file with the extension `.in`.
-  * Command-line arguments are specified with the `.args` extension.
+  * Command-line arguments are specified in a file with the `.args` extension, one per line.
 
 Outputs that can be observed by Smoke consist of *standard output*, *standard error* and the *exit status* of the program.
 

@@ -7,8 +7,6 @@ GREEN = "\e[32m"
 RED = "\e[31m"
 RESET = "\e[0m"
 
-SPECIAL = '#;&."\',\\/`:!*?$*(){}[]><|~'.chars
-
 FILE_TYPES = {
   args: { extension: '.args' },
   input: { extension: '.in' },
@@ -18,7 +16,8 @@ FILE_TYPES = {
 }
 
 def run_application application, args, input
-  Open3.popen3 "#{application} #{escape args}" do |stdin, stdout, stderr, wait_threads|
+  command = [application] + args
+  Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|
     stdin.write input
     stdin.close_write
     [stdout.read.strip, stderr.read.strip, wait_threads.value.exitstatus]
@@ -41,7 +40,7 @@ def read_tests test_case
       [name, categorized_files]
     }
     .collect { |name, files|
-      args = (files[:args] || [''])[0]
+      args = (files[:args] || [''])[0].lines.collect(&:strip)
       input = (files[:input] || [''])[0]
       expected_output = files[:output] || ['']
       expected_error = files[:error] || ['']
@@ -59,7 +58,7 @@ def run_tests tests, application
 
     unless status == expected_status and expected_output.include?(output) and expected_error.include?(error)
       info = []
-      info << ['args', highlight(args)] unless args.empty?
+      info << ['args', highlight(args.join("\n"))] unless args.empty?
       info << ['input', highlight(input)] unless input.empty?
       info += add_unless(status == expected_status, status, [highlight(expected_status.to_s)], 'status')
       info += add_unless(expected_output.include?(output), output, highlighted_array(expected_output), 'output')
@@ -130,10 +129,6 @@ def look_up_extension(extension)
     end
   }
   type
-end
-
-def escape args
-  args.chars.collect { |c| SPECIAL.include?(c) ? '\\' + c : c }.join
 end
 
 def highlighted_array array

@@ -3,7 +3,11 @@ args
 in
   succeeded
 wrong
-  args:             uno dos tres quatro cinqo
+  args:             uno
+                    dos
+                    tres
+                    quatro
+                    cinqo
   actual output:    cinqo
   expected output:  one
                or:  two

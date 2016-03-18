@@ -1,1 +1,3 @@
---color fixtures/calculator fixtures/calculator.rb
+--color
+fixtures/calculator
+fixtures/calculator.rb

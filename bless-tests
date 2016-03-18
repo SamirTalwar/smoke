@@ -1,9 +1,21 @@
 #!/bin/sh
 
+set -e
+
+delete_if_empty() {
+    if [[ "`wc -c < "$1"`" -eq 0 ]]; then
+        rm "$1"
+    fi
+}
+
 for test in `find test -name '*.args'`
 do
     test_name=`basename $test .args`
-    bin/smoke `cat $test` > test/$test_name.out
+
+    bin/smoke `cat $test` > test/$test_name.out 2> test/$test_name.err || :
+    delete_if_empty test/$test_name.out
+    delete_if_empty test/$test_name.err
+
     status=$?
     if [ $status -ne 0 ]; then
         echo $status > test/$test_name.status

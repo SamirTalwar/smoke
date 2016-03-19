@@ -3,14 +3,14 @@
 require 'open3'
 require 'optparse'
 
-GREEN = "\e[32m"
-RED = "\e[31m"
-RESET = "\e[0m"
+GREEN = "\e[32m".freeze
+RED = "\e[31m".freeze
+RESET = "\e[0m".freeze
 
 GLOB_PATTERNS = [
   ->(root) { "#{root}/*.*" },
   ->(root) { "#{root}.*" },
-]
+].freeze
 
 FILE_TYPES = {
   args: { extension: '.args' },
@@ -18,7 +18,7 @@ FILE_TYPES = {
   output: { extension: /^\.out/ },
   error: { extension: /^\.err/ },
   status: { extension: '.status' },
-}
+}.freeze
 
 module Enumerable
   unless method_defined?(:to_h)
@@ -46,12 +46,12 @@ def read_tests(roots)
     .sort
     .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
     .collect { |name, extension, file| [name, look_up_extension(extension), file] }
-    .reject { |name, type, file| type.nil? }
-    .group_by { |name, type, file| name }
+    .reject { |_, type, _| type.nil? }
+    .group_by { |name, _, _| name }
     .collect { |name, files|
       categorized_files = files
         .collect { |_, type, file| [type, IO.read(file).strip] }
-        .group_by { |type, file| type }
+        .group_by { |type, _| type }
         .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
         .to_h
       [name, categorized_files]
@@ -70,11 +70,11 @@ end
 def run_tests(application, tests)
   tests.each do |name, args, input, expected_output, expected_error, expected_status|
     puts name
-    next failed "no outputs provided" if expected_output.empty? and expected_error.empty?
+    next failed 'no outputs provided' if expected_output.empty? && expected_error.empty?
 
     output, error, status = run_application application, args, input
 
-    unless status == expected_status and expected_output.include?(output) and expected_error.include?(error)
+    unless status == expected_status && expected_output.include?(output) && expected_error.include?(error)
       info = []
       info << ['args', highlight(args.join("\n"))] unless args.empty?
       info << ['input', highlight(input)] unless input.empty?
@@ -145,7 +145,7 @@ def failed(*messages)
 end
 
 def look_up_extension(extension)
-  type, _ = FILE_TYPES.find { |_, configuration|
+  type, = FILE_TYPES.find { |_, configuration|
     case configuration[:extension]
     when String
       extension == configuration[:extension]
@@ -167,7 +167,7 @@ end
 
 def parse_options
   options = {
-    color: $stdout.isatty
+    color: $stdout.isatty,
   }
 
   immediate_exit_code = 0
@@ -179,7 +179,7 @@ def parse_options
       options[:color] = color
     end
 
-    opts.on '-h', '--help', 'Help me' do |color|
+    opts.on '-h', '--help', 'Help me' do
       puts opts
       exit immediate_exit_code
     end
@@ -189,7 +189,7 @@ def parse_options
 
   if ARGV.length < 2
     immediate_exit_code = 2
-    parser.parse!(%w{--help})
+    parser.parse!(%w(--help))
   end
   [options, ARGV]
 end

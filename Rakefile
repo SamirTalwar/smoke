@@ -2,9 +2,11 @@ require 'open3'
 require 'pathname'
 require 'yaml'
 
-RUBY_VERSIONS = YAML::load(File.read('.travis.yml'))['rvm']
+require 'rubocop/rake_task'
 
-task :default => :test
+RUBY_VERSIONS = YAML.load(File.read('.travis.yml'))['rvm']
+
+task default: [:test, :lint]
 
 task :test do
   sh 'bin/smoke --color bin/smoke test'
@@ -15,6 +17,10 @@ task :test_all_ruby_versions do
     sh "rvm #{version}@smoke --create do bundle exec rake"
   end
 end
+
+RuboCop::RakeTask.new
+
+task lint: :rubocop
 
 task :bless do
   Pathname.glob('test/*.args').each do |args_file|

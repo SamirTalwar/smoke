@@ -2,11 +2,11 @@
 
 BASE = 'a'.ord
 
-def rotate char
+def rotate(char)
   ((char.ord - BASE + 13) % 26 + BASE).chr
 end
 
-def rot13 string
+def rot13(string)
   in_escape = false
   string.chars.collect { |char|
     if char == "\e"
@@ -19,8 +19,8 @@ def rot13 string
       next char
     end
 
-    next rotate(char.downcase).upcase if ('A'..'Z').include? char
-    next rotate(char) if ('a'..'z').include? char
+    next rotate(char.downcase).upcase if ('A'..'Z').cover? char
+    next rotate(char) if ('a'..'z').cover? char
     next char
   }.join
 end

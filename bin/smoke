@@ -43,6 +43,7 @@ end
 
 def read_tests roots
   roots.collect_concat { |root| GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) } }
+    .sort
     .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
     .collect { |name, extension, file| [name, look_up_extension(extension), file] }
     .reject { |name, type, file| type.nil? }

@@ -12,7 +12,7 @@ end
 
 task :test_all_ruby_versions do
   RUBY_VERSIONS.each do |version|
-    sh "rvm #{version} do bundle exec rake"
+    sh "rvm #{version}@smoke --create do bundle exec rake"
   end
 end
 

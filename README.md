@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke)
+
 # Smoke
 
 *An integration test framework for console applications.*

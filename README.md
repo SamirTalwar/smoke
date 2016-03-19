@@ -61,6 +61,8 @@ Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, 
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
 
+Smoke requires Ruby 1.9.3 or greater. It does not require any additional gems.
+
 Enjoy. Any feedback is welcome.
 
 ## Origins

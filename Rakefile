@@ -1,10 +1,19 @@
 require 'open3'
 require 'pathname'
+require 'yaml'
+
+RUBY_VERSIONS = YAML::load(File.read('.travis.yml'))['rvm']
 
 task :default => :test
 
 task :test do
   sh 'bin/smoke --color bin/smoke test'
+end
+
+task :test_all_ruby_versions do
+  RUBY_VERSIONS.each do |version|
+    sh "rvm #{version} do bundle exec rake"
+  end
 end
 
 task :bless do

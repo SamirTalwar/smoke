@@ -53,7 +53,11 @@ In order to run tests against an application, you simply invoke Smoke with the c
 
     smoke 'ruby bin/calculator.rb' test
 
-Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails.
+Tests can also be passed on an individual basis:
+
+    smoke 'ruby bin/calculator.rb' test/addition test/postfix-notation-fails
+
+Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
 

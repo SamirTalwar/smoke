@@ -20,6 +20,18 @@ FILE_TYPES = {
   status: { extension: '.status' },
 }
 
+module Enumerable
+  unless method_defined?(:to_h)
+    def to_h
+      hash = {}
+      each do |key, value|
+        hash[key] = value
+      end
+      hash
+    end
+  end
+end
+
 def run_application application, args, input
   command = [application] + args
   Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|

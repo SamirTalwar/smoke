@@ -7,6 +7,10 @@ GREEN = "\e[32m"
 RED = "\e[31m"
 RESET = "\e[0m"
 
+GLOB_PATTERNS = [
+  ->(root) { "#{root}/*.*" }
+]
+
 FILE_TYPES = {
   args: { extension: '.args' },
   input: { extension: '.in' },
@@ -24,8 +28,8 @@ def run_application application, args, input
   end
 end
 
-def read_tests test_case
-  Dir.glob("#{test_case}/*.*")
+def read_tests root
+  GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) }
     .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
     .group_by { |name, extension, file| name }
     .sort_by { |name, _| name }
@@ -49,7 +53,7 @@ def read_tests test_case
     }
 end
 
-def run_tests tests, application
+def run_tests application, tests
   tests.each do |name, args, input, expected_output, expected_error, expected_status|
     puts name
     next failed "no outputs provided" if expected_output.empty? and expected_error.empty?
@@ -177,6 +181,6 @@ def parse_options
 end
 
 @options, @args = parse_options
-run_tests(read_tests(@args[0]), @args[1])
+run_tests(@args[0], read_tests(@args[1]))
 print_summary
 exit 1 if @failures > 0

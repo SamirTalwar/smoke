@@ -49,9 +49,9 @@ We might want to assert that certain things fail. For example, postfix notation 
 
 ## Running Tests
 
-In order to run tests against an application, you simply invoke Smoke with the directory containing the tests, and the command required to invoke the application.
+In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the *test* directory, we would run the tests as follows:
 
-    smoke test 'ruby bin/calculator.rb'
+    smoke 'ruby bin/calculator.rb' test
 
 Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails.
 

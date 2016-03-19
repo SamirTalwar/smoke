@@ -32,7 +32,7 @@ module Enumerable
   end
 end
 
-def run_application application, args, input
+def run_application(application, args, input)
   command = [application] + args
   Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|
     stdin.write input
@@ -41,7 +41,7 @@ def run_application application, args, input
   end
 end
 
-def read_tests roots
+def read_tests(roots)
   roots.collect_concat { |root| GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) } }
     .sort
     .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
@@ -67,7 +67,7 @@ def read_tests roots
     }
 end
 
-def run_tests application, tests
+def run_tests(application, tests)
   tests.each do |name, args, input, expected_output, expected_error, expected_status|
     puts name
     next failed "no outputs provided" if expected_output.empty? and expected_error.empty?
@@ -116,7 +116,7 @@ def print_summary
   end
 end
 
-def green string
+def green(string)
   if @options[:color]
     "#{GREEN}#{string}#{RESET}"
   else
@@ -124,7 +124,7 @@ def green string
   end
 end
 
-def red string
+def red(string)
   if @options[:color]
     "#{RED}#{string}#{RESET}"
   else
@@ -133,13 +133,13 @@ def red string
 end
 
 @successes = 0
-def succeeded *messages
+def succeeded(*messages)
   puts green messages.collect { |message| '  ' + message }.join "\n"
   @successes += 1
 end
 
 @failures = 0
-def failed *messages
+def failed(*messages)
   puts red messages.collect { |message| '  ' + message }.join "\n"
   @failures += 1
 end
@@ -156,11 +156,11 @@ def look_up_extension(extension)
   type
 end
 
-def highlighted_array array
+def highlighted_array(array)
   array.collect { |value| highlight(value) }
 end
 
-def highlight text
+def highlight(text)
   highlighted = (!@options[:color] && text.include?("\e")) ? (RESET + text + RED) : text
   highlighted.gsub("\n", "\n" + (' ' * 20))
 end

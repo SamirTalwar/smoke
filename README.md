@@ -23,11 +23,11 @@ At least one of standard output and standard error must be specified, though it 
 
 Our simplest calculator test case consists of two files:
 
-**test/addition.in**:
+#### test/addition.in:
 
     2 + 2
 
-**test/addition.out**:
+#### test/addition.out:
 
     4
 
@@ -35,15 +35,15 @@ That's it.
 
 We might want to assert that certain things fail. For example, postfix notation should fail because the second token is expected to be an operator. In this example, our calculator is expected to produce a semi-reasonable error message and exit with a status of `2` to signify a parsing error.
 
-**test/postfix-notation-fails.in**
+#### test/postfix-notation-fails.in:
 
     5 3 *
 
-**test/postfix-notation-fails.err**
+#### test/postfix-notation-fails.err:
 
     "3" is not a valid operator.
 
-**test/postfix-notation-fails.status**
+#### test/postfix-notation-fails.status:
 
     2
 

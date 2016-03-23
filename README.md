@@ -6,6 +6,16 @@
 
 ![Smoke output](https://s3-eu-west-1.amazonaws.com/samirtalwar-smoke/screenshot.png)
 
+## Installation
+
+Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
+
+Smoke is distributed under [the MIT license][the MIT license].
+
+[bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
+[LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
+[the MIT license]: http://samirtalwar.mit-license.org/
+
 ## Writing Test Cases
 
 A test case consists of *input* and *expected output*. It is constructed of a number of files with the same name and different extensions.

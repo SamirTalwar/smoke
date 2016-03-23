@@ -7,9 +7,7 @@ complex
 division
   succeeded
 infix-words-error
-  input:            3 to-the-power-of 3
-  actual error:     fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
-  expected error:   ./fixtures/calculator.rb:3:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
+  succeeded
 multiple-digits
   succeeded
 multiplication
@@ -25,4 +23,4 @@ three-numbers
   actual output:    12
   expected output:  24
 
-9 tests, 4 failures
+9 tests, 3 failures

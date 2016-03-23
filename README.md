@@ -10,6 +10,8 @@
 
 Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
 
+The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
+
 Smoke is distributed under [the MIT license][the MIT license].
 
 [bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
@@ -74,8 +76,6 @@ Tests can also be passed on an individual basis:
 Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
-
-Smoke requires Ruby 1.9.3 or greater. It does not require any additional gems.
 
 Enjoy. Any feedback is welcome.
 

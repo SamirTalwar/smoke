@@ -4,6 +4,8 @@
 
 *An integration test framework for console applications.*
 
+![Smoke output](https://s3-eu-west-1.amazonaws.com/samirtalwar-smoke/screenshot.png)
+
 ## Writing Test Cases
 
 A test case consists of *input* and *expected output*. It is constructed of a number of files with the same name and different extensions.

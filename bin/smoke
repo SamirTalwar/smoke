@@ -173,7 +173,7 @@ def parse_options
   immediate_exit_code = 0
 
   parser = OptionParser.new { |opts|
-    opts.banner = 'Usage: smoke [options] TEST-DIRECTORY COMMAND'
+    opts.banner = 'Usage: smoke [options] COMMAND TEST-DIRECTORY'
 
     opts.on '-c', '--[no-]color', 'Color output' do |color|
       options[:color] = color

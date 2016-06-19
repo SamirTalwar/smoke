@@ -18,6 +18,11 @@ task :test_all_ruby_versions do
   end
 end
 
+task publish: [:test] do
+  sh 'docker build --pull --tag=samirtalwar/smoke .'
+  sh 'docker push samirtalwar/smoke'
+end
+
 RuboCop::RakeTask.new
 
 task lint: :rubocop

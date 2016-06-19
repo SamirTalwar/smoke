@@ -12,10 +12,13 @@ Currently, Smoke is in alpha, and as such is not packaged. You can use it with y
 
 The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
 
+You can also run Smoke using [Docker][] without any further installation. See below for more information.
+
 Smoke is distributed under [the MIT license][the MIT license].
 
 [bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
 [LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
+[Docker]: https://www.docker.com/
 [the MIT license]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases
@@ -76,6 +79,10 @@ Tests can also be passed on an individual basis:
 Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
+
+In order to run Smoke with Docker instead, you would change the command as follows:
+
+    docker run --rm -it -v $PWD:/var/app samirtalwar/smoke 'ruby bin/calculator.rb' test
 
 Enjoy. Any feedback is welcome.
 

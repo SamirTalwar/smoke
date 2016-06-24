@@ -14,7 +14,14 @@ end
 
 task :test_all_ruby_versions do
   RUBY_VERSIONS.each do |version|
-    sh "rvm #{version}@smoke --create do bundle exec rake"
+    run = "rvm #{version}@smoke do"
+    [
+      "rvm install #{version}",
+      "rvm #{version} gemset create smoke",
+      "#{run} gem install rake bundler",
+      "#{run} bundle install",
+      "#{run} bundle exec rake test",
+    ].each(&method(:sh))
   end
 end
 

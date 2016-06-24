@@ -41,8 +41,15 @@ class NoSuchApplicationError < SmokeError
   end
 end
 
+class NonExecutableApplicationError < SmokeError
+  def initialize(name)
+    super "The application #{name.inspect} is not executable."
+  end
+end
+
 def validate_application(application)
   raise NoSuchApplicationError, application unless File.exist?(application)
+  raise NonExecutableApplicationError, application unless File.executable?(application)
 end
 
 def run_application(application, args, input)

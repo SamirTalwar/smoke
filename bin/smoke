@@ -32,6 +32,19 @@ module Enumerable
   end
 end
 
+class SmokeError < StandardError
+end
+
+class NoSuchApplicationError < SmokeError
+  def initialize(name)
+    super "The application #{name.inspect} does not exist."
+  end
+end
+
+def validate_application(application)
+  raise NoSuchApplicationError, application unless File.exist?(application)
+end
+
 def run_application(application, args, input)
   command = [application] + args
   Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|
@@ -194,7 +207,14 @@ def parse_options
   [options, ARGV]
 end
 
-@options, @args = parse_options
-run_tests(@args[0], read_tests(@args[1...@args.length]))
-print_summary
-exit 1 if @failures > 0
+begin
+  @options, @args = parse_options
+  application = @args[0]
+  validate_application(application)
+  run_tests(application, read_tests(@args[1...@args.length]))
+  print_summary
+  exit 1 if @failures > 0
+rescue SmokeError => e
+  $stderr.puts e.message
+  exit 1
+end

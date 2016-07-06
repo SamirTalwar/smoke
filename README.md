@@ -8,7 +8,7 @@
 
 ## Installation
 
-Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
+Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke], [Smoke Windows launcher][bin/smoke.bat] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
 
 The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
 
@@ -17,6 +17,7 @@ You can also run Smoke using [Docker][] without any further installation. See be
 Smoke is distributed under [the MIT license][the MIT license].
 
 [bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
+[bin/smoke.bat]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke.bat
 [LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
 [Docker]: https://www.docker.com/
 [the MIT license]: http://samirtalwar.mit-license.org/
@@ -70,7 +71,11 @@ We might want to assert that certain things fail. For example, postfix notation 
 
 In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the *test* directory, we would run the tests as follows:
 
-    smoke 'ruby bin/calculator.rb' test
+    smoke 'bin/calculator.rb' test
+
+Smoke (alpha) supports Windows commandline. Be aware that for scripts you always have to provide the interpreter as well, e.g. `bin/calculator.rb` is not executable but `ruby bin/calculator.rb` is. We would run the tests as follows:
+
+    smoke.bat 'ruby bin/calculator.rb' test
 
 Tests can also be passed on an individual basis:
 
@@ -95,3 +100,15 @@ We quickly found we had another problem: it was taking a lot of developer time t
 We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby&hellip; I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running application tests. This was a stupid idea. Eventually I decided the only thing every language has in common is the command-line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
 
 I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
+
+## Smoke Development
+
+Run all Smoke Smoke tests (dog-fooding yeah) using
+
+    bin/smoke bin/smoke test
+
+or
+
+    bin\smoke bin\smoke test
+
+for Windows.

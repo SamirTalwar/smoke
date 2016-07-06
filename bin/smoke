@@ -48,7 +48,7 @@ class NonExecutableApplicationError < SmokeError
 end
 
 def run_application(application, args, input)
-  command = [application] + args
+  command = application + args
   Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|
     stdin.write input
     stdin.close_write
@@ -61,9 +61,9 @@ end
 def create_readable_error(application, errno)
   # no case/when because === does not work on class?
   if errno.class == Errno::ENOENT
-    raise NoSuchApplicationError, application
+    raise NoSuchApplicationError, application[0]
   elsif errno.class == Errno::ENOEXEC
-    raise NonExecutableApplicationError, application
+    raise NonExecutableApplicationError, application[0]
   else
     raise errno
   end
@@ -224,7 +224,7 @@ end
 
 begin
   @options, @args = parse_options
-  application = @args[0]
+  application = @args[0].split(/ /) # quick hack, does not consider blanks in file names
   run_tests(application, read_tests(@args[1...@args.length]))
   print_summary
   exit 1 if @failures > 0

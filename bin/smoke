@@ -49,8 +49,18 @@ class NonExecutableApplicationError < SmokeError
 end
 
 def validate_application(application)
-  raise NoSuchApplicationError, application unless File.exist?(application)
-  raise NonExecutableApplicationError, application unless File.executable?(application)
+  valid_extensions = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+  return if ENV['PATH'].split(File::PATH_SEPARATOR).any? { |path|
+    valid_extensions.find { |extension|
+      name = File.join(path, "#{application}#{extension}")
+      File.executable?(name) && !File.directory?(name)
+    }
+  }
+
+  raise NonExecutableApplicationError, application \
+    if File.exist?(application) && (!File.executable?(application) || File.directory?(application))
+  raise NoSuchApplicationError, application \
+    unless File.exist?(application)
 end
 
 def run_application(command, args, input)

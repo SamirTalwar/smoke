@@ -36,6 +36,12 @@ end
 class SmokeError < StandardError
 end
 
+class NoCommandFileError < SmokeError
+  def initialize(test_name)
+    super "There is no command file for the #{test_name.inspect} test."
+  end
+end
+
 class NoSuchApplicationError < SmokeError
   def initialize(name)
     super "The application #{name.inspect} does not exist."
@@ -48,7 +54,10 @@ class NonExecutableApplicationError < SmokeError
   end
 end
 
-def validate_application(application)
+def validate_application(test_name, command)
+  raise NoCommandFileError, test_name if command.nil?
+
+  application = command[0]
   valid_extensions = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
   return if ENV['PATH'].split(File::PATH_SEPARATOR).any? { |path|
     valid_extensions.find { |extension|
@@ -91,7 +100,8 @@ def read_tests(roots)
         }
         .sort_by { |name, _| name }
         .collect { |name, files|
-          command = (files[:command] || [root_command])[0].lines.collect(&:strip)
+          command_file = (files[:command] || [root_command])[0]
+          command = command_file ? command_file.lines.collect(&:strip) : nil
           args = (files[:args] || [''])[0].lines.collect(&:strip)
           input = (files[:input] || [''])[0]
           expected_output = files[:output] || ['']
@@ -108,7 +118,7 @@ def run_tests(tests)
     next failed 'no outputs provided' if expected_output.empty? && expected_error.empty?
 
     begin
-      validate_application(command[0])
+      validate_application(name, command)
     rescue SmokeError => e
       next failed(e.message)
     end

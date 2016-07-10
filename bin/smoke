@@ -13,6 +13,7 @@ GLOB_PATTERNS = [
 ].freeze
 
 FILE_TYPES = {
+  command: { extension: '.command' },
   args: { extension: '.args' },
   input: { extension: '.in' },
   output: { extension: /^\.out/ },
@@ -52,9 +53,8 @@ def validate_application(application)
   raise NonExecutableApplicationError, application unless File.executable?(application)
 end
 
-def run_application(application, args, input)
-  command = [application] + args
-  Open3.popen3(*command) do |stdin, stdout, stderr, wait_threads|
+def run_application(command, args, input)
+  Open3.popen3(*(command + args)) do |stdin, stdout, stderr, wait_threads|
     stdin.write input
     stdin.close_write
     [stdout.read.strip, stderr.read.strip, wait_threads.value.exitstatus]
@@ -62,38 +62,48 @@ def run_application(application, args, input)
 end
 
 def read_tests(roots)
-  roots.collect_concat { |root| GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) } }
-    .sort
-    .collect { |file| [File.basename(file, '.*'), File.extname(file), file] }
-    .collect { |name, extension, file| [name, look_up_extension(extension), file] }
-    .reject { |_, type, _| type.nil? }
-    .group_by { |name, _, _| name }
-    .collect { |name, files|
-      categorized_files = files
-        .collect { |_, type, file| [type, IO.read(file).strip] }
-        .group_by { |type, _| type }
-        .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
-        .to_h
-      [name, categorized_files]
-    }
-    .sort_by { |name, _| name }
-    .collect { |name, files|
-      args = (files[:args] || [''])[0].lines.collect(&:strip)
-      input = (files[:input] || [''])[0]
-      expected_output = files[:output] || ['']
-      expected_error = files[:error] || ['']
-      expected_status = (files[:status] || ['0'])[0].to_i
-      [name, args, input, expected_output, expected_error, expected_status]
+  roots
+    .collect_concat { |root|
+      root_command_file = ["#{root}/command", "#{File.dirname(root)}/command"].find { |c| File.exist?(c) }
+      root_command = root_command_file ? IO.read(root_command_file).strip : nil
+      GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) }
+        .sort
+        .collect { |file| [File.basename(file, '.*'), look_up_extension(File.extname(file)), file] }
+        .reject { |_, type, _| type.nil? }
+        .group_by { |name, _, _| name }
+        .collect { |name, files|
+          categorized_files = files
+            .collect { |_, type, file| [type, IO.read(file).strip] }
+            .group_by { |type, _| type }
+            .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
+            .to_h
+          [name, categorized_files]
+        }
+        .sort_by { |name, _| name }
+        .collect { |name, files|
+          command = (files[:command] || [root_command])[0].lines.collect(&:strip)
+          args = (files[:args] || [''])[0].lines.collect(&:strip)
+          input = (files[:input] || [''])[0]
+          expected_output = files[:output] || ['']
+          expected_error = files[:error] || ['']
+          expected_status = (files[:status] || ['0'])[0].to_i
+          [command, name, args, input, expected_output, expected_error, expected_status]
+        }
     }
 end
 
-def run_tests(application, tests)
-  tests.each do |name, args, input, expected_output, expected_error, expected_status|
+def run_tests(tests)
+  tests.each do |command, name, args, input, expected_output, expected_error, expected_status|
     puts name
     next failed 'no outputs provided' if expected_output.empty? && expected_error.empty?
 
-    output, error, status = run_application application, args, input
+    begin
+      validate_application(command[0])
+    rescue SmokeError => e
+      next failed(e.message)
+    end
 
+    output, error, status = run_application command, args, input
     unless status == expected_status && expected_output.include?(output) && expected_error.include?(error)
       info = []
       info << ['args', highlight(args.join("\n"))] unless args.empty?
@@ -193,7 +203,7 @@ def parse_options
   immediate_exit_code = 0
 
   parser = OptionParser.new { |opts|
-    opts.banner = 'Usage: smoke [options] COMMAND TEST-DIRECTORY'
+    opts.banner = 'Usage: smoke [options] TEST-DIRECTORY'
 
     opts.on '-c', '--[no-]color', 'Color output' do |color|
       options[:color] = color
@@ -207,7 +217,7 @@ def parse_options
 
   parser.parse!
 
-  if ARGV.length < 2
+  if ARGV.empty?
     immediate_exit_code = 2
     parser.parse!(%w(--help))
   end
@@ -216,9 +226,7 @@ end
 
 begin
   @options, @args = parse_options
-  application = @args[0]
-  validate_application(application)
-  run_tests(application, read_tests(@args[1...@args.length]))
+  run_tests(read_tests(@args))
   print_summary
   exit 1 if @failures > 0
 rescue SmokeError => e

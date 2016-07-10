@@ -1,0 +1,6 @@
+no-such-application
+  The application "fixtures/no-such-application.rb" does not exist.
+non-executable-application
+  The application "fixtures/non-executable-application.rb" is not executable.
+
+2 tests, 2 failures

@@ -1,2 +1,1 @@
 fixtures/no-such-application.rb
-fixtures/empty

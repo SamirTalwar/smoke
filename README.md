@@ -25,6 +25,11 @@ Smoke is distributed under [the MIT license][the MIT license].
 
 A test case consists of *input* and *expected output*. It is constructed of a number of files with the same name and different extensions.
 
+First off, you need to specify the *command* itself.
+
+  * The command is specified in a file named `command`, with parameters each on a new line. It is executed from the current working directory.
+  * The command can be overriden for each individual test case by creating a file with the `.command` extension.
+
 Input can come in two forms: *standard input* and *command-line arguments*.
 
   * Standard input is specified by naming the file with the extension `.in`.
@@ -40,7 +45,12 @@ At least one of standard output and standard error must be specified, though it 
 
 ### Example: Calculator
 
-Our simplest calculator test case consists of two files:
+Our simplest calculator test case consists of three files:
+
+#### test/command:
+
+    ruby
+    calculator.rb
 
 #### test/addition.in:
 
@@ -70,11 +80,11 @@ We might want to assert that certain things fail. For example, postfix notation 
 
 In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the *test* directory, we would run the tests as follows:
 
-    smoke 'ruby bin/calculator.rb' test
+    smoke test
 
 Tests can also be passed on an individual basis:
 
-    smoke 'ruby bin/calculator.rb' test/addition test/postfix-notation-fails
+    smoke test/addition test/postfix-notation-fails
 
 Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
 
@@ -82,7 +92,7 @@ Output will be in color if outputting to a terminal. You can force color output 
 
 In order to run Smoke with Docker instead, you would change the command as follows:
 
-    docker run --rm -it -v $PWD:/var/app samirtalwar/smoke 'ruby bin/calculator.rb' test
+    docker run --rm -it -v $PWD:/var/app samirtalwar/smoke test
 
 Enjoy. Any feedback is welcome.
 

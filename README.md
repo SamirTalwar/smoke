@@ -112,3 +112,8 @@ or
     bin\smoke bin\smoke test
 
 for Windows.
+
+Smoke development follows a few rules:
+
+  * The *smoke* binary is a single file without any dependencies. No gems are used.
+  * Smoke should work cross-platform and all tests should work, but there might be less support for Windows users.

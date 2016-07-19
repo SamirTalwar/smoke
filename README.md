@@ -8,7 +8,7 @@
 
 ## Installation
 
-Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
+Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke], [Smoke Windows launcher][bin/smoke.bat] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
 
 The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
 
@@ -17,6 +17,7 @@ You can also run Smoke using [Docker][] without any further installation. See be
 Smoke is distributed under [the MIT license][the MIT license].
 
 [bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
+[bin/smoke.bat]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke.bat
 [LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
 [Docker]: https://www.docker.com/
 [the MIT license]: http://samirtalwar.mit-license.org/
@@ -86,6 +87,10 @@ Tests can also be passed on an individual basis:
 
     smoke test/addition test/postfix-notation-fails
 
+To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` switch:
+
+    smoke --command='ruby calculator.rb' test
+
 Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
@@ -105,3 +110,24 @@ We quickly found we had another problem: it was taking a lot of developer time t
 We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby&hellip; I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running application tests. This was a stupid idea. Eventually I decided the only thing every language has in common is the command-line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
 
 I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
+
+## Contributing
+
+Issues and pull requests are very welcome. Please don't hesitate.
+
+Developers of Smoke pledge to follow the [Contributor Covenant][].
+
+We dog-food. You can run all of Smoke's smoke tests using:
+
+    rake test
+
+On Windows, run this instead:
+
+    bin\smoke --command=bin\smoke test
+
+Smoke development follows a few rules:
+
+  * The *smoke* binary is a single file without any dependencies. No gems are used.
+  * Smoke should work on Linux and Mac OS without any issue. Most features should also work on Windows, and we hope to get it to feature parity soon.
+
+[Contributor Covenant]: http://contributor-covenant.org/version/1/4/

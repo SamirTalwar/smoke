@@ -1,1 +1,2 @@
+--command=ruby fixtures/hexify.rb
 fixtures/hexify

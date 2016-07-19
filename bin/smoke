@@ -2,6 +2,7 @@
 
 require 'open3'
 require 'optparse'
+require 'shellwords'
 
 GREEN = "\e[32m".freeze
 RED = "\e[31m".freeze
@@ -80,7 +81,7 @@ def run_application(command, args, input)
   end
 end
 
-def read_tests(roots)
+def read_tests(roots, command_override)
   roots
     .collect_concat { |root|
       root_command_file = ["#{root}/command", "#{File.dirname(root)}/command"].find { |c| File.exist?(c) }
@@ -100,8 +101,14 @@ def read_tests(roots)
         }
         .sort_by { |name, _| name }
         .collect { |name, files|
-          command_file = (files[:command] || [root_command])[0]
-          command = command_file ? command_file.lines.collect(&:strip) : nil
+          command =
+            if command_override
+              command_override
+            elsif files[:command]
+              files[:command][0].lines.collect(&:strip)
+            elsif root_command
+              root_command.lines.collect(&:strip)
+            end
           args = (files[:args] || [''])[0].lines.collect(&:strip)
           input = (files[:input] || [''])[0]
           expected_output = files[:output] || ['']
@@ -225,6 +232,10 @@ def parse_options
   parser = OptionParser.new { |opts|
     opts.banner = 'Usage: smoke [options] TEST-DIRECTORY'
 
+    opts.on '--command COMMAND', 'Specify or override the command to run' do |command|
+      options[:command] = Shellwords.shellwords(command)
+    end
+
     opts.on '-c', '--[no-]color', 'Color output' do |color|
       options[:color] = color
     end
@@ -246,7 +257,7 @@ end
 
 begin
   @options, @args = parse_options
-  run_tests(read_tests(@args))
+  run_tests(read_tests(@args, @options[:command]))
   print_summary
   exit 1 if @failures > 0
 rescue SmokeError => e

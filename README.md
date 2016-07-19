@@ -101,19 +101,23 @@ We let our interview candidates write code in whatever they like: Java, C#, Pyth
 
 I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
 
-## Smoke Development
+## Contributing
 
-Run all Smoke Smoke tests (dog-fooding yeah) using
+Issues and pull requests are very welcome. Please don't hesitate.
+
+Developers of Smoke pledge to follow the [Contributor Covenant][].
+
+We dog-food. You can run all of Smoke's smoke tests using:
 
     bin/smoke bin/smoke test
 
-or
+On Windows, run this instead:
 
     bin\smoke bin\smoke test
-
-for Windows.
 
 Smoke development follows a few rules:
 
   * The *smoke* binary is a single file without any dependencies. No gems are used.
-  * Smoke should work cross-platform and all tests should work, but there might be less support for Windows users.
+  * Smoke should work on Linux and Mac OS without any issue. Most features should also work on Windows, and we hope to get it to feature parity soon.
+
+[Contributor Covenant]: http://contributor-covenant.org/version/1/4/

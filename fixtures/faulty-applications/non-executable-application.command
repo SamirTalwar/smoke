@@ -1,2 +1,1 @@
 fixtures/non-executable-application.rb
-fixtures/empty

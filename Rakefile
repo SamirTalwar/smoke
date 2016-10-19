@@ -9,7 +9,7 @@ RUBY_VERSIONS = YAML.load(File.read('.travis.yml'))['rvm']
 task default: [:test, :lint]
 
 task :test do
-  sh 'bin/smoke --color bin/smoke test'
+  sh 'bin/smoke --color test'
 end
 
 task :test_all_ruby_versions do

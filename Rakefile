@@ -4,7 +4,7 @@ require 'yaml'
 
 require 'rubocop/rake_task'
 
-RUBY_VERSIONS = YAML.load(File.read('.travis.yml'))['rvm']
+RUBY_VERSIONS = YAML.safe_load(File.read('.travis.yml'))['rvm']
 
 task default: [:test, :lint]
 
@@ -45,7 +45,7 @@ task :bless do
 
       out_file.write(out) unless out.empty?
       err_file.write(err) unless err.empty?
-      status_file.write("#{status}\n") unless status == 0
+      status_file.write("#{status}\n") unless status.zero?
     end
   end
 end

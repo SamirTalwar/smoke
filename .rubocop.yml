@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 1.9.3
 
 Metrics/LineLength:
   Max: 120
@@ -8,6 +8,12 @@ Style/Documentation:
   Enabled: false
 
 Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/TernaryParentheses:
   Enabled: false
 
 Style/TrailingCommaInArguments:

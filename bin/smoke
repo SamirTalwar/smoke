@@ -86,36 +86,40 @@ def read_tests(roots, command_override)
     .collect_concat { |root|
       root_command_file = ["#{root}/command", "#{File.dirname(root)}/command"].find { |c| File.exist?(c) }
       root_command = root_command_file ? IO.read(root_command_file).strip : nil
-      GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) }
-        .sort
-        .collect { |file| [File.basename(file, '.*'), look_up_extension(File.extname(file)), file] }
-        .reject { |_, type, _| type.nil? }
-        .group_by { |name, _, _| name }
-        .collect { |name, files|
-          categorized_files = files
-            .collect { |_, type, file| [type, IO.read(file).strip] }
-            .group_by { |type, _| type }
-            .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
-            .to_h
-          [name, categorized_files]
-        }
-        .sort_by { |name, _| name }
-        .collect { |name, files|
-          command =
-            if command_override
-              command_override
-            elsif files[:command]
-              files[:command][0].lines.collect(&:strip)
-            elsif root_command
-              root_command.lines.collect(&:strip)
-            end
-          args = (files[:args] || [''])[0].lines.collect(&:strip)
-          input = (files[:input] || [''])[0]
-          expected_output = files[:output] || ['']
-          expected_error = files[:error] || ['']
-          expected_status = (files[:status] || ['0'])[0].to_i
-          [command, name, args, input, expected_output, expected_error, expected_status]
-        }
+      all_files = GLOB_PATTERNS.collect_concat { |pattern| Dir.glob(pattern.call(root)) }.sort
+      harvest(command_override, root_command, all_files)
+    }
+end
+
+def harvest(command_override, root_command, all_files)
+  all_files
+    .collect { |file| [File.basename(file, '.*'), look_up_extension(File.extname(file)), file] }
+    .reject { |_, type, _| type.nil? }
+    .group_by { |name, _, _| name }
+    .collect { |name, files|
+      categorized_files = files
+        .collect { |_, type, file| [type, IO.read(file).strip] }
+        .group_by { |type, _| type }
+        .collect { |type, types_and_files| [type, types_and_files.collect { |_, file| file }] }
+        .to_h
+      [name, categorized_files]
+    }
+    .sort_by { |name, _| name }
+    .collect { |name, files|
+      command =
+        if command_override
+          command_override
+        elsif files[:command]
+          files[:command][0].lines.collect(&:strip)
+        elsif root_command
+          root_command.lines.collect(&:strip)
+        end
+      args = (files[:args] || [''])[0].lines.collect(&:strip)
+      input = (files[:input] || [''])[0]
+      expected_output = files[:output] || ['']
+      expected_error = files[:error] || ['']
+      expected_status = (files[:status] || ['0'])[0].to_i
+      [command, name, args, input, expected_output, expected_error, expected_status]
     }
 end
 
@@ -166,7 +170,7 @@ def print_summary
   count = @successes + @failures
   test_summary = "#{count} #{pluralize(count, 'test', 'tests')}"
   failure_summary = "#{@failures} #{pluralize(@failures, 'failure', 'failures')}"
-  if @failures == 0
+  if @failures.zero?
     puts green "#{test_summary}, #{failure_summary}"
   else
     puts red "#{test_summary}, #{failure_summary}"
@@ -218,7 +222,7 @@ def highlighted_array(array)
 end
 
 def highlight(text)
-  highlighted = (!@options[:color] && text.include?("\e")) ? (RESET + text + RED) : text
+  highlighted = (!@options[:color] && text.include?("\e")) ? RESET + text + RED : text
   highlighted.gsub("\n", "\n" + (' ' * 20))
 end
 
@@ -250,7 +254,7 @@ def parse_options
 
   if ARGV.empty?
     immediate_exit_code = 2
-    parser.parse!(%w(--help))
+    parser.parse!(['--help'])
   end
   [options, ARGV]
 end

@@ -74,11 +74,10 @@ def validate_application(test_name, command)
 end
 
 def run_application(command, args, input)
-  Open3.popen3(*(command + args)) do |stdin, stdout, stderr, wait_threads|
-    stdin.write input
-    stdin.close_write
-    [stdout.read.strip, stderr.read.strip, wait_threads.value.exitstatus]
-  end
+  output, error, status = Open3.capture3(*(command + args), stdin_data: input)
+  output.strip!
+  error.strip!
+  [output, error, status.exitstatus]
 end
 
 def read_tests(roots, command_override)

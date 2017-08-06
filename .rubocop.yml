@@ -1,6 +1,15 @@
 AllCops:
   TargetRubyVersion: 2.0
 
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
 Metrics/LineLength:
   Max: 120
 
@@ -24,15 +33,6 @@ Style/TrailingCommaInLiteral:
 
 Style/BlockDelimiters:
   EnforcedStyle: semantic
-
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-Style/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-
-Style/MultilineOperationIndentation:
-  EnforcedStyle: indented
 
 # The following lint suppressions are (hopefully) temporary.
 # I would like to clean the code up so they are not necessary.

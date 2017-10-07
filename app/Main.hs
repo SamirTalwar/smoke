@@ -1,6 +1,10 @@
 module Main where
 
+import Options
 import Test.Smoke
 
 main :: IO ()
-main = runSmokeTests undefined undefined
+main = do
+  options <- parseOptions
+  print options
+  runSmokeTests undefined undefined

@@ -25,7 +25,10 @@ library
 executable smoke-exe
   hs-source-dirs:      app
   main-is:             Main.hs
+  other-modules:       Options
   default-language:    Haskell2010
   build-depends:       base
                      , smoke
+                     , optparse-applicative
+                     , unix
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

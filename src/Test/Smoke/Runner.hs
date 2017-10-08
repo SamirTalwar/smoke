@@ -27,7 +27,7 @@ runTest test = do
   executable <-
     case (isJust executableName, executableExists) of
       (True, True) -> return executableName
-      (True, False) -> findExecutable (fromJust executableName) -- TODO: Test this on Windows.
+      (True, False) -> findExecutable (fromJust executableName)
       (False, _) -> return Nothing
   eitherResult <-
     runExceptT $ do

@@ -33,7 +33,7 @@ colorParser :: Bool -> Parser Bool
 colorParser isTTY =
   flag' True (short 'c' <> long "color" <> help "Color output") <|>
   flag' False (long "no-color" <> help "Do not color output") <|>
-  pure isTTY -- TODO: Make this work on Windows.
+  pure isTTY
 
 testLocationParser :: Parser [FilePath]
 testLocationParser = some (argument str (metavar "TEST-LOCATION..."))

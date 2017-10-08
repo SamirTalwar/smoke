@@ -1,5 +1,6 @@
 module Test.Smoke.Types
-  ( Command
+  ( Args
+  , Command
   , Options(..)
   , Tests
   , Test(..)

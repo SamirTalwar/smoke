@@ -1,5 +1,6 @@
 module Test.Smoke
-  ( Command
+  ( Args
+  , Command
   , Options(..)
   , Tests
   , Test(..)
@@ -8,9 +9,5 @@ module Test.Smoke
   ) where
 
 import Test.Smoke.Discovery (discoverTests)
+import Test.Smoke.Runner (runTests)
 import Test.Smoke.Types
-
-runTests :: Tests -> IO ()
-runTests tests = do
-  print tests
-  return ()

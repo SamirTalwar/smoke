@@ -124,7 +124,7 @@ putColor options color string =
 putColorLn :: Options -> Color -> String -> IO ()
 putColorLn options color string = do
   putColor options color string
-  when (last string /= '\n') (putStrLn "")
+  when (string == "" || last string /= '\n') (putStrLn "")
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

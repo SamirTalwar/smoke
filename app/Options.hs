@@ -4,13 +4,12 @@ module Options
 
 import Data.Semigroup ((<>))
 import Options.Applicative
-import System.Posix.IO (stdOutput)
-import System.Posix.Terminal (queryTerminal)
+import qualified Shell
 import Test.Smoke (Command, Options(Options))
 
 parseOptions :: IO Options
 parseOptions = do
-  isTTY <- queryTerminal stdOutput
+  isTTY <- Shell.isTTY
   execParser (options isTTY)
 
 options :: Bool -> ParserInfo Options

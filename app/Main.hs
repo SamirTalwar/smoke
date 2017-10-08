@@ -11,80 +11,81 @@ main = do
   options <- parseOptions
   tests <- discoverTests options
   results <- runTests tests
-  printResults results
-  printSummary results
+  printResults options results
+  printSummary options results
   exitAccordingTo results
 
-printResults :: TestResults -> IO ()
-printResults = mapM_ printResult
+printResults :: Options -> TestResults -> IO ()
+printResults options = mapM_ (printResult options)
 
-printResult :: TestResult -> IO ()
-printResult (TestSuccess test) = do
+printResult :: Options -> TestResult -> IO ()
+printResult options (TestSuccess test) = do
   putStrLn (testName test)
-  putGreenLn "  succeeded"
-printResult (TestFailure test actualStatus actualStdOut actualStdErr stdIn expectedStatus expectedStdOuts expectedStdErrs) = do
+  putGreenLn options "  succeeded"
+printResult options (TestFailure test actualStatus actualStdOut actualStdErr stdIn expectedStatus expectedStdOuts expectedStdErrs) = do
   putStrLn (testName test)
   when (actualStatus /= expectedStatus) $ do
-    putRed "  actual status:    "
-    putRedLn (show actualStatus)
-    putRed "  expected status:  "
-    putRedLn (show expectedStatus)
+    putRed options "  actual status:    "
+    putRedLn options (show actualStatus)
+    putRed options "  expected status:  "
+    putRedLn options (show expectedStatus)
   forM_ stdIn $ \input -> do
-    putRed "  input:            "
-    putRedLn input
+    putRed options "  input:            "
+    putRedLn options input
   when (actualStdOut `notElem` expectedStdOuts) $ do
-    putRed "  actual output:    "
-    putRedLn actualStdOut
-    putRed "  expected output:  "
-    putRedLn (head expectedStdOuts)
+    putRed options "  actual output:    "
+    putRedLn options actualStdOut
+    putRed options "  expected output:  "
+    putRedLn options (head expectedStdOuts)
     forM_ (tail expectedStdOuts) $ \output -> do
-      putRed "               or:  "
-      putRedLn output
+      putRed options "               or:  "
+      putRedLn options output
   when (actualStdErr `notElem` expectedStdErrs) $ do
-    putRed "  actual error:     "
-    putRedLn actualStdErr
-    putRed "  expected error:   "
-    putRedLn (head expectedStdErrs)
+    putRed options "  actual error:     "
+    putRedLn options actualStdErr
+    putRed options "  expected error:   "
+    putRedLn options (head expectedStdErrs)
     forM_ (tail expectedStdErrs) $ \output -> do
-      putRed "              or:   "
-      putRedLn output
-printResult (TestError test CouldNotFindExecutable) = do
+      putRed options "              or:   "
+      putRedLn options output
+printResult options (TestError test CouldNotFindExecutable) = do
   putStrLn (testName test)
-  putRedLn "  could not find the executable"
+  putRedLn options "  could not find the executable"
 
-printSummary :: TestResults -> IO ()
-printSummary results = do
+printSummary :: Options -> TestResults -> IO ()
+printSummary options results = do
   putStrLn ""
   let testCount = length results
   let failureCount = length failures
   case failureCount of
-    0 -> putGreenLn (show testCount ++ " tests, 0 failures")
-    1 -> putRedLn (show testCount ++ " tests, 1 failure")
-    n -> putRedLn (show testCount ++ " tests, " ++ show n ++ " failures")
+    0 -> putGreenLn options (show testCount ++ " tests, 0 failures")
+    1 -> putRedLn options (show testCount ++ " tests, 1 failure")
+    n ->
+      putRedLn options (show testCount ++ " tests, " ++ show n ++ " failures")
   where
     failures = filter isFailure results
 
-putGreen :: String -> IO ()
-putGreen = putColor Green
+putGreen :: Options -> String -> IO ()
+putGreen options = putColor options Green
 
-putGreenLn :: String -> IO ()
-putGreenLn = putColorLn Green
+putGreenLn :: Options -> String -> IO ()
+putGreenLn options = putColorLn options Green
 
-putRed :: String -> IO ()
-putRed = putColor Red
+putRed :: Options -> String -> IO ()
+putRed options = putColor options Red
 
-putRedLn :: String -> IO ()
-putRedLn = putColorLn Red
+putRedLn :: Options -> String -> IO ()
+putRedLn options = putColorLn options Red
 
-putColor :: Color -> String -> IO ()
-putColor color string = do
-  setSGR [SetColor Foreground Dull color]
+putColor :: Options -> Color -> String -> IO ()
+putColor options color string = do
+  when (optionsColor options) $ setSGR [SetColor Foreground Dull color]
   putStr string
-  setSGR [Reset]
+  when (optionsColor options) $ setSGR [Reset]
 
-putColorLn :: Color -> String -> IO ()
-putColorLn color string = do
-  putColor color string
+putColorLn :: Options -> Color -> String -> IO ()
+putColorLn options color string = do
+  putColor options color string
   when (last string /= '\n') (putStrLn "")
 
 exitAccordingTo :: TestResults -> IO ()

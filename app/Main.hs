@@ -26,7 +26,7 @@ printResult options (TestSuccess test) = do
 printResult options (TestFailure test actualStatus actualStdOut actualStdErr stdIn expectedStatus expectedStdOuts expectedStdErrs) = do
   putStrLn (testName test)
   forM_ (testArgs test) $ \args -> do
-    putRed options "   args:            "
+    putRed options "  args:             "
     putRedLn options (unlines $ indentedLines args)
   forM_ stdIn $ \input -> do
     putRed options "  input:            "

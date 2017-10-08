@@ -1,7 +1,6 @@
 Smoke: a framework for testing most things from the very edges.
 
-Usage: smoke-exe [--command ARG] ([-c|--color] | [--no-color])
-                 [TEST-LOCATION...]
+Usage: smoke-exe [--command ARG] ([-c|--color] | [--no-color]) TEST-LOCATION...
 
 Available options:
   --command ARG            Specify or override the command to run

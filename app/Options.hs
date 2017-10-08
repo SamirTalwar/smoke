@@ -37,4 +37,4 @@ colorParser isTTY =
   pure isTTY -- TODO: Make this work on Windows.
 
 testLocationParser :: Parser [FilePath]
-testLocationParser = many (argument str (metavar "TEST-LOCATION..."))
+testLocationParser = some (argument str (metavar "TEST-LOCATION..."))

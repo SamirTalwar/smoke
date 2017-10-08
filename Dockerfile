@@ -1,4 +1,4 @@
-FROM ruby:slim
+FROM haskell:integer-gmp
 
 COPY bin/smoke /smoke
 WORKDIR /var/app

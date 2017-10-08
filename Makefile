@@ -15,6 +15,12 @@ endif
 
 BIN := out/build/smoke-exe
 
+ifdef CI
+  STACK := stack --no-terminal
+else
+  STACK := stack
+endif
+
 .PHONY: build
 build: $(BIN) out/smoke-$(OS)
 
@@ -22,28 +28,35 @@ out/smoke-$(OS):
 	cp $(BIN) out/smoke-$(OS)
 
 $(BIN):
-	stack build
-	stack install --local-bin-path=out/build
+	$(STACK) build
+	$(STACK) install --local-bin-path=out/build
 
 .PHONY: test
 test: build
-	./bin/smoke --command=$(BIN) test
+	$(BIN) --command=$(BIN) test
 
 .PHONY: lint
 lint: ~/.local/bin/hlint
-	stack exec -- hlint .
+	$(STACK) exec -- hlint .
 
 .PHONY: check
 check: test lint
 
+.PHONY: dependencies
+dependencies: build-dependencies editor-dependencies
+	$(STACK) install --only-dependencies
+
+.PHONY: build-dependencies
+build-dependencies: ~/.local/bin/hlint
+
 .PHONY: editor-dependencies
-editor-dependencies: ~/.local/bin/ghc-mod ~/.local/bin/hindent ~/.local/bin/hlint
+editor-dependencies: ~/.local/bin/ghc-mod ~/.local/bin/hindent
 
 ~/.local/bin/ghc-mod:
-	stack install ghc-mod
+	$(STACK) install ghc-mod
 
 ~/.local/bin/hindent:
-	stack install hindent
+	$(STACK) install hindent
 
 ~/.local/bin/hlint:
-	stack install hlint
+	$(STACK) install hlint

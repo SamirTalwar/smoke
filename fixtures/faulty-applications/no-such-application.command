@@ -1,1 +1,1 @@
-fixtures/no_such_application.rb
+fixtures/no_such_application

@@ -27,10 +27,10 @@ printResult options (TestFailure test actualStatus actualStdOut actualStdErr std
   putStrLn (testName test)
   forM_ (testArgs test) $ \args -> do
     putRed options "  args:             "
-    putRedLn options (unlines $ indentedLines args)
+    putRedLn options (unlines $ indentedLines outputIndentation args)
   forM_ stdIn $ \input -> do
     putRed options "  input:            "
-    putRedLn options (indented input)
+    putRedLn options (indented outputIndentation input)
   when (actualStatus /= expectedStatus) $ do
     putRed options "  actual status:    "
     putRedLn options (show actualStatus)
@@ -38,44 +38,52 @@ printResult options (TestFailure test actualStatus actualStdOut actualStdErr std
     putRedLn options (show expectedStatus)
   when (actualStdOut `notElem` expectedStdOuts) $ do
     putRed options "  actual output:    "
-    putRedLn options (indented actualStdOut)
+    putRedLn options (indented outputIndentation actualStdOut)
     putRed options "  expected output:  "
-    putRedLn options (indented (head expectedStdOuts))
+    putRedLn options (indented outputIndentation (head expectedStdOuts))
     forM_ (tail expectedStdOuts) $ \output -> do
       putRed options "               or:  "
-      putRedLn options (indented output)
+      putRedLn options (indented outputIndentation output)
   when (actualStdErr `notElem` expectedStdErrs) $ do
     putRed options "  actual error:     "
-    putRedLn options (indented actualStdErr)
+    putRedLn options (indented outputIndentation actualStdErr)
     putRed options "  expected error:   "
-    putRedLn options (indented (head expectedStdErrs))
+    putRedLn options (indented outputIndentation (head expectedStdErrs))
     forM_ (tail expectedStdErrs) $ \output -> do
       putRed options "              or:   "
-      putRedLn options (indented output)
+      putRedLn options (indented outputIndentation output)
 printResult options (TestError test NoCommandFile) = do
   putStrLn (testName test)
-  putRedLn options "  There is no command file."
+  putRedLn options $ indentedAll messageIndentation "There is no command file."
 printResult options (TestError test NoInputFiles) = do
   putStrLn (testName test)
-  putRedLn options "  There are no args or STDIN files."
+  putRedLn options $
+    indentedAll messageIndentation "There are no args or STDIN files."
 printResult options (TestError test NoOutputFiles) = do
   putStrLn (testName test)
-  putRedLn options "  There are no STDOUT or STDERR files."
+  putRedLn options $
+    indentedAll messageIndentation "There are no STDOUT or STDERR files."
 printResult options (TestError test NonExistentCommand) = do
   putStrLn (testName test)
   putRedLn options $
-    "  The application \"" ++
+    indentedAll messageIndentation $
+    "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" does not exist."
 printResult options (TestError test NonExecutableCommand) = do
   putStrLn (testName test)
   putRedLn options $
-    "  The application \"" ++
+    indentedAll messageIndentation $
+    "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" is not executable."
 printResult options (TestError test (CouldNotExecuteCommand e)) = do
   putStrLn (testName test)
-  putRedLn options $
-    "  The application \"" ++
-    unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
+  putRedLn options $ unlines $
+    indentedAllLines
+      messageIndentation
+      [ "The application \"" ++
+        unwords (fromJust (testCommand test)) ++ "\" could not be executed."
+      , e
+      ]
 
 printSummary :: Options -> TestResults -> IO ()
 printSummary options results = do
@@ -90,15 +98,24 @@ printSummary options results = do
   where
     failures = filter isFailure results
 
-indentationPrefix :: String
-indentationPrefix = replicate 20 ' '
+outputIndentation :: Int
+outputIndentation = 20
 
-indented :: String -> String
-indented = unlines . indentedLines . lines
+messageIndentation :: Int
+messageIndentation = 2
 
-indentedLines :: [String] -> [String]
-indentedLines [] = []
-indentedLines (first:rest) = first : map (indentationPrefix ++) rest
+indented :: Int -> String -> String
+indented n = unlines . indentedLines n . lines
+
+indentedAll :: Int -> String -> String
+indentedAll n = unlines . indentedAllLines n . lines
+
+indentedLines :: Int -> [String] -> [String]
+indentedLines _ [] = []
+indentedLines n (first:rest) = first : indentedAllLines n rest
+
+indentedAllLines :: Int -> [String] -> [String]
+indentedAllLines n = map (replicate n ' ' ++)
 
 putGreen :: Options -> String -> IO ()
 putGreen options = putColor options Green

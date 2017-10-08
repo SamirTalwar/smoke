@@ -5,8 +5,8 @@ no-inputs
 no-outputs
   There are no STDOUT or STDERR files.
 no-such-application
-  The application "fixtures/no_such_application.rb" does not exist.
+  The application "fixtures/no_such_application" does not exist.
 non-executable-application
-  The application "fixtures/non_executable_application.rb" is not executable.
+  The application "fixtures/non_executable_application" is not executable.
 
 5 tests, 5 failures

@@ -1,1 +1,1 @@
-fixtures/non_executable_application.rb
+fixtures/non_executable_application

@@ -1,8 +1,12 @@
 no-command-file
-  There is no command file for the "no-command-file" test.
+  There is no command file.
+no-inputs
+  There are no args or STDIN files.
+no-outputs
+  There are no STDOUT or STDERR files.
 no-such-application
   The application "fixtures/no_such_application.rb" does not exist.
 non-executable-application
   The application "fixtures/non_executable_application.rb" is not executable.
 
-3 tests, 3 failures
+5 tests, 5 failures

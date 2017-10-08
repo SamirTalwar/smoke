@@ -38,8 +38,20 @@ class SmokeError < StandardError
 end
 
 class NoCommandFileError < SmokeError
-  def initialize(test_name)
-    super "There is no command file for the #{test_name.inspect} test."
+  def initialize
+    super "There is no command file."
+  end
+end
+
+class NoInputFilesError < SmokeError
+  def initialize
+    super "There are no args or STDIN files."
+  end
+end
+
+class NoOutputFilesError < SmokeError
+  def initialize
+    super "There are no STDOUT or STDERR files."
   end
 end
 
@@ -56,7 +68,7 @@ class NonExecutableApplicationError < SmokeError
 end
 
 def validate_application(test_name, command)
-  raise NoCommandFileError, test_name if command.nil?
+  raise NoCommandFileError if command.nil?
 
   application = command[0]
   valid_extensions = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
@@ -113,10 +125,10 @@ def harvest(command_override, root_command, all_files)
         elsif root_command
           root_command.lines.collect(&:strip)
         end
-      args = (files[:args] || [''])[0].lines.collect(&:strip)
-      input = (files[:input] || [''])[0]
-      expected_output = files[:output] || ['']
-      expected_error = files[:error] || ['']
+      args = files[:args] && files[:args][0].lines.collect(&:strip)
+      input = files[:input] && files[:input][0]
+      expected_output = files[:output]
+      expected_error = files[:error]
       expected_status = (files[:status] || ['0'])[0].to_i
       [command, name, args, input, expected_output, expected_error, expected_status]
     }
@@ -125,14 +137,19 @@ end
 def run_tests(tests)
   tests.each do |command, name, args, input, expected_output, expected_error, expected_status|
     puts name
-    next failed 'no outputs provided' if expected_output.empty? && expected_error.empty?
 
     begin
       validate_application(name, command)
+      raise NoInputFilesError if args.nil? && input.nil?
+      raise NoOutputFilesError if expected_output.nil? && expected_error.nil?
     rescue SmokeError => e
       next failed(e.message)
     end
 
+    args ||= []
+    input ||= ''
+    expected_output ||= ['']
+    expected_error ||= ['']
     output, error, status = run_application command, args, input
     unless status == expected_status && expected_output.include?(output) && expected_error.include?(error)
       info = []

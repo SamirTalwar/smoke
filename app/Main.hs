@@ -3,6 +3,7 @@ module Main where
 import Control.Monad (forM_, when)
 import Options
 import System.Console.ANSI
+import System.Exit
 import Test.Smoke
 
 main :: IO ()
@@ -12,6 +13,7 @@ main = do
   results <- runTests tests
   printResults results
   printSummary results
+  exitAccordingTo results
 
 printResults :: TestResults -> IO ()
 printResults = mapM_ printResult
@@ -61,9 +63,6 @@ printSummary results = do
     n -> putRedLn (show testCount ++ " tests, " ++ show n ++ " failures")
   where
     failures = filter isFailure results
-    isFailure TestSuccess {} = False
-    isFailure TestFailure {} = True
-    isFailure TestError {} = True
 
 putGreen :: String -> IO ()
 putGreen = putColor Green
@@ -87,3 +86,16 @@ putColorLn :: Color -> String -> IO ()
 putColorLn color string = do
   putColor color string
   when (last string /= '\n') (putStrLn "")
+
+exitAccordingTo :: TestResults -> IO ()
+exitAccordingTo results =
+  if failureCount == 0
+    then exitSuccess
+    else exitWith (ExitFailure 1)
+  where
+    failureCount = length (filter isFailure results)
+
+isFailure :: TestResult -> Bool
+isFailure TestSuccess {} = False
+isFailure TestFailure {} = True
+isFailure TestError {} = True

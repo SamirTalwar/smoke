@@ -51,7 +51,19 @@ printResult (TestError test CouldNotFindExecutable) = do
   putRedLn "  could not find the executable"
 
 printSummary :: TestResults -> IO ()
-printSummary _ = return ()
+printSummary results = do
+  putStrLn ""
+  let testCount = length results
+  let failureCount = length failures
+  case failureCount of
+    0 -> putGreenLn (show testCount ++ " tests, 0 failures")
+    1 -> putRedLn (show testCount ++ " tests, 1 failure")
+    n -> putRedLn (show testCount ++ " tests, " ++ show n ++ " failures")
+  where
+    failures = filter isFailure results
+    isFailure TestSuccess {} = False
+    isFailure TestFailure {} = True
+    isFailure TestError {} = True
 
 putGreen :: String -> IO ()
 putGreen = putColor Green

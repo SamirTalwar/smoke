@@ -26,6 +26,7 @@ library
                      , filepath
                      , Glob
                      , process
+                     , transformers
   ghc-options:         -Wall -Werror
 
 executable smoke-exe

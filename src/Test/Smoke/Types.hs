@@ -26,7 +26,7 @@ type Tests = [Test]
 
 data Test = Test
   { testName :: String
-  , testCommand :: Command
+  , testCommand :: Maybe Command
   , testArgs :: Maybe Args
   , testStdIn :: Maybe FilePath
   , testStdOut :: [FilePath]
@@ -50,6 +50,11 @@ data TestResult
               , testErrorMessage :: TestErrorMessage }
   deriving (Eq, Show)
 
-data TestErrorMessage =
-  CouldNotFindExecutable
+data TestErrorMessage
+  = NoCommandFile
+  | NoInputFiles
+  | NoOutputFiles
+  | NonExistentCommand
+  | NonExecutableCommand
+  | CouldNotExecuteCommand String
   deriving (Eq, Show)

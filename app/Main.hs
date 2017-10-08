@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad (forM_, when)
+import Data.Maybe (fromJust)
 import Options
 import System.Console.ANSI
 import System.Exit
@@ -24,14 +25,17 @@ printResult options (TestSuccess test) = do
   putGreenLn options "  succeeded"
 printResult options (TestFailure test actualStatus actualStdOut actualStdErr stdIn expectedStatus expectedStdOuts expectedStdErrs) = do
   putStrLn (testName test)
+  forM_ (testArgs test) $ \args -> do
+    putRed options "   args:            "
+    putRedLn options (unlines $ indentedLines args)
+  forM_ stdIn $ \input -> do
+    putRed options "  input:            "
+    putRedLn options (indented input)
   when (actualStatus /= expectedStatus) $ do
     putRed options "  actual status:    "
     putRedLn options (show actualStatus)
     putRed options "  expected status:  "
     putRedLn options (show expectedStatus)
-  forM_ stdIn $ \input -> do
-    putRed options "  input:            "
-    putRedLn options (indented input)
   when (actualStdOut `notElem` expectedStdOuts) $ do
     putRed options "  actual output:    "
     putRedLn options (indented actualStdOut)
@@ -48,9 +52,30 @@ printResult options (TestFailure test actualStatus actualStdOut actualStdErr std
     forM_ (tail expectedStdErrs) $ \output -> do
       putRed options "              or:   "
       putRedLn options (indented output)
-printResult options (TestError test CouldNotFindExecutable) = do
+printResult options (TestError test NoCommandFile) = do
   putStrLn (testName test)
-  putRedLn options "  could not find the executable"
+  putRedLn options "  There is no command file."
+printResult options (TestError test NoInputFiles) = do
+  putStrLn (testName test)
+  putRedLn options "  There are no args or STDIN files."
+printResult options (TestError test NoOutputFiles) = do
+  putStrLn (testName test)
+  putRedLn options "  There are no STDOUT or STDERR files."
+printResult options (TestError test NonExistentCommand) = do
+  putStrLn (testName test)
+  putRedLn options $
+    "  The application \"" ++
+    unwords (fromJust (testCommand test)) ++ "\" does not exist."
+printResult options (TestError test NonExecutableCommand) = do
+  putStrLn (testName test)
+  putRedLn options $
+    "  The application \"" ++
+    unwords (fromJust (testCommand test)) ++ "\" is not executable."
+printResult options (TestError test (CouldNotExecuteCommand e)) = do
+  putStrLn (testName test)
+  putRedLn options $
+    "  The application \"" ++
+    unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
 
 printSummary :: Options -> TestResults -> IO ()
 printSummary options results = do
@@ -69,9 +94,11 @@ indentationPrefix :: String
 indentationPrefix = replicate 20 ' '
 
 indented :: String -> String
-indented string = unlines $ first : map (indentationPrefix ++) rest
-  where
-    (first:rest) = lines string
+indented = unlines . indentedLines . lines
+
+indentedLines :: [String] -> [String]
+indentedLines [] = []
+indentedLines (first:rest) = first : map (indentationPrefix ++) rest
 
 putGreen :: Options -> String -> IO ()
 putGreen options = putColor options Green

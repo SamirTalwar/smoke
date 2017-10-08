@@ -3,10 +3,10 @@ module Test.Smoke.Discovery
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, liftM2, when)
+import Control.Monad (forM, liftM2)
 import Data.Function (on)
 import Data.List (find, groupBy, sortBy)
-import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Data.Maybe (fromMaybe)
 import System.Directory
 import System.FilePath
 import System.FilePath.Glob
@@ -55,19 +55,10 @@ constructTestFromGroup location commandForLocation group = do
   let stdOut = parts FileTypes.StdOut
   let stdErr = parts FileTypes.StdErr
   status <- fromMaybe (return 0) (readStatusFile <$> part FileTypes.Status)
-  when
-    (isNothing command)
-    (fail ("The test \"" ++ name ++ "\" has no command."))
-  when
-    (isNothing args && isNothing stdIn)
-    (fail ("The test \"" ++ name ++ "\" has no args or STDIN."))
-  when
-    (null stdOut && null stdErr)
-    (fail ("The test \"" ++ name ++ "\" has no STDOUT or STDERR."))
   return
     Test
     { testName = name
-    , testCommand = fromJust command
+    , testCommand = command
     , testArgs = args
     , testStdIn = stdIn
     , testStdOut = stdOut

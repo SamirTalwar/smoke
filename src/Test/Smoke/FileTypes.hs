@@ -1,7 +1,9 @@
 module Test.Smoke.FileTypes
   ( FileType(..)
-  , glob
-  , globs
+  , directoryGlob
+  , directoryGlobs
+  , fileGlob
+  , fileGlobs
   ) where
 
 import qualified System.FilePath.Glob as Glob
@@ -18,13 +20,24 @@ data FileType
 allFileTypes :: [FileType]
 allFileTypes = [Command, Args, StdIn, StdOut, StdErr, Status]
 
-glob :: FileType -> Glob.Pattern
-glob Command = Glob.compile "*.command"
-glob Args = Glob.compile "*.args"
-glob StdIn = Glob.compile "*.in"
-glob StdOut = Glob.compile "*.out*"
-glob StdErr = Glob.compile "*.err*"
-glob Status = Glob.compile "*.status"
+directoryGlob :: FileType -> Glob.Pattern
+directoryGlob Command = Glob.compile "*.command"
+directoryGlob Args = Glob.compile "*.args"
+directoryGlob StdIn = Glob.compile "*.in"
+directoryGlob StdOut = Glob.compile "*.out*"
+directoryGlob StdErr = Glob.compile "*.err*"
+directoryGlob Status = Glob.compile "*.status"
 
-globs :: [(FileType, Glob.Pattern)]
-globs = zip allFileTypes $ map glob allFileTypes
+directoryGlobs :: [(FileType, Glob.Pattern)]
+directoryGlobs = zip allFileTypes $ map directoryGlob allFileTypes
+
+fileGlob :: FilePath -> FileType -> Glob.Pattern
+fileGlob path Command = Glob.compile (path ++ ".command")
+fileGlob path Args = Glob.compile (path ++ ".args")
+fileGlob path StdIn = Glob.compile (path ++ ".in")
+fileGlob path StdOut = Glob.compile (path ++ ".out*")
+fileGlob path StdErr = Glob.compile (path ++ ".err*")
+fileGlob path Status = Glob.compile (path ++ ".status")
+
+fileGlobs :: FilePath -> [(FileType, Glob.Pattern)]
+fileGlobs path = zip allFileTypes $ map (fileGlob path) allFileTypes

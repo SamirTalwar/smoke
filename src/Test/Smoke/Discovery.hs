@@ -23,23 +23,36 @@ discoverTests options =
 
 discoverTestsInLocation :: Maybe Command -> FilePath -> IO [Test]
 discoverTestsInLocation commandFromOptions location = do
+  isDirectory <- doesDirectoryExist location
+  let directory =
+        if isDirectory
+          then location
+          else takeDirectory location
+  let globs =
+        if isDirectory
+          then FileTypes.directoryGlobs
+          else FileTypes.fileGlobs (takeFileName location)
+  discoverTestsByGlob commandFromOptions directory globs
+
+discoverTestsByGlob ::
+     Maybe Command -> FilePath -> [(FileType, Pattern)] -> IO [Test]
+discoverTestsByGlob commandFromOptions directory globs = do
   command <- findCommand
   files <- allFiles
   let grouped = groupBy ((==) `on` (dropExtension . snd)) files
-  forM grouped (constructTestFromGroup location command)
+  forM grouped (constructTestFromGroup directory command)
   where
     findCommand =
       return commandFromOptions <<|>>
-      readCommandFileIfExists (location </> "command") <<|>>
-      readCommandFileIfExists (takeDirectory location </> "command")
+      readCommandFileIfExists (directory </> "command")
     allFiles =
       sortBy (compare `on` snd) .
       concat .
       zipWith
         (\fileTypeGlob paths -> zip (repeat fileTypeGlob) paths)
-        (map fst FileTypes.globs) .
+        (map fst globs) .
       fst <$>
-      globDir (map snd FileTypes.globs) location
+      globDir (map snd globs) directory
 
 constructTestFromGroup ::
      FilePath -> Maybe Command -> [(FileType, FilePath)] -> IO Test

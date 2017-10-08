@@ -26,7 +26,7 @@ discoverTestsInLocation commandFromOptions location = do
   command <- findCommand
   files <- allFiles
   let grouped = groupBy ((==) `on` (dropExtension . snd)) files
-  forM grouped (constructTestFromGroup command)
+  forM grouped (constructTestFromGroup location command)
   where
     findCommand =
       return commandFromOptions <<|>>
@@ -41,11 +41,12 @@ discoverTestsInLocation commandFromOptions location = do
       fst <$>
       globDir (map snd FileTypes.globs) location
 
-constructTestFromGroup :: Maybe Command -> [(FileType, FilePath)] -> IO Test
-constructTestFromGroup commandForLocation group = do
+constructTestFromGroup ::
+     FilePath -> Maybe Command -> [(FileType, FilePath)] -> IO Test
+constructTestFromGroup location commandForLocation group = do
   let part fileType = snd <$> find ((== fileType) . fst) group
   let parts fileType = snd <$> filter ((== fileType) . fst) group
-  let name = dropExtension (snd (head group))
+  let name = makeRelative location $ dropExtension (snd (head group))
   command <-
     sequence (readCommandFile <$> part FileTypes.Command) <<|>>
     return commandForLocation

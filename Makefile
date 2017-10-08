@@ -13,6 +13,8 @@ else
   endif
 endif
 
+CONF = Setup.hs smoke.cabal stack.yaml
+SRC = $(shell find app src -name '*.hs')
 BIN := out/build/smoke-exe
 
 ifdef CI
@@ -27,7 +29,7 @@ build: $(BIN) out/smoke-$(OS)
 out/smoke-$(OS):
 	cp $(BIN) out/smoke-$(OS)
 
-$(BIN):
+$(BIN): $(CONF) $(SRC)
 	$(STACK) build
 	$(STACK) install --local-bin-path=out/build
 

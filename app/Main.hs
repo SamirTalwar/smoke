@@ -77,7 +77,8 @@ printResult options (TestError test NonExecutableCommand) = do
     unwords (fromJust (testCommand test)) ++ "\" is not executable."
 printResult options (TestError test (CouldNotExecuteCommand e)) = do
   putStrLn (testName test)
-  putRedLn options $ unlines $
+  putRedLn options $
+    unlines $
     indentedAllLines
       messageIndentation
       [ "The application \"" ++

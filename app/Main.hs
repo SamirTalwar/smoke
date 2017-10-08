@@ -86,10 +86,13 @@ putRedLn :: Options -> String -> IO ()
 putRedLn options = putColorLn options Red
 
 putColor :: Options -> Color -> String -> IO ()
-putColor options color string = do
-  when (optionsColor options) $ setSGR [SetColor Foreground Dull color]
-  putStr string
-  when (optionsColor options) $ setSGR [Reset]
+putColor options color string =
+  if optionsColor options && '\ESC' `notElem` string
+    then do
+      setSGR [SetColor Foreground Dull color]
+      putStr string
+      setSGR [Reset]
+    else putStr string
 
 putColorLn :: Options -> Color -> String -> IO ()
 putColorLn options color string = do

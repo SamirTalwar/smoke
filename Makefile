@@ -1,10 +1,33 @@
+ifeq ($(OS),Windows_NT)
+  OS := windows
+else
+  UNAME_S := $(shell uname -s)
+  ifeq ($(UNAME_S),Linux)
+    OS := linux
+  endif
+  ifeq ($(UNAME_S),Darwin)
+    OS := macos
+  endif
+  ifeq ($(OS),)
+    $(error "Could not detect the OS.")
+  endif
+endif
+
+BIN := out/build/smoke-exe
+
 .PHONY: build
-build:
+build: $(BIN) out/smoke-$(OS)
+
+out/smoke-$(OS):
+	cp $(BIN) out/smoke-$(OS)
+
+$(BIN):
 	stack build
+	stack install --local-bin-path=out/build
 
 .PHONY: test
 test: build
-	./bin/smoke --command=$(shell stack exec -- which smoke-exe) test
+	./bin/smoke --command=$(BIN) test
 
 .PHONY: lint
 lint: ~/.local/bin/hlint

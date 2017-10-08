@@ -31,23 +31,23 @@ printResult options (TestFailure test actualStatus actualStdOut actualStdErr std
     putRedLn options (show expectedStatus)
   forM_ stdIn $ \input -> do
     putRed options "  input:            "
-    putRedLn options input
+    putRedLn options (indented input)
   when (actualStdOut `notElem` expectedStdOuts) $ do
     putRed options "  actual output:    "
-    putRedLn options actualStdOut
+    putRedLn options (indented actualStdOut)
     putRed options "  expected output:  "
-    putRedLn options (head expectedStdOuts)
+    putRedLn options (indented (head expectedStdOuts))
     forM_ (tail expectedStdOuts) $ \output -> do
       putRed options "               or:  "
-      putRedLn options output
+      putRedLn options (indented output)
   when (actualStdErr `notElem` expectedStdErrs) $ do
     putRed options "  actual error:     "
-    putRedLn options actualStdErr
+    putRedLn options (indented actualStdErr)
     putRed options "  expected error:   "
-    putRedLn options (head expectedStdErrs)
+    putRedLn options (indented (head expectedStdErrs))
     forM_ (tail expectedStdErrs) $ \output -> do
       putRed options "              or:   "
-      putRedLn options output
+      putRedLn options (indented output)
 printResult options (TestError test CouldNotFindExecutable) = do
   putStrLn (testName test)
   putRedLn options "  could not find the executable"
@@ -64,6 +64,14 @@ printSummary options results = do
       putRedLn options (show testCount ++ " tests, " ++ show n ++ " failures")
   where
     failures = filter isFailure results
+
+indentationPrefix :: String
+indentationPrefix = replicate 20 ' '
+
+indented :: String -> String
+indented string = unlines $ first : map (indentationPrefix ++) rest
+  where
+    (first:rest) = lines string
 
 putGreen :: Options -> String -> IO ()
 putGreen options = putColor options Green

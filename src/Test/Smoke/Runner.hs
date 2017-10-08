@@ -4,7 +4,7 @@ module Test.Smoke.Runner
 
 import Control.Monad (forM)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
-import System.Directory (findExecutable)
+import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
 import Test.Smoke.Types
@@ -18,7 +18,12 @@ runTest test = do
   let expectedStatus = testStatus test
   expectedStdOuts <- ifEmpty "" <$> mapM readFile (testStdOut test)
   expectedStdErrs <- ifEmpty "" <$> mapM readFile (testStdErr test)
-  executable <- findExecutable (head (testCommand test)) -- TODO: Test this on Windows.
+  let executableName = head (testCommand test)
+  executableExists <- doesFileExist executableName
+  executable <-
+    if executableExists
+      then return (Just executableName)
+      else findExecutable executableName -- TODO: Test this on Windows.
   if isNothing executable
     then return $ TestError test CouldNotFindExecutable
     else do

@@ -8,18 +8,17 @@
 
 ## Installation
 
-Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke], [Smoke Windows launcher][bin/smoke.bat] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
+Currently, Smoke is in alpha, and as such is not packaged. You will need to build it yourself.
 
-The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
-
-You can also run Smoke using [Docker][] without any further installation. See below for more information.
+1. Install [Stack][], which we will use to compile the Haskell code.
+2. Clone the repository and `cd` into the directory.
+3. Run `stack setup` to download the correct version of GHC.
+4. Run `stack install --local-bin-path=out/build` to build the application.
+5. Copy the application file from `out/build/smoke-exe` to wherever you need it to go.
 
 Smoke is distributed under [the MIT license][the MIT license].
 
-[bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
-[bin/smoke.bat]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke.bat
-[LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
-[Docker]: https://www.docker.com/
+[Stack]: https://docs.haskellstack.org/en/stable/README/
 [the MIT license]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases
@@ -117,17 +116,16 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-We dog-food. You can run all of Smoke's smoke tests using:
+We dog-food. You can build Smoke and run all of its smoke tests using:
 
-    rake test
+    make build
+    make test
 
 On Windows, run this instead:
 
-    bin\smoke --command=bin\smoke test
+    stack build --local-bin-path=.\out\build
+    .\out\build\smoke --command=.\out\build\smoke test
 
-Smoke development follows a few rules:
-
-  * The *smoke* binary is a single file without any dependencies. No gems are used.
-  * Smoke should work on Linux and Mac OS without any issue. Most features should also work on Windows, and we hope to get it to feature parity soon.
+Smoke should work on Linux and Mac OS without any issue. Almost all features should also work on Windows, with the exception of allowing shell scripts as commands.
 
 [Contributor Covenant]: http://contributor-covenant.org/version/1/4/

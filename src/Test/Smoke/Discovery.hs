@@ -12,7 +12,7 @@ import System.FilePath
 import System.FilePath.Glob
 import Test.Smoke.FileTypes (FileType)
 import qualified Test.Smoke.FileTypes as FileTypes
-import Test.Smoke.Types (Command, Options(..), Test(..), Tests)
+import Test.Smoke.Types
 
 discoverTests :: Options -> IO Tests
 discoverTests options =

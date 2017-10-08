@@ -2,8 +2,11 @@ module Test.Smoke
   ( Args
   , Command
   , Options(..)
-  , Tests
   , Test(..)
+  , Tests
+  , TestResult(..)
+  , TestResults
+  , TestErrorMessage(..)
   , discoverTests
   , runTests
   ) where

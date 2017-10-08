@@ -25,6 +25,7 @@ library
                      , directory
                      , filepath
                      , Glob
+                     , process
   ghc-options:         -Wall -Werror
 
 executable smoke-exe

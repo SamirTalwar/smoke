@@ -2,13 +2,19 @@ module Test.Smoke.Types
   ( Args
   , Command
   , Options(..)
-  , Tests
+  , Status
   , Test(..)
+  , Tests
+  , TestResult(..)
+  , TestResults
+  , TestErrorMessage(..)
   ) where
 
 type Command = [String]
 
 type Args = [String]
+
+type Status = Int
 
 data Options = Options
   { optionsCommand :: Maybe Command
@@ -25,5 +31,21 @@ data Test = Test
   , testStdIn :: Maybe FilePath
   , testStdOut :: [FilePath]
   , testStdErr :: [FilePath]
-  , testStatus :: Int
+  , testStatus :: Status
   } deriving (Eq, Show)
+
+type TestResults = [TestResult]
+
+data TestResult
+  = TestSuccess { testSuccessTest :: Test }
+  | TestFailure { testFailureTest :: Test
+                , testFailureStatus :: Status
+                , testFailureStdOut :: String
+                , testFailureStdErr :: String }
+  | TestError { testErrorTest :: Test
+              , testErrorMessage :: TestErrorMessage }
+  deriving (Eq, Show)
+
+data TestErrorMessage =
+  CouldNotFindExecutable
+  deriving (Eq, Show)

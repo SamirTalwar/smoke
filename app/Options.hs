@@ -1,20 +1,12 @@
 module Options
-  ( Options(..)
-  , parseOptions
+  ( parseOptions
   ) where
 
 import Data.Semigroup ((<>))
 import Options.Applicative
 import System.Posix.IO (stdOutput)
 import System.Posix.Terminal (queryTerminal)
-
-type Command = [String]
-
-data Options = Options
-  { command :: Maybe Command
-  , color :: Bool
-  , testLocations :: [FilePath]
-  } deriving (Eq, Show)
+import Test.Smoke (Command, Options(Options))
 
 parseOptions :: IO Options
 parseOptions = do

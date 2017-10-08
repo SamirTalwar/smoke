@@ -6,5 +6,5 @@ import Test.Smoke
 main :: IO ()
 main = do
   options <- parseOptions
-  print options
-  runSmokeTests undefined undefined
+  tests <- discoverTests options
+  runTests tests

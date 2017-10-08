@@ -1,3 +1,6 @@
+os:
+  - linux
+  - osx
 sudo: false
 cache:
   directories:
@@ -8,7 +11,12 @@ apt:
 before_install:
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - |
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+      travis_retry curl -sSL 'https://www.stackage.org/stack/osx-x86_64' | tar xz --strip-components=1 -C ~/.local/bin '*/stack'
+    else
+      travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    fi
   - stack setup
   - make build-dependencies
 install:

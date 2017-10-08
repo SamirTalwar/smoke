@@ -14,7 +14,8 @@ runTests tests = forM tests runTest
 
 runTest :: Test -> IO TestResult
 runTest test = do
-  stdIn <- fromMaybe (return "") (readFile <$> testStdIn test)
+  stdIn <- sequence (readFile <$> testStdIn test)
+  let expectedStatus = testStatus test
   expectedStdOuts <- ifEmpty "" <$> mapM readFile (testStdOut test)
   expectedStdErrs <- ifEmpty "" <$> mapM readFile (testStdErr test)
   executable <- findExecutable (head (testCommand test)) -- TODO: Test this on Windows.
@@ -23,13 +24,23 @@ runTest test = do
     else do
       let args = tail (testCommand test) ++ fromMaybe [] (testArgs test)
       (actualExitCode, actualStdOut, actualStdErr) <-
-        readProcessWithExitCode (fromJust executable) args stdIn
+        readProcessWithExitCode (fromJust executable) args (fromMaybe "" stdIn)
       let actualStatus = convertExitCode actualExitCode
-      if testStatus test == actualStatus &&
+      if actualStatus == expectedStatus &&
          actualStdOut `elem` expectedStdOuts &&
          actualStdErr `elem` expectedStdErrs
         then return $ TestSuccess test
-        else return $ TestFailure test actualStatus actualStdOut actualStdErr
+        else return
+               TestFailure
+               { testFailureTest = test
+               , testFailureActualStatus = actualStatus
+               , testFailureActualStdOut = actualStdOut
+               , testFailureActualStdErr = actualStdErr
+               , testFailureStdIn = stdIn
+               , testFailureExpectedStatus = expectedStatus
+               , testFailureExpectedStdOuts = expectedStdOuts
+               , testFailureExpectedStdErrs = expectedStdErrs
+               }
 
 ifEmpty :: a -> [a] -> [a]
 ifEmpty value [] = [value]

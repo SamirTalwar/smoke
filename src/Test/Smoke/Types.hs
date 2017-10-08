@@ -39,9 +39,13 @@ type TestResults = [TestResult]
 data TestResult
   = TestSuccess { testSuccessTest :: Test }
   | TestFailure { testFailureTest :: Test
-                , testFailureStatus :: Status
-                , testFailureStdOut :: String
-                , testFailureStdErr :: String }
+                , testFailureActualStatus :: Status
+                , testFailureActualStdOut :: String
+                , testFailureActualStdErr :: String
+                , testFailureStdIn :: Maybe String
+                , testFailureExpectedStatus :: Status
+                , testFailureExpectedStdOuts :: [String]
+                , testFailureExpectedStdErrs :: [String] }
   | TestError { testErrorTest :: Test
               , testErrorMessage :: TestErrorMessage }
   deriving (Eq, Show)

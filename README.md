@@ -14,12 +14,12 @@ Currently, Smoke is in alpha, and as such is not packaged. You will need to buil
 2. Clone the repository and `cd` into the directory.
 3. Run `stack setup` to download the correct version of GHC.
 4. Run `stack install --local-bin-path=out/build` to build the application.
-5. Copy the application file from `out/build/smoke-exe` to wherever you need it to go.
+5. Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
 
-Smoke is distributed under [the MIT license][the MIT license].
+Smoke is distributed under [the MIT license][MIT License].
 
 [Stack]: https://docs.haskellstack.org/en/stable/README/
-[the MIT license]: http://samirtalwar.mit-license.org/
+[MIT License]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases
 
@@ -86,11 +86,13 @@ Tests can also be passed on an individual basis:
 
     smoke test/addition test/postfix-notation-fails
 
-To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` switch:
+To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
 
     smoke --command='ruby calculator.rb' test
 
-Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
+Bear in mind that Smoke simply splits the argument to the `--command` option by whitespace, so quoting, escaping, etc. will not work. For anything complicated, use a file instead.
+
+Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails, or if the invocation of Smoke itself was not understood (for example, if no test locations are provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
 
@@ -102,9 +104,9 @@ We had a problem at work. It was a pretty nice problem to have. We were getting 
 
 We quickly found we had another problem: it was taking a lot of developer time to decide whether we should bring in the furballs for real-life interviews. So one night, while more than a little tipsy, I wrote *Smoke*.
 
-We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby&hellip; I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running application tests. This was a stupid idea. Eventually I decided the only thing every language has in common is the command-line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
+We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby… I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running tests for applications in any and all languages. This was a stupid idea. Eventually I decided the only thing every language has in common is the command line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
 
-I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
+I have to stress that this is not a replacement for looking over people's code. I've invited people for further interview even when failed every one of my test cases, because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
 
 ## Contributing
 

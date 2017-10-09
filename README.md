@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke)
+[![Travis Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/9m04ffr3h65cviht?svg=true)](https://ci.appveyor.com/project/SamirTalwar/smoke)
 
 # Smoke
 

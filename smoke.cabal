@@ -1,0 +1,47 @@
+name:                smoke
+version:             2.0.0-alpha
+synopsis:            An integration test framework for console applications.
+description:         Please see README.md
+homepage:            https://github.com/SamirTalwar/smoke#readme
+license:             MIT
+license-file:        LICENSE
+author:              Samir Talwar
+maintainer:          samir@noodlesandwich.com
+copyright:           Samir Talwar
+category:            Testing
+build-type:          Simple
+cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/SamirTalwar/smoke
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Test.Smoke
+  other-modules:       Test.Smoke.Discovery Test.Smoke.FileTypes Test.Smoke.Runner Test.Smoke.Types
+  default-language:    Haskell2010
+  build-depends:       base >= 4.9.1 && < 5
+                     , directory
+                     , filepath
+                     , Glob
+                     , process
+                     , transformers
+  ghc-options:         -Wall -Werror
+
+executable smoke-exe
+  hs-source-dirs:      app
+  if os(windows)
+    hs-source-dirs:    app/windows
+  else
+    hs-source-dirs:    app/unix
+  main-is:             Main.hs
+  other-modules:       Options Shell
+  default-language:    Haskell2010
+  build-depends:       base
+                     , smoke
+                     , ansi-terminal
+                     , optparse-applicative
+  if !os(windows)
+    build-depends:     unix
+  ghc-options:         -Wall -Werror -threaded -rtsopts -with-rtsopts=-N

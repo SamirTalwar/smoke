@@ -1,7 +1,7 @@
 color
-  input:            [0mthis is a [32mgreen[0m word[31m
-  actual output:    [0mguvf vf n [32mterra[0m jbeq[31m
-  expected output:  [0muijt jt b [32mhsffo[0m xpse[31m
+  input:            this is a [32mgreen[0m word
+  actual output:    guvf vf n [32mterra[0m jbeq
+  expected output:  uijt jt b [32mhsffo[0m xpse
 lines
   input:            one
                     two

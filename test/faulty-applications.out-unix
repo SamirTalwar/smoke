@@ -1,0 +1,12 @@
+no-command-file
+  There is no command file.
+no-inputs
+  There are no args or STDIN files.
+no-outputs
+  There are no STDOUT or STDERR files.
+no-such-application
+  The application "fixtures/no_such_application" does not exist.
+non-executable-application
+  The application "fixtures/non_executable_application" is not executable.
+
+5 tests, 5 failures

@@ -1,4 +1,0 @@
-Usage: smoke [options] TEST-DIRECTORY
-        --command COMMAND            Specify or override the command to run
-    -c, --[no-]color                 Color output
-    -h, --help                       Help me

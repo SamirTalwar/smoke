@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke)
+[![Travis Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/9m04ffr3h65cviht?svg=true)](https://ci.appveyor.com/project/SamirTalwar/smoke)
 
 # Smoke
 
@@ -8,19 +8,18 @@
 
 ## Installation
 
-Currently, Smoke is in alpha, and as such is not packaged. You can use it with your own projects by downloading the [*smoke* binary][bin/smoke], [Smoke Windows launcher][bin/smoke.bat] and the [LICENSE][] file and committing them with your code, or adding this repository as a Git submodule and committing the reference.
+Currently, Smoke is in alpha, and as such is not packaged. You will need to build it yourself.
 
-The *smoke* binary requires Ruby 1.9.3 or greater. It does not require any additional gems.
+1. Install [Stack][], which we will use to compile the Haskell code.
+2. Clone the repository and `cd` into the directory.
+3. Run `stack setup` to download the correct version of GHC.
+4. Run `stack install --local-bin-path=out/build` to build the application.
+5. Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
 
-You can also run Smoke using [Docker][] without any further installation. See below for more information.
+Smoke is distributed under [the MIT license][MIT License].
 
-Smoke is distributed under [the MIT license][the MIT license].
-
-[bin/smoke]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke
-[bin/smoke.bat]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/bin/smoke.bat
-[LICENSE]: https://raw.githubusercontent.com/SamirTalwar/Smoke/master/LICENSE
-[Docker]: https://www.docker.com/
-[the MIT license]: http://samirtalwar.mit-license.org/
+[Stack]: https://docs.haskellstack.org/en/stable/README/
+[MIT License]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases
 
@@ -87,17 +86,15 @@ Tests can also be passed on an individual basis:
 
     smoke test/addition test/postfix-notation-fails
 
-To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` switch:
+To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
 
     smoke --command='ruby calculator.rb' test
 
-Smoke will exit with a code of `0` if all tests succeed, `1` if any test fails, or `2` if the invocation of Smoke itself was not understood (for example, if only one argument is provided).
+Bear in mind that Smoke simply splits the argument to the `--command` option by whitespace, so quoting, escaping, etc. will not work. For anything complicated, use a file instead.
+
+Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails, or if the invocation of Smoke itself was not understood (for example, if no test locations are provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
-
-In order to run Smoke with Docker instead, you would change the command as follows:
-
-    docker run --rm -it -v $PWD:/var/app samirtalwar/smoke test
 
 Enjoy. Any feedback is welcome.
 
@@ -107,9 +104,9 @@ We had a problem at work. It was a pretty nice problem to have. We were getting 
 
 We quickly found we had another problem: it was taking a lot of developer time to decide whether we should bring in the furballs for real-life interviews. So one night, while more than a little tipsy, I wrote *Smoke*.
 
-We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby&hellip; I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running application tests. This was a stupid idea. Eventually I decided the only thing every language has in common is the command-line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
+We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby… I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running tests for applications in any and all languages. This was a stupid idea. Eventually I decided the only thing every language has in common is the command line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
 
-I have to stress that this is not a replacement for looking over people's code. I've put people through that failed every one of my test cases because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
+I have to stress that this is not a replacement for looking over people's code. I've invited people for further interview even when failed every one of my test cases, because they understood the problem and mostly solved it. Similarly, someone that passes every case but writes Python like people wrote C in the 80s makes me very sad, despite all the green output from Smoke.
 
 ## Contributing
 
@@ -117,17 +114,26 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-We dog-food. You can run all of Smoke's smoke tests using:
+You will need to set up Stack as above, and install a few dependencies:
 
-    rake test
+    stack install ghc-mod hindent hlint
 
-On Windows, run this instead:
+We dog-food. Smoke is tested using itself.
 
-    bin\smoke --command=bin\smoke test
+Before committing, these four commands should be run, and any failures should be fixed:
 
-Smoke development follows a few rules:
+    make build     # Builds the application using Stack.
+    make test      # Tests the application using itself, with the tests in the "test" directory.
+    make lint      # Lints the code using HLint.
+    make reformat  # Reformats the code using hindent.
 
-  * The *smoke* binary is a single file without any dependencies. No gems are used.
-  * Smoke should work on Linux and Mac OS without any issue. Most features should also work on Windows, and we hope to get it to feature parity soon.
+On Windows, Makefiles don't work very well, so run the commands directly:
+
+    stack install --local-bin-path=out\build
+    .\out\build\smoke-exe --command=.\out\build\smoke-exe test
+    stack exec -- hlint .
+    stack exec -- hindent Setup.hs $(find app src -name '*.hs')
+
+Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 
 [Contributor Covenant]: http://contributor-covenant.org/version/1/4/

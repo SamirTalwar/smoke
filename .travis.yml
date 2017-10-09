@@ -1,7 +1,25 @@
+os:
+  - linux
+  - osx
 sudo: false
-language: ruby
-rvm:
-  - '2.3.1'
-  - '2.2'
-  - '2.1'
-  - '2.0'
+cache:
+  directories:
+    - $HOME/.stack
+apt:
+  packages:
+    - ruby
+before_install:
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - |
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+      travis_retry curl -sSL 'https://www.stackage.org/stack/osx-x86_64' | tar xz --strip-components=1 -C ~/.local/bin '*/stack'
+    else
+      travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    fi
+  - stack setup
+  - make build-dependencies
+install:
+  - stack --no-terminal install --only-dependencies
+script:
+  - make check

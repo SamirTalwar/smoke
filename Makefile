@@ -44,8 +44,8 @@ lint: ~/.local/bin/hlint
 .PHONY: check
 check: test lint
 
-.PHONY: reindent
-reindent:
+.PHONY: reformat
+reformat:
 	$(STACK) exec -- hindent Setup.hs $(SRC)
 
 .PHONY: dependencies

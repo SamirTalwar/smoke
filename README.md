@@ -114,15 +114,25 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-We dog-food. You can build Smoke and run all of its smoke tests using:
+You will need to set up Stack as above, and install a few dependencies:
 
-    make build
-    make test
+    stack install ghc-mod hindent hlint
 
-On Windows, run this instead:
+We dog-food. Smoke is tested using itself.
+
+Before committing, these four commands should be run, and any failures should be fixed:
+
+    make build     # Builds the application using Stack.
+    make test      # Tests the application using itself, with the tests in the "test" directory.
+    make lint      # Lints the code using HLint.
+    make reformat  # Reformats the code using hindent.
+
+On Windows, Makefiles don't work very well, so run the commands directly:
 
     stack install --local-bin-path=out\build
     .\out\build\smoke-exe --command=.\out\build\smoke-exe test
+    stack exec -- hlint .
+    stack exec -- hindent Setup.hs $(find app src -name '*.hs')
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

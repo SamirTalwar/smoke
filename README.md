@@ -123,9 +123,9 @@ We dog-food. You can build Smoke and run all of its smoke tests using:
 
 On Windows, run this instead:
 
-    stack build --local-bin-path=.\out\build
-    .\out\build\smoke --command=.\out\build\smoke test
+    stack install --local-bin-path=out\build
+    .\out\build\smoke-exe --command=.\out\build\smoke-exe test
 
-Smoke should work on Linux and Mac OS without any issue. Almost all features should also work on Windows, with the exception of allowing shell scripts as commands.
+Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 
 [Contributor Covenant]: http://contributor-covenant.org/version/1/4/

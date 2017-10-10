@@ -2,9 +2,18 @@
 
 # Smoke
 
-*An integration test framework for console applications.*
+*An integration test framework for practically anything.*
 
 ![Smoke output](https://s3-eu-west-1.amazonaws.com/samirtalwar-smoke/screenshot.png)
+
+Smoke is designed to test anything that can be wrapped with a command-line interface. In practice, this amounts to almost any application or large piece of code. Whatever you're working on, no matter how big or complicated, you can usually wrap a CLI around it with minimum effort.
+
+Smoke works especially well for testing large applications, especially after the fact. It allows you to create regression tests, [golden master tests][Testing legacy code with Golden Master], and other things that make refactoring a legacy application much easier.
+
+It's not a replacement for other, smaller tests. We recommend writing unit tests ([perhaps even first][Test-driven development]), especially for new code.
+
+[Testing legacy code with Golden Master]: https://craftedsw.blogspot.co.uk/2012/11/testing-legacy-code-with-golden-master.html
+[Test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
 
 ## Installation
 

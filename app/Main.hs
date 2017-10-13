@@ -1,83 +1,88 @@
 module Main where
 
 import Control.Monad (forM_, when)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import Data.Maybe (fromJust)
 import Options
 import System.Console.ANSI
 import System.Exit
 import Test.Smoke
 
+type Output a = ReaderT Options IO a
+
 main :: IO ()
 main = do
   options <- parseOptions
   tests <- discoverTests options
   results <- runTests tests
-  printResults options results
-  printSummary options results
+  runReaderT
+    (do printResults results
+        printSummary results)
+    options
   exitAccordingTo results
 
-printResults :: Options -> TestResults -> IO ()
-printResults options = mapM_ (printResult options)
+printResults :: TestResults -> Output ()
+printResults = mapM_ printResult
 
-printResult :: Options -> TestResult -> IO ()
-printResult options (TestSuccess test) = do
-  putStrLn (testName test)
-  putGreenLn options "  succeeded"
-printResult options (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
-  putStrLn (testName test)
+printResult :: TestResult -> Output ()
+printResult (TestSuccess test) = do
+  putWhiteLn (testName test)
+  putGreenLn "  succeeded"
+printResult (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
+  putWhiteLn (testName test)
   forM_ (testArgs test) $ \args -> do
-    putRed options "  args:             "
-    putRedLn options (unlines $ indentedLines outputIndentation args)
+    putRed "  args:             "
+    putRedLn (unlines $ indentedLines outputIndentation args)
   forM_ stdIn $ \input -> do
-    putRed options "  input:            "
-    putRedLn options (indented outputIndentation input)
+    putRed "  input:            "
+    putRedLn (indented outputIndentation input)
   when (actualStatus /= expectedStatus) $ do
-    putRed options "  actual status:    "
-    putRedLn options (show actualStatus)
-    putRed options "  expected status:  "
-    putRedLn options (show expectedStatus)
+    putRed "  actual status:    "
+    putRedLn (show actualStatus)
+    putRed "  expected status:  "
+    putRedLn (show expectedStatus)
   when (actualStdOut `notElem` expectedStdOuts) $ do
-    putRed options "  actual output:    "
-    putRedLn options (indented outputIndentation actualStdOut)
-    putRed options "  expected output:  "
-    putRedLn options (indented outputIndentation (head expectedStdOuts))
+    putRed "  actual output:    "
+    putRedLn (indented outputIndentation actualStdOut)
+    putRed "  expected output:  "
+    putRedLn (indented outputIndentation (head expectedStdOuts))
     forM_ (tail expectedStdOuts) $ \output -> do
-      putRed options "               or:  "
-      putRedLn options (indented outputIndentation output)
+      putRed "               or:  "
+      putRedLn (indented outputIndentation output)
   when (actualStdErr `notElem` expectedStdErrs) $ do
-    putRed options "  actual error:     "
-    putRedLn options (indented outputIndentation actualStdErr)
-    putRed options "  expected error:   "
-    putRedLn options (indented outputIndentation (head expectedStdErrs))
+    putRed "  actual error:     "
+    putRedLn (indented outputIndentation actualStdErr)
+    putRed "  expected error:   "
+    putRedLn (indented outputIndentation (head expectedStdErrs))
     forM_ (tail expectedStdErrs) $ \output -> do
-      putRed options "              or:   "
-      putRedLn options (indented outputIndentation output)
-printResult options (TestError test NoCommandFile) = do
-  putStrLn (testName test)
-  putRedLn options $ indentedAll messageIndentation "There is no command file."
-printResult options (TestError test NoInputFiles) = do
-  putStrLn (testName test)
-  putRedLn options $
-    indentedAll messageIndentation "There are no args or STDIN files."
-printResult options (TestError test NoOutputFiles) = do
-  putStrLn (testName test)
-  putRedLn options $
+      putRed "              or:   "
+      putRedLn (indented outputIndentation output)
+printResult (TestError test NoCommandFile) = do
+  putWhiteLn (testName test)
+  putRedLn $ indentedAll messageIndentation "There is no command file."
+printResult (TestError test NoInputFiles) = do
+  putWhiteLn (testName test)
+  putRedLn $ indentedAll messageIndentation "There are no args or STDIN files."
+printResult (TestError test NoOutputFiles) = do
+  putWhiteLn (testName test)
+  putRedLn $
     indentedAll messageIndentation "There are no STDOUT or STDERR files."
-printResult options (TestError test NonExistentCommand) = do
-  putStrLn (testName test)
-  putRedLn options $
+printResult (TestError test NonExistentCommand) = do
+  putWhiteLn (testName test)
+  putRedLn $
     indentedAll messageIndentation $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" does not exist."
-printResult options (TestError test NonExecutableCommand) = do
-  putStrLn (testName test)
-  putRedLn options $
+printResult (TestError test NonExecutableCommand) = do
+  putWhiteLn (testName test)
+  putRedLn $
     indentedAll messageIndentation $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" is not executable."
-printResult options (TestError test (CouldNotExecuteCommand e)) = do
-  putStrLn (testName test)
-  putRedLn options $
+printResult (TestError test (CouldNotExecuteCommand e)) = do
+  putWhiteLn (testName test)
+  putRedLn $
     unlines $
     indentedAllLines
       messageIndentation
@@ -86,16 +91,15 @@ printResult options (TestError test (CouldNotExecuteCommand e)) = do
       , e
       ]
 
-printSummary :: Options -> TestResults -> IO ()
-printSummary options results = do
-  putStrLn ""
+printSummary :: TestResults -> Output ()
+printSummary results = do
+  putLn
   let testCount = length results
   let failureCount = length failures
   case failureCount of
-    0 -> putGreenLn options (show testCount ++ " tests, 0 failures")
-    1 -> putRedLn options (show testCount ++ " tests, 1 failure")
-    n ->
-      putRedLn options (show testCount ++ " tests, " ++ show n ++ " failures")
+    0 -> putGreenLn (show testCount ++ " tests, 0 failures")
+    1 -> putRedLn (show testCount ++ " tests, 1 failure")
+    n -> putRedLn (show testCount ++ " tests, " ++ show n ++ " failures")
   where
     failures = filter isFailure results
 
@@ -118,34 +122,41 @@ indentedLines n (first:rest) = first : indentedAllLines n rest
 indentedAllLines :: Int -> [String] -> [String]
 indentedAllLines n = map (replicate n ' ' ++)
 
-putGreen :: Options -> String -> IO ()
-putGreen options = putColor options Green
+putLn :: Output ()
+putLn = liftIO $ putStrLn ""
 
-putGreenLn :: Options -> String -> IO ()
-putGreenLn options = putColorLn options Green
+putWhiteLn :: String -> Output ()
+putWhiteLn = liftIO . putStrLn
 
-putRed :: Options -> String -> IO ()
-putRed options = putColor options Red
+putGreen :: String -> Output ()
+putGreen = putColor Green
 
-putRedLn :: Options -> String -> IO ()
-putRedLn options = putColorLn options Red
+putGreenLn :: String -> Output ()
+putGreenLn = putColorLn Green
 
-putColor :: Options -> Color -> String -> IO ()
-putColor options color string =
+putRed :: String -> Output ()
+putRed = putColor Red
+
+putRedLn :: String -> Output ()
+putRedLn = putColorLn Red
+
+putColor :: Color -> String -> Output ()
+putColor color string = do
+  options <- ask
   if optionsColor options && '\ESC' `notElem` string
     then do
-      setSGR [SetColor Foreground Dull color]
-      putStr string
-      setSGR [Reset]
-    else putStr string
+      liftIO $ setSGR [SetColor Foreground Dull color]
+      liftIO $ putStr string
+      liftIO $ setSGR [Reset]
+    else liftIO $ putStr string
 
-putColorLn :: Options -> Color -> String -> IO ()
-putColorLn options color string
-  | string == "" = putStrLn ""
-  | last string == '\n' = putColorLn options color (init string)
+putColorLn :: Color -> String -> Output ()
+putColorLn color string
+  | string == "" = putLn
+  | last string == '\n' = putColorLn color (init string)
   | otherwise = do
-    putColor options color string
-    putStrLn ""
+    putColor color string
+    putLn
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

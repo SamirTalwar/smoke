@@ -42,6 +42,7 @@ executable smoke-exe
                      , smoke
                      , ansi-terminal
                      , optparse-applicative
+                     , transformers
   if !os(windows)
     build-depends:     unix
   ghc-options:         -Wall -Werror -threaded -rtsopts -with-rtsopts=-N

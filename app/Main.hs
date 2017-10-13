@@ -28,47 +28,42 @@ printResults = mapM_ printResult
 
 printResult :: TestResult -> Output ()
 printResult (TestSuccess test) = do
-  putWhiteLn (testName test)
+  printTitle (testName test)
   putGreenLn "  succeeded"
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
-  putWhiteLn (testName test)
+  printTitle (testName test)
   printFailingInput "args" (unlines <$> testArgs test)
   printFailingInput "input" stdIn
   printFailingOutput "status" [show expectedStatus] (show actualStatus)
   printFailingOutput "output" expectedStdOuts actualStdOut
   printFailingOutput "error" expectedStdErrs actualStdErr
 printResult (TestError test NoCommandFile) = do
-  putWhiteLn (testName test)
-  putRedLn $ indentedAll messageIndentation "There is no command file."
+  printTitle (testName test)
+  printError "There is no command file."
 printResult (TestError test NoInputFiles) = do
-  putWhiteLn (testName test)
-  putRedLn $ indentedAll messageIndentation "There are no args or STDIN files."
+  printTitle (testName test)
+  printError "There are no args or STDIN files."
 printResult (TestError test NoOutputFiles) = do
-  putWhiteLn (testName test)
-  putRedLn $
-    indentedAll messageIndentation "There are no STDOUT or STDERR files."
+  printTitle (testName test)
+  printError "There are no STDOUT or STDERR files."
 printResult (TestError test NonExistentCommand) = do
-  putWhiteLn (testName test)
-  putRedLn $
-    indentedAll messageIndentation $
+  printTitle (testName test)
+  printError $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" does not exist."
 printResult (TestError test NonExecutableCommand) = do
-  putWhiteLn (testName test)
-  putRedLn $
-    indentedAll messageIndentation $
+  printTitle (testName test)
+  printError $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" is not executable."
 printResult (TestError test (CouldNotExecuteCommand e)) = do
-  putWhiteLn (testName test)
-  putRedLn $
-    unlines $
-    indentedAllLines
-      messageIndentation
-      [ "The application \"" ++
-        unwords (fromJust (testCommand test)) ++ "\" could not be executed."
-      , e
-      ]
+  printTitle (testName test)
+  printError $
+    "The application \"" ++
+    unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
+
+printTitle :: String -> Output ()
+printTitle = liftIO . putStrLn
 
 printFailingInput :: Foldable f => String -> f String -> Output ()
 printFailingInput name value =
@@ -86,6 +81,9 @@ printFailingOutput name expectedValues actualValue =
     forM_ (tail expectedValues) $ \output -> do
       putRed "               or:  "
       putRedLn (indented outputIndentation output)
+
+printError :: String -> Output ()
+printError = putRedLn . indentedAll messageIndentation
 
 printSummary :: TestResults -> Output ()
 printSummary results = do
@@ -120,9 +118,6 @@ indentedAllLines n = map (replicate n ' ' ++)
 
 putLn :: Output ()
 putLn = liftIO $ putStrLn ""
-
-putWhiteLn :: String -> Output ()
-putWhiteLn = liftIO . putStrLn
 
 putGreen :: String -> Output ()
 putGreen = putColor Green

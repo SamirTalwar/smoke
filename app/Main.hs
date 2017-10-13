@@ -23,7 +23,7 @@ printResult :: Options -> TestResult -> IO ()
 printResult options (TestSuccess test) = do
   putStrLn (testName test)
   putGreenLn options "  succeeded"
-printResult options (TestFailure test actualStatus actualStdOut actualStdErr stdIn expectedStatus expectedStdOuts expectedStdErrs) = do
+printResult options (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
   putStrLn (testName test)
   forM_ (testArgs test) $ \args -> do
     putRed options "  args:             "

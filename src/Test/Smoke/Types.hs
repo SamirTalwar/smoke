@@ -1,14 +1,4 @@
-module Test.Smoke.Types
-  ( Args
-  , Command
-  , Options(..)
-  , Status
-  , Test(..)
-  , Tests
-  , TestResult(..)
-  , TestResults
-  , TestErrorMessage(..)
-  ) where
+module Test.Smoke.Types where
 
 type Command = [String]
 
@@ -34,20 +24,34 @@ data Test = Test
   , testStatus :: Status
   } deriving (Eq, Show)
 
+data TestExecutionPlan =
+  TestExecutionPlan Test
+                    String
+                    Args
+                    (Maybe String)
+  deriving (Eq, Show)
+
 type TestResults = [TestResult]
 
 data TestResult
-  = TestSuccess { testSuccessTest :: Test }
-  | TestFailure { testFailureTest :: Test
-                , testFailureActualStatus :: Status
-                , testFailureActualStdOut :: String
-                , testFailureActualStdErr :: String
-                , testFailureStdIn :: Maybe String
-                , testFailureExpectedStatus :: Status
-                , testFailureExpectedStdOuts :: [String]
-                , testFailureExpectedStdErrs :: [String] }
-  | TestError { testErrorTest :: Test
-              , testErrorMessage :: TestErrorMessage }
+  = TestSuccess Test
+  | TestFailure TestExecutionPlan
+                ExpectedOutput
+                ActualOutput
+  | TestError Test
+              TestErrorMessage
+  deriving (Eq, Show)
+
+data ExpectedOutput =
+  ExpectedOutput Int
+                 [String]
+                 [String]
+  deriving (Eq, Show)
+
+data ActualOutput =
+  ActualOutput Int
+               String
+               String
   deriving (Eq, Show)
 
 data TestErrorMessage

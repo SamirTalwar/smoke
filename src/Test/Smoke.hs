@@ -4,8 +4,11 @@ module Test.Smoke
   , Options(..)
   , Test(..)
   , Tests
+  , TestExecutionPlan(..)
   , TestResult(..)
   , TestResults
+  , ExpectedOutput(..)
+  , ActualOutput(..)
   , TestErrorMessage(..)
   , discoverTests
   , runTests

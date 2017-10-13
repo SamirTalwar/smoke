@@ -12,19 +12,6 @@ import System.IO.Error (isPermissionError, tryIOError)
 import System.Process (readProcessWithExitCode)
 import Test.Smoke.Types
 
-data TestExecutionPlan =
-  TestExecutionPlan Test
-                    String
-                    Args
-                    (Maybe String)
-  deriving (Eq, Show)
-
-data ExpectedResults =
-  ExpectedResults Int
-                  [String]
-                  [String]
-  deriving (Eq, Show)
-
 type Execution = ExceptT TestErrorMessage IO
 
 type ExecutionOutputs = (ExitCode, String, String)
@@ -38,9 +25,9 @@ runTest test =
   runExceptT
     (do validateTest test
         executionPlan <- readExecutionPlan test
-        expectedResults <- liftIO $ readExpectedResults test
-        actualResults <- executeTest executionPlan
-        return $ processResult executionPlan expectedResults actualResults)
+        expectedOutput <- liftIO $ readExpectedOutputs test
+        actualOutput <- executeTest executionPlan
+        return $ processOutput executionPlan expectedOutput actualOutput)
 
 validateTest :: Test -> Execution ()
 validateTest test = do
@@ -63,12 +50,12 @@ readExecutionPlan test = do
   stdIn <- liftIO $ sequence (readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
-readExpectedResults :: Test -> IO ExpectedResults
-readExpectedResults test = do
+readExpectedOutputs :: Test -> IO ExpectedOutput
+readExpectedOutputs test = do
   let expectedStatus = testStatus test
   expectedStdOuts <- ifEmpty "" <$> mapM readFile (testStdOut test)
   expectedStdErrs <- ifEmpty "" <$> mapM readFile (testStdErr test)
-  return $ ExpectedResults expectedStatus expectedStdOuts expectedStdErrs
+  return $ ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs
 
 executeTest :: TestExecutionPlan -> Execution ExecutionOutputs
 executeTest (TestExecutionPlan _ executable args stdIn) =
@@ -83,27 +70,19 @@ handleExecutionError (Left e) =
     else throwE $ CouldNotExecuteCommand (show e)
 handleExecutionError (Right value) = return value
 
-processResult ::
+processOutput ::
      TestExecutionPlan
-  -> ExpectedResults
+  -> ExpectedOutput
   -> (ExitCode, String, String)
   -> TestResult
-processResult (TestExecutionPlan test _ _ stdIn) (ExpectedResults expectedStatus expectedStdOuts expectedStdErrs) (actualExitCode, actualStdOut, actualStdErr) =
+processOutput executionPlan@(TestExecutionPlan test _ _ _) expectedOutput@(ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (actualExitCode, actualStdOut, actualStdErr) =
   if actualStatus == expectedStatus &&
      actualStdOut `elem` expectedStdOuts && actualStdErr `elem` expectedStdErrs
     then TestSuccess test
-    else TestFailure
-         { testFailureTest = test
-         , testFailureActualStatus = actualStatus
-         , testFailureActualStdOut = actualStdOut
-         , testFailureActualStdErr = actualStdErr
-         , testFailureStdIn = stdIn
-         , testFailureExpectedStatus = expectedStatus
-         , testFailureExpectedStdOuts = expectedStdOuts
-         , testFailureExpectedStdErrs = expectedStdErrs
-         }
+    else TestFailure executionPlan expectedOutput actualOutput
   where
     actualStatus = convertExitCode actualExitCode
+    actualOutput = ActualOutput actualStatus actualStdOut actualStdErr
 
 handleError :: (a -> b) -> Either a b -> b
 handleError handler = either handler id

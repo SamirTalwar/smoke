@@ -8,6 +8,7 @@ import Options
 import System.Console.ANSI
 import System.Exit
 import Test.Smoke
+import Text.Printf (printf)
 
 type Output a = ReaderT Options IO a
 
@@ -31,33 +32,11 @@ printResult (TestSuccess test) = do
   putGreenLn "  succeeded"
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
   putWhiteLn (testName test)
-  forM_ (testArgs test) $ \args -> do
-    putRed "  args:             "
-    putRedLn (unlines $ indentedLines outputIndentation args)
-  forM_ stdIn $ \input -> do
-    putRed "  input:            "
-    putRedLn (indented outputIndentation input)
-  when (actualStatus /= expectedStatus) $ do
-    putRed "  actual status:    "
-    putRedLn (show actualStatus)
-    putRed "  expected status:  "
-    putRedLn (show expectedStatus)
-  when (actualStdOut `notElem` expectedStdOuts) $ do
-    putRed "  actual output:    "
-    putRedLn (indented outputIndentation actualStdOut)
-    putRed "  expected output:  "
-    putRedLn (indented outputIndentation (head expectedStdOuts))
-    forM_ (tail expectedStdOuts) $ \output -> do
-      putRed "               or:  "
-      putRedLn (indented outputIndentation output)
-  when (actualStdErr `notElem` expectedStdErrs) $ do
-    putRed "  actual error:     "
-    putRedLn (indented outputIndentation actualStdErr)
-    putRed "  expected error:   "
-    putRedLn (indented outputIndentation (head expectedStdErrs))
-    forM_ (tail expectedStdErrs) $ \output -> do
-      putRed "              or:   "
-      putRedLn (indented outputIndentation output)
+  printFailingInput "args" (unlines <$> testArgs test)
+  printFailingInput "input" stdIn
+  printFailingOutput "status" [show expectedStatus] (show actualStatus)
+  printFailingOutput "output" expectedStdOuts actualStdOut
+  printFailingOutput "error" expectedStdErrs actualStdErr
 printResult (TestError test NoCommandFile) = do
   putWhiteLn (testName test)
   putRedLn $ indentedAll messageIndentation "There is no command file."
@@ -90,6 +69,23 @@ printResult (TestError test (CouldNotExecuteCommand e)) = do
         unwords (fromJust (testCommand test)) ++ "\" could not be executed."
       , e
       ]
+
+printFailingInput :: Foldable f => String -> f String -> Output ()
+printFailingInput name value =
+  forM_ value $ \v -> do
+    putRed (printf "%-20s" ("  " ++ name ++ ":"))
+    putRedLn (indented outputIndentation v)
+
+printFailingOutput :: String -> [String] -> String -> Output ()
+printFailingOutput name expectedValues actualValue =
+  when (actualValue `notElem` expectedValues) $ do
+    putRed (printf "%-20s" ("  actual " ++ name ++ ":"))
+    putRedLn (indented outputIndentation actualValue)
+    putRed (printf "%-20s" ("  expected " ++ name ++ ":"))
+    putRedLn (indented outputIndentation (head expectedValues))
+    forM_ (tail expectedValues) $ \output -> do
+      putRed "               or:  "
+      putRedLn (indented outputIndentation output)
 
 printSummary :: TestResults -> Output ()
 printSummary results = do

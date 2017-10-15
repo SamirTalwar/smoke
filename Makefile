@@ -58,6 +58,9 @@ build-dependencies: ~/.local/bin/hlint
 .PHONY: editor-dependencies
 editor-dependencies: ~/.local/bin/ghc-mod ~/.local/bin/hindent
 
+default.nix: smoke.cabal
+	cabal2nix --shell . > default.nix
+
 ~/.local/bin/ghc-mod:
 	$(STACK) install ghc-mod
 

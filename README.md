@@ -25,9 +25,12 @@ Currently, Smoke is in alpha, and as such is not packaged. You will need to buil
 4. Run `stack install --local-bin-path=out/build` to build the application.
 5. Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
 
+If you are using [Nix][] you can build Smoke via `nix-build`.
+
 Smoke is distributed under [the MIT license][MIT License].
 
 [Stack]: https://docs.haskellstack.org/en/stable/README/
+[Nix]: https://nixos.org/nix
 [MIT License]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases

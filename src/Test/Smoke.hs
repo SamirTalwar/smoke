@@ -7,8 +7,7 @@ module Test.Smoke
   , TestExecutionPlan(..)
   , TestResult(..)
   , TestResults
-  , ExpectedOutput(..)
-  , ActualOutput(..)
+  , PartResult(..)
   , TestErrorMessage(..)
   , discoverTests
   , runTests

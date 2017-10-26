@@ -36,23 +36,23 @@ type TestResults = [TestResult]
 data TestResult
   = TestSuccess Test
   | TestFailure TestExecutionPlan
-                ExpectedOutput
-                ActualOutput
+                (PartResult Status)
+                (PartResult String)
+                (PartResult String)
   | TestError Test
               TestErrorMessage
   deriving (Eq, Show)
 
-data ExpectedOutput =
-  ExpectedOutput Int
-                 [String]
-                 [String]
+data PartResult a
+  = PartSuccess
+  | PartFailure [a]
+                a
   deriving (Eq, Show)
 
-data ActualOutput =
-  ActualOutput Int
-               String
-               String
-  deriving (Eq, Show)
+instance Functor PartResult where
+  _ `fmap` PartSuccess = PartSuccess
+  f `fmap` (PartFailure expected actual) =
+    PartFailure (map f expected) (f actual)
 
 data TestErrorMessage
   = NoCommandFile

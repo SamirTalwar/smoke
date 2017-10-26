@@ -14,7 +14,9 @@ import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
 
-type ExecutionOutputs = (ExitCode, String, String)
+type ExpectedOutputs = (Status, [String], [String])
+
+type ActualOutputs = (ExitCode, String, String)
 
 runTests :: Tests -> IO TestResults
 runTests tests = forM tests runTest
@@ -50,14 +52,14 @@ readExecutionPlan test = do
   stdIn <- liftIO $ sequence (readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
-readExpectedOutputs :: Test -> IO ExpectedOutput
+readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
   expectedStdOuts <- ifEmpty "" <$> mapM readFile (testStdOut test)
   expectedStdErrs <- ifEmpty "" <$> mapM readFile (testStdErr test)
-  return $ ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs
+  return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
-executeTest :: TestExecutionPlan -> Execution ExecutionOutputs
+executeTest :: TestExecutionPlan -> Execution ActualOutputs
 executeTest (TestExecutionPlan _ executable args stdIn) =
   liftIO
     (tryIOError (readProcessWithExitCode executable args (fromMaybe "" stdIn))) >>=
@@ -71,18 +73,26 @@ handleExecutionError (Left e) =
 handleExecutionError (Right value) = return value
 
 processOutput ::
-     TestExecutionPlan
-  -> ExpectedOutput
-  -> (ExitCode, String, String)
-  -> TestResult
-processOutput executionPlan@(TestExecutionPlan test _ _ _) expectedOutput@(ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (actualExitCode, actualStdOut, actualStdErr) =
-  if actualStatus == expectedStatus &&
-     actualStdOut `elem` expectedStdOuts && actualStdErr `elem` expectedStdErrs
+     TestExecutionPlan -> ExpectedOutputs -> ActualOutputs -> TestResult
+processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualExitCode, actualStdOut, actualStdErr) =
+  if statusResult == PartSuccess &&
+     stdOutResult == PartSuccess && stdErrResult == PartSuccess
     then TestSuccess test
-    else TestFailure executionPlan expectedOutput actualOutput
+    else TestFailure executionPlan statusResult stdOutResult stdErrResult
   where
     actualStatus = convertExitCode actualExitCode
-    actualOutput = ActualOutput actualStatus actualStdOut actualStdErr
+    statusResult =
+      if expectedStatus == actualStatus
+        then PartSuccess
+        else PartFailure [expectedStatus] actualStatus
+    stdOutResult =
+      if actualStdOut `elem` expectedStdOuts
+        then PartSuccess
+        else PartFailure expectedStdOuts actualStdOut
+    stdErrResult =
+      if actualStdErr `elem` expectedStdErrs
+        then PartSuccess
+        else PartFailure expectedStdErrs actualStdErr
 
 handleError :: (a -> b) -> Either a b -> b
 handleError handler = either handler id

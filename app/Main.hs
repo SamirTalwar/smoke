@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Monad (forM_, when)
+import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import Data.Maybe (fromJust)
@@ -30,13 +30,13 @@ printResult :: TestResult -> Output ()
 printResult (TestSuccess test) = do
   printTitle (testName test)
   putGreenLn "  succeeded"
-printResult (TestFailure (TestExecutionPlan test _ _ stdIn) (ExpectedOutput expectedStatus expectedStdOuts expectedStdErrs) (ActualOutput actualStatus actualStdOut actualStdErr)) = do
+printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
   printFailingInput "args" (unlines <$> testArgs test)
   printFailingInput "input" stdIn
-  printFailingOutput "status" [show expectedStatus] (show actualStatus)
-  printFailingOutput "output" expectedStdOuts actualStdOut
-  printFailingOutput "error" expectedStdErrs actualStdErr
+  printFailingOutput "status" (show <$> statusResult)
+  printFailingOutput "output" stdOutResult
+  printFailingOutput "error" stdErrResult
 printResult (TestError test NoCommandFile) = do
   printTitle (testName test)
   printError "There is no command file."
@@ -71,16 +71,16 @@ printFailingInput name value =
     putRed (printf "%-20s" ("  " ++ name ++ ":"))
     putRedLn (indented outputIndentation v)
 
-printFailingOutput :: String -> [String] -> String -> Output ()
-printFailingOutput name expectedValues actualValue =
-  when (actualValue `notElem` expectedValues) $ do
-    putRed (printf "%-20s" ("  actual " ++ name ++ ":"))
-    putRedLn (indented outputIndentation actualValue)
-    putRed (printf "%-20s" ("  expected " ++ name ++ ":"))
-    putRedLn (indented outputIndentation (head expectedValues))
-    forM_ (tail expectedValues) $ \output -> do
-      putRed "               or:  "
-      putRedLn (indented outputIndentation output)
+printFailingOutput :: String -> PartResult String -> Output ()
+printFailingOutput _ PartSuccess = return ()
+printFailingOutput name (PartFailure expected actual) = do
+  putRed (printf "%-20s" ("  actual " ++ name ++ ":"))
+  putRedLn (indented outputIndentation actual)
+  putRed (printf "%-20s" ("  expected " ++ name ++ ":"))
+  putRedLn (indented outputIndentation (head expected))
+  forM_ (tail expected) $ \output -> do
+    putRed "               or:  "
+    putRedLn (indented outputIndentation output)
 
 printError :: String -> Output ()
 printError = putRedLn . indentedAll messageIndentation

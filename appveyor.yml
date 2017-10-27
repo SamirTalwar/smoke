@@ -3,6 +3,7 @@ build: off
 cache:
   - stack.zip
   - '%LOCALAPPDATA%\Programs\stack'
+  - '%APPDATA%\stack'
   - .stack-work
 
 before_build:

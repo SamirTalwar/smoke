@@ -4,8 +4,9 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, ansi-terminal, base, directory, filepath
-      , Glob, optparse-applicative, process, stdenv, transformers, unix
+  f = { mkDerivation, ansi-terminal, base, bytestring, directory
+      , filepath, Glob, optparse-applicative, process, process-extras
+      , stdenv, transformers, unix
       }:
       mkDerivation {
         pname = "smoke";
@@ -14,10 +15,12 @@ let
         isLibrary = true;
         isExecutable = true;
         libraryHaskellDepends = [
-          base directory filepath Glob process transformers
+          base bytestring directory filepath Glob process process-extras
+          transformers
         ];
         executableHaskellDepends = [
-          ansi-terminal base optparse-applicative transformers unix
+          ansi-terminal base bytestring optparse-applicative transformers
+          unix
         ];
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";

@@ -3,6 +3,7 @@ module Main where
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
+import Data.ByteString.Char8 (unpack)
 import Data.Maybe (fromJust)
 import Options
 import System.Console.ANSI
@@ -33,10 +34,10 @@ printResult (TestSuccess test) = do
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
   printFailingInput "args" (unlines <$> testArgs test)
-  printFailingInput "input" (unStdIn <$> stdIn)
+  printFailingInput "input" (unpack . unStdIn <$> stdIn)
   printFailingOutput "status" (show . unStatus <$> statusResult)
-  printFailingOutput "output" (unStdOut <$> stdOutResult)
-  printFailingOutput "error" (unStdErr <$> stdErrResult)
+  printFailingOutput "output" (unpack . unStdOut <$> stdOutResult)
+  printFailingOutput "error" (unpack . unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
   printTitle (testName test)
   printError "There is no command file."

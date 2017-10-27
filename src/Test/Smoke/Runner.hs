@@ -5,11 +5,12 @@ module Test.Smoke.Runner
 import Control.Monad (forM, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
+import Data.ByteString as ByteString (empty, readFile)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
-import System.Process (readProcessWithExitCode)
+import System.Process.ByteString (readProcessWithExitCode)
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
@@ -49,24 +50,29 @@ readExecutionPlan test = do
       else onNothingThrow NonExistentCommand =<<
            liftIO (findExecutable executableName)
   let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
-  stdIn <- liftIO $ sequence ((StdIn <$>) . readFile <$> testStdIn test)
+  stdIn <-
+    liftIO $ sequence ((StdIn <$>) . ByteString.readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
-  expectedStdOuts <- map StdOut . ifEmpty "" <$> mapM readFile (testStdOut test)
-  expectedStdErrs <- map StdErr . ifEmpty "" <$> mapM readFile (testStdErr test)
+  expectedStdOuts <-
+    map StdOut . ifEmpty ByteString.empty <$>
+    mapM ByteString.readFile (testStdOut test)
+  expectedStdErrs <-
+    map StdErr . ifEmpty ByteString.empty <$>
+    mapM ByteString.readFile (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
 executeTest (TestExecutionPlan _ executable args stdIn) = do
-  (exitCode, stdOutString, stdErrString) <-
+  (exitCode, processStdOut, processStdErr) <-
     handleExecutionError =<<
-    liftIO (tryIOError (readProcessWithExitCode executable args stdInString))
-  return (convertExitCode exitCode, StdOut stdOutString, StdErr stdErrString)
+    liftIO (tryIOError (readProcessWithExitCode executable args processStdIn))
+  return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
   where
-    stdInString = unStdIn (fromMaybe (StdIn "") stdIn)
+    processStdIn = unStdIn (fromMaybe (StdIn ByteString.empty) stdIn)
 
 handleExecutionError :: Either IOError a -> Execution a
 handleExecutionError (Left e) =

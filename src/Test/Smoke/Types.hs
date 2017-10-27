@@ -1,5 +1,7 @@
 module Test.Smoke.Types where
 
+import Data.ByteString (ByteString)
+
 type Command = [String]
 
 type Args = [String]
@@ -9,15 +11,15 @@ newtype Status = Status
   } deriving (Eq, Show)
 
 newtype StdIn = StdIn
-  { unStdIn :: String
+  { unStdIn :: ByteString
   } deriving (Eq, Show)
 
 newtype StdOut = StdOut
-  { unStdOut :: String
+  { unStdOut :: ByteString
   } deriving (Eq, Show)
 
 newtype StdErr = StdErr
-  { unStdErr :: String
+  { unStdErr :: ByteString
   } deriving (Eq, Show)
 
 data Options = Options

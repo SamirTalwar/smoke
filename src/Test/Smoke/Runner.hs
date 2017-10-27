@@ -14,9 +14,9 @@ import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
 
-type ExpectedOutputs = (Status, [String], [String])
+type ExpectedOutputs = (Status, [StdOut], [StdErr])
 
-type ActualOutputs = (ExitCode, String, String)
+type ActualOutputs = (Status, StdOut, StdErr)
 
 runTests :: Tests -> IO TestResults
 runTests tests = forM tests runTest
@@ -49,21 +49,24 @@ readExecutionPlan test = do
       else onNothingThrow NonExistentCommand =<<
            liftIO (findExecutable executableName)
   let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
-  stdIn <- liftIO $ sequence (readFile <$> testStdIn test)
+  stdIn <- liftIO $ sequence ((StdIn <$>) . readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
-  expectedStdOuts <- ifEmpty "" <$> mapM readFile (testStdOut test)
-  expectedStdErrs <- ifEmpty "" <$> mapM readFile (testStdErr test)
+  expectedStdOuts <- map StdOut . ifEmpty "" <$> mapM readFile (testStdOut test)
+  expectedStdErrs <- map StdErr . ifEmpty "" <$> mapM readFile (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
-executeTest (TestExecutionPlan _ executable args stdIn) =
-  liftIO
-    (tryIOError (readProcessWithExitCode executable args (fromMaybe "" stdIn))) >>=
-  handleExecutionError
+executeTest (TestExecutionPlan _ executable args stdIn) = do
+  (exitCode, stdOutString, stdErrString) <-
+    handleExecutionError =<<
+    liftIO (tryIOError (readProcessWithExitCode executable args stdInString))
+  return (convertExitCode exitCode, StdOut stdOutString, StdErr stdErrString)
+  where
+    stdInString = unStdIn (fromMaybe (StdIn "") stdIn)
 
 handleExecutionError :: Either IOError a -> Execution a
 handleExecutionError (Left e) =
@@ -74,13 +77,12 @@ handleExecutionError (Right value) = return value
 
 processOutput ::
      TestExecutionPlan -> ExpectedOutputs -> ActualOutputs -> TestResult
-processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualExitCode, actualStdOut, actualStdErr) =
+processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
   if statusResult == PartSuccess &&
      stdOutResult == PartSuccess && stdErrResult == PartSuccess
     then TestSuccess test
     else TestFailure executionPlan statusResult stdOutResult stdErrResult
   where
-    actualStatus = convertExitCode actualExitCode
     statusResult =
       if expectedStatus == actualStatus
         then PartSuccess
@@ -106,5 +108,5 @@ ifEmpty value [] = [value]
 ifEmpty _ xs = xs
 
 convertExitCode :: ExitCode -> Status
-convertExitCode ExitSuccess = 0
-convertExitCode (ExitFailure value) = value
+convertExitCode ExitSuccess = Status 0
+convertExitCode (ExitFailure value) = Status value

@@ -4,7 +4,21 @@ type Command = [String]
 
 type Args = [String]
 
-type Status = Int
+newtype Status = Status
+  { unStatus :: Int
+  } deriving (Eq, Show)
+
+newtype StdIn = StdIn
+  { unStdIn :: String
+  } deriving (Eq, Show)
+
+newtype StdOut = StdOut
+  { unStdOut :: String
+  } deriving (Eq, Show)
+
+newtype StdErr = StdErr
+  { unStdErr :: String
+  } deriving (Eq, Show)
 
 data Options = Options
   { optionsCommand :: Maybe Command
@@ -28,7 +42,7 @@ data TestExecutionPlan =
   TestExecutionPlan Test
                     String
                     Args
-                    (Maybe String)
+                    (Maybe StdIn)
   deriving (Eq, Show)
 
 type TestResults = [TestResult]
@@ -37,8 +51,8 @@ data TestResult
   = TestSuccess Test
   | TestFailure TestExecutionPlan
                 (PartResult Status)
-                (PartResult String)
-                (PartResult String)
+                (PartResult StdOut)
+                (PartResult StdErr)
   | TestError Test
               TestErrorMessage
   deriving (Eq, Show)

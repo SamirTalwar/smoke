@@ -67,7 +67,8 @@ constructTestFromGroup location commandForLocation group = do
   let stdIn = part FileTypes.StdIn
   let stdOut = parts FileTypes.StdOut
   let stdErr = parts FileTypes.StdErr
-  status <- fromMaybe (return 0) (readStatusFile <$> part FileTypes.Status)
+  status <-
+    Status <$> fromMaybe (return 0) (readStatusFile <$> part FileTypes.Status)
   return
     Test
     { testName = name

@@ -33,10 +33,10 @@ printResult (TestSuccess test) = do
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
   printFailingInput "args" (unlines <$> testArgs test)
-  printFailingInput "input" stdIn
-  printFailingOutput "status" (show <$> statusResult)
-  printFailingOutput "output" stdOutResult
-  printFailingOutput "error" stdErrResult
+  printFailingInput "input" (unStdIn <$> stdIn)
+  printFailingOutput "status" (show . unStatus <$> statusResult)
+  printFailingOutput "output" (unStdOut <$> stdOutResult)
+  printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
   printTitle (testName test)
   printError "There is no command file."

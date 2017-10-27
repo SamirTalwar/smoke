@@ -1,6 +1,10 @@
 module Test.Smoke
-  ( Args
-  , Command
+  ( Command
+  , Args
+  , Status(..)
+  , StdIn(..)
+  , StdOut(..)
+  , StdErr(..)
   , Options(..)
   , Test(..)
   , Tests

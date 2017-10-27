@@ -2,6 +2,7 @@ build: off
 
 cache:
   - '%LOCALAPPDATA%\Programs\stack'
+  - .stack-work
 
 before_build:
   - curl -o stack.zip -L --insecure https://www.stackage.org/stack/windows-x86_64

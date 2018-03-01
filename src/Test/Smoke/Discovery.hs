@@ -6,7 +6,7 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, liftM2)
 import Data.Function (on)
 import Data.List (find, groupBy, sortBy)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (maybe)
 import System.Directory
 import System.FilePath
 import System.FilePath.Glob
@@ -50,8 +50,7 @@ discoverTestsByGlob commandFromOptions directory globs = do
       concat .
       zipWith
         (\fileTypeGlob paths -> zip (repeat fileTypeGlob) paths)
-        (map fst globs) .
-      fst <$>
+        (map fst globs) <$>
       globDir (map snd globs) directory
 
 constructTestFromGroup ::
@@ -67,8 +66,7 @@ constructTestFromGroup location commandForLocation group = do
   let stdIn = part FileTypes.StdIn
   let stdOut = parts FileTypes.StdOut
   let stdErr = parts FileTypes.StdErr
-  status <-
-    Status <$> fromMaybe (return 0) (readStatusFile <$> part FileTypes.Status)
+  status <- Status <$> maybe (return 0) readStatusFile (part FileTypes.Status)
   return
     Test
     { testName = name

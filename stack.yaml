@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-9.6
+resolver: lts-10.7
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -39,20 +39,20 @@ packages:
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+# extra-deps: []
 
 # Override default flag values for local packages and extra-deps
-flags: {}
+# flags: {}
 
 # Extra package databases containing global packages
-extra-package-dbs: []
+# extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
 # system-ghc: true
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
-# require-stack-version: ">=1.5"
+# require-stack-version: ">=1.6"
 #
 # Override the architecture used by stack, especially useful on Windows
 # arch: i386
@@ -66,6 +66,4 @@ extra-package-dbs: []
 # compiler-check: newer-minor
 
 ghc-options:
-  "*": -Wall
-  "smoke": -Werror
-  "smoke-exe": -Werror
+  $locals: -Wall -Werror

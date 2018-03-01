@@ -1,10 +1,17 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
 module Main where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
-import Data.ByteString.Char8 (unpack)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteStringChar
+import Data.Char (ord)
 import Data.Maybe (fromJust)
+import Data.Word (Word8)
 import Options
 import System.Console.ANSI
 import System.Exit
@@ -34,10 +41,10 @@ printResult (TestSuccess test) = do
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
   printFailingInput "args" (unlines <$> testArgs test)
-  printFailingInput "input" (unpack . unStdIn <$> stdIn)
+  printFailingInput "input" (unStdIn <$> stdIn)
   printFailingOutput "status" (show . unStatus <$> statusResult)
-  printFailingOutput "output" (unpack . unStdOut <$> stdOutResult)
-  printFailingOutput "error" (unpack . unStdErr <$> stdErrResult)
+  printFailingOutput "output" (unStdOut <$> stdOutResult)
+  printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
   printTitle (testName test)
   printError "There is no command file."
@@ -66,18 +73,18 @@ printResult (TestError test (CouldNotExecuteCommand e)) = do
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn
 
-printFailingInput :: Foldable f => String -> f String -> Output ()
+printFailingInput :: (Printable p, Foldable f) => String -> f p -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
-    putRed (printf "%-20s" ("  " ++ name ++ ":"))
+    putRed (indentedKey ("  " ++ name ++ ":"))
     putRedLn (indented outputIndentation v)
 
-printFailingOutput :: String -> PartResult String -> Output ()
+printFailingOutput :: Printable p => String -> PartResult p -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
-  putRed (printf "%-20s" ("  actual " ++ name ++ ":"))
+  putRed (indentedKey ("  actual " ++ name ++ ":"))
   putRedLn (indented outputIndentation actual)
-  putRed (printf "%-20s" ("  expected " ++ name ++ ":"))
+  putRed (indentedKey ("  expected " ++ name ++ ":"))
   putRedLn (indented outputIndentation (head expected))
   forM_ (tail expected) $ \output -> do
     putRed "               or:  "
@@ -88,7 +95,7 @@ printError = putRedLn . indentedAll messageIndentation
 
 printSummary :: TestResults -> Output ()
 printSummary results = do
-  putLn
+  printEmptyLn
   let testCount = length results
   let failureCount = length failures
   case failureCount of
@@ -104,51 +111,93 @@ outputIndentation = 20
 messageIndentation :: Int
 messageIndentation = 2
 
-indented :: Int -> String -> String
-indented n = unlines . indentedLines n . lines
+indentedKey :: String -> String
+indentedKey = printf "%-20s"
 
-indentedAll :: Int -> String -> String
-indentedAll n = unlines . indentedAllLines n . lines
+class Printable p where
+  printStr :: p -> IO ()
+  printStrLn :: p -> IO ()
+  indented :: Int -> p -> p
+  indentedAll :: Int -> p -> p
+  stripTrailingNewline :: p -> p
+  isEmpty :: p -> Bool
+  hasEsc :: p -> Bool
 
-indentedLines :: Int -> [String] -> [String]
-indentedLines _ [] = []
-indentedLines n (first:rest) = first : indentedAllLines n rest
+instance Printable String where
+  printStr = putStr
+  printStrLn = putStrLn
+  indented n = unlines . indentedLines . lines
+    where
+      indentString = replicate n ' '
+      indentedLines [] = []
+      indentedLines (first:rest) = first : map (indentString ++) rest
+  indentedAll n = unlines . map (indentString ++) . lines
+    where
+      indentString = replicate n ' '
+  stripTrailingNewline string
+    | last string == '\n' = init string
+    | otherwise = string
+  isEmpty = (== "")
+  hasEsc string = '\ESC' `elem` string
 
-indentedAllLines :: Int -> [String] -> [String]
-indentedAllLines n = map (replicate n ' ' ++)
+instance Printable ByteString where
+  printStr = ByteStringChar.putStr
+  printStrLn = ByteStringChar.putStrLn
+  indented n = ByteStringChar.unlines . indentedLines . ByteStringChar.lines
+    where
+      indentString = ByteString.replicate n space
+      indentedLines [] = []
+      indentedLines (first:rest) =
+        first : map (\line -> ByteString.concat [indentString, line]) rest
+  indentedAll n =
+    ByteStringChar.unlines .
+    map (\line -> ByteString.concat [indentString, line]) . ByteStringChar.lines
+    where
+      indentString = ByteString.replicate n (fromIntegral $ ord ' ')
+  stripTrailingNewline string
+    | ByteString.last string == newline = ByteString.init string
+    | otherwise = string
+  isEmpty string = ByteString.length string == 0
+  hasEsc string = esc `ByteString.elem` string
 
-putLn :: Output ()
-putLn = liftIO $ putStrLn ""
+space :: Word8
+space = fromIntegral $ ord ' '
 
-putGreen :: String -> Output ()
+newline :: Word8
+newline = fromIntegral $ ord '\n'
+
+esc :: Word8
+esc = fromIntegral $ ord '\ESC'
+
+printEmptyLn :: Output ()
+printEmptyLn = liftIO $ putStrLn ""
+
+putGreen :: Printable p => p -> Output ()
 putGreen = putColor Green
 
-putGreenLn :: String -> Output ()
+putGreenLn :: Printable p => p -> Output ()
 putGreenLn = putColorLn Green
 
-putRed :: String -> Output ()
+putRed :: Printable p => p -> Output ()
 putRed = putColor Red
 
-putRedLn :: String -> Output ()
+putRedLn :: Printable p => p -> Output ()
 putRedLn = putColorLn Red
 
-putColor :: Color -> String -> Output ()
+putColor :: Printable p => Color -> p -> Output ()
 putColor color string = do
   options <- ask
-  if optionsColor options && '\ESC' `notElem` string
+  if optionsColor options && not (hasEsc string)
     then do
       liftIO $ setSGR [SetColor Foreground Dull color]
-      liftIO $ putStr string
+      liftIO $ printStr string
       liftIO $ setSGR [Reset]
-    else liftIO $ putStr string
+    else liftIO $ printStr string
 
-putColorLn :: Color -> String -> Output ()
-putColorLn color string
-  | string == "" = putLn
-  | last string == '\n' = putColorLn color (init string)
-  | otherwise = do
-    putColor color string
-    putLn
+putColorLn :: Printable p => Color -> p -> Output ()
+putColorLn color string = do
+  putColor color (stripTrailingNewline string)
+  printEmptyLn
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

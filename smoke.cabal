@@ -48,6 +48,7 @@ executable smoke-exe
                      , smoke
                      , ansi-terminal
                      , bytestring
+                     , Diff
                      , optparse-applicative
                      , transformers
   if !os(windows)

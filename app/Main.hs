@@ -7,6 +7,8 @@ import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
+import Data.Algorithm.Diff (getGroupedDiff)
+import Data.Algorithm.DiffOutput (ppDiff)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as ByteStringChar
@@ -100,13 +102,17 @@ printFailingInput name value =
 printFailingOutput :: Printable p => String -> PartResult p -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
-  putRed (indentedKey ("  actual " ++ name ++ ":"))
-  putRedLn (indented outputIndentation actual)
-  putRed (indentedKey ("  expected " ++ name ++ ":"))
-  putRedLn (indented outputIndentation (head expected))
-  forM_ (tail expected) $ \output -> do
-    putRed "               or:  "
-    putRedLn (indented outputIndentation output)
+  putRed (indentedKey ("  " ++ name ++ ":"))
+  putDiff (head expected) actual
+  forM_ (tail expected) $ \e -> do
+    putRed "      or: "
+    putDiff e actual
+  where
+    putDiff :: Printable p => p -> p -> Output ()
+    putDiff left right =
+      putRedLn $
+      indented outputIndentation $
+      ppDiff $ getGroupedDiff (lines (toString left)) (lines (toString right))
 
 printError :: String -> Output ()
 printError = putRedLn . indentedAll messageIndentation
@@ -124,15 +130,16 @@ printSummary results = do
     failures = filter isFailure results
 
 outputIndentation :: Int
-outputIndentation = 20
+outputIndentation = 10
 
 messageIndentation :: Int
 messageIndentation = 2
 
 indentedKey :: String -> String
-indentedKey = printf "%-20s"
+indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
 class Printable p where
+  toString :: p -> String
   printStr :: p -> IO ()
   printStrLn :: p -> IO ()
   indented :: Int -> p -> p
@@ -142,6 +149,7 @@ class Printable p where
   hasEsc :: p -> Bool
 
 instance Printable String where
+  toString = id
   printStr = putStr
   printStrLn = putStrLn
   indented n = unlines . indentedLines . lines
@@ -160,6 +168,7 @@ instance Printable String where
   hasEsc string = '\ESC' `elem` string
 
 instance Printable ByteString where
+  toString = ByteStringChar.unpack
   printStr = ByteStringChar.putStr
   printStrLn = ByteStringChar.putStrLn
   indented n = ByteStringChar.unlines . indentedLines . ByteStringChar.lines

@@ -24,7 +24,6 @@ newtype StdErr = StdErr
 
 data Options = Options
   { optionsCommand :: Maybe Command
-  , optionsColor :: Bool
   , optionsTestLocations :: [FilePath]
   } deriving (Eq, Show)
 

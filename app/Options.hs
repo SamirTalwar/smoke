@@ -1,5 +1,8 @@
+{-# LANGUAGE ApplicativeDo #-}
+
 module Options
-  ( parseOptions
+  ( AppOptions(..)
+  , parseOptions
   ) where
 
 import Data.Semigroup ((<>))
@@ -7,21 +10,29 @@ import Options.Applicative
 import qualified Shell
 import Test.Smoke (Command, Options(Options))
 
-parseOptions :: IO Options
+data AppOptions = AppOptions
+  { optionsExecution :: Options
+  , optionsColor :: Bool
+  } deriving (Eq, Show)
+
+parseOptions :: IO AppOptions
 parseOptions = do
   isTTY <- Shell.isTTY
   execParser (options isTTY)
 
-options :: Bool -> ParserInfo Options
+options :: Bool -> ParserInfo AppOptions
 options isTTY =
   info
     (optionParser isTTY <**> helper)
     (fullDesc <>
      header "Smoke: a framework for testing most things from the very edges.")
 
-optionParser :: Bool -> Parser Options
-optionParser isTTY =
-  Options <$> commandParser <*> colorParser isTTY <*> testLocationParser
+optionParser :: Bool -> Parser AppOptions
+optionParser isTTY = do
+  executionCommand <- commandParser
+  color <- colorParser isTTY
+  testLocation <- testLocationParser
+  return $ AppOptions (Options executionCommand testLocation) color
 
 commandParser :: Parser (Maybe Command)
 commandParser =

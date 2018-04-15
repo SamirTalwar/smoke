@@ -18,12 +18,12 @@ import System.Exit
 import Test.Smoke
 import Text.Printf (printf)
 
-type Output a = ReaderT Options IO a
+type Output a = ReaderT AppOptions IO a
 
 main :: IO ()
 main = do
   options <- parseOptions
-  tests <- discoverTests options
+  tests <- discoverTests (optionsExecution options)
   results <- runTests tests
   runReaderT
     (do printResults results

@@ -24,9 +24,9 @@ else
 endif
 
 .PHONY: build
-build: $(BIN) out/smoke-$(OS)
+build: out/smoke-$(OS)
 
-out/smoke-$(OS):
+out/smoke-$(OS): $(BIN)
 	cp $(BIN) out/smoke-$(OS)
 
 $(BIN): $(CONF) $(SRC)

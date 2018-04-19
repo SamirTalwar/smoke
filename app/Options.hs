@@ -8,11 +8,12 @@ module Options
 import Data.Semigroup ((<>))
 import Options.Applicative
 import qualified Shell
-import Test.Smoke (Command, Options(Options))
+import Test.Smoke (Command, Options(..))
 
 data AppOptions = AppOptions
   { optionsExecution :: Options
   , optionsColor :: Bool
+  , optionsBless :: Bool
   } deriving (Eq, Show)
 
 parseOptions :: IO AppOptions
@@ -31,8 +32,18 @@ optionParser :: Bool -> Parser AppOptions
 optionParser isTTY = do
   executionCommand <- commandParser
   color <- colorParser isTTY
+  bless <- blessParser
   testLocation <- testLocationParser
-  return $ AppOptions (Options executionCommand testLocation) color
+  return
+    AppOptions
+      { optionsExecution =
+          Options
+            { optionsCommand = executionCommand
+            , optionsTestLocations = testLocation
+            }
+      , optionsColor = color
+      , optionsBless = bless
+      }
 
 commandParser :: Parser (Maybe Command)
 commandParser =
@@ -45,6 +56,10 @@ colorParser isTTY =
   flag' True (short 'c' <> long "color" <> help "Color output") <|>
   flag' False (long "no-color" <> help "Do not color output") <|>
   pure isTTY
+
+blessParser :: Parser Bool
+blessParser =
+  flag' True (long "bless" <> help "Bless the results") <|> pure False
 
 testLocationParser :: Parser [FilePath]
 testLocationParser = some (argument str (metavar "TEST-LOCATION..."))

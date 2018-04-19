@@ -2,6 +2,10 @@ module Test.Smoke.Types where
 
 import Data.ByteString (ByteString)
 
+type TestName = String
+
+type Executable = String
+
 type Command = [String]
 
 type Args = [String]
@@ -30,7 +34,8 @@ data Options = Options
 type Tests = [Test]
 
 data Test = Test
-  { testName :: String
+  { testName :: TestName
+  , testLocation :: FilePath
   , testCommand :: Maybe Command
   , testArgs :: Maybe Args
   , testStdIn :: Maybe FilePath
@@ -39,12 +44,12 @@ data Test = Test
   , testStatus :: Status
   } deriving (Eq, Show)
 
-data TestExecutionPlan =
-  TestExecutionPlan Test
-                    String
-                    Args
-                    (Maybe StdIn)
-  deriving (Eq, Show)
+data TestExecutionPlan = TestExecutionPlan
+  { planTest :: Test
+  , planExecutable :: Executable
+  , planArgs :: Args
+  , planStdIn :: Maybe StdIn
+  } deriving (Eq, Show)
 
 type TestResults = [TestResult]
 
@@ -76,4 +81,6 @@ data TestErrorMessage
   | NonExistentCommand
   | NonExecutableCommand
   | CouldNotExecuteCommand String
+  | CouldNotBlessStdOutWithMultipleValues
+  | CouldNotBlessStdErrWithMultipleValues
   deriving (Eq, Show)

@@ -4,9 +4,12 @@ module Test.Smoke.FileTypes
   , directoryGlobs
   , fileGlob
   , fileGlobs
+  , filePath
   ) where
 
+import System.FilePath
 import qualified System.FilePath.Glob as Glob
+import Test.Smoke.Types (TestName)
 
 data FileType
   = Command
@@ -19,6 +22,17 @@ data FileType
 
 allFileTypes :: [FileType]
 allFileTypes = [Command, Args, StdIn, StdOut, StdErr, Status]
+
+filePath :: FilePath -> TestName -> FileType -> FilePath
+filePath location name fileType = location </> (name <.> extensionOf fileType)
+
+extensionOf :: FileType -> String
+extensionOf Command = ".command"
+extensionOf Args = ".args"
+extensionOf StdIn = ".in"
+extensionOf StdOut = ".out"
+extensionOf StdErr = ".err"
+extensionOf Status = ".status"
 
 directoryGlob :: FileType -> Glob.Pattern
 directoryGlob Command = Glob.compile "*.command"

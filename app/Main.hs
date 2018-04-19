@@ -25,6 +25,12 @@ main = do
   options <- parseOptions
   tests <- discoverTests (optionsExecution options)
   results <- runTests tests
+  if optionsBless options
+    then outputResults options =<< blessResults results
+    else outputResults options results
+
+outputResults :: AppOptions -> TestResults -> IO ()
+outputResults options results = do
   runReaderT
     (do printResults results
         printSummary results)
@@ -69,6 +75,14 @@ printResult (TestError test (CouldNotExecuteCommand e)) = do
   printError $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
+printResult (TestError test CouldNotBlessStdOutWithMultipleValues) = do
+  printTitle (testName test)
+  printError
+    "There are multiple expected STDOUT values, so the result cannot be blessed.\n"
+printResult (TestError test CouldNotBlessStdErrWithMultipleValues) = do
+  printTitle (testName test)
+  printError
+    "There are multiple expected STDERR values, so the result cannot be blessed.\n"
 
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn

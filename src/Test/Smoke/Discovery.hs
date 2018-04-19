@@ -70,6 +70,7 @@ constructTestFromGroup location commandForLocation group = do
   return
     Test
     { testName = name
+    , testLocation = location
     , testCommand = command
     , testArgs = args
     , testStdIn = stdIn

@@ -1,5 +1,6 @@
 module Test.Smoke.Types where
 
+import Control.Exception (IOException)
 import Data.ByteString (ByteString)
 
 type TestName = String
@@ -81,6 +82,7 @@ data TestErrorMessage
   | NonExistentCommand
   | NonExecutableCommand
   | CouldNotExecuteCommand String
+  | BlessingFailed IOException
   | CouldNotBlessStdOutWithMultipleValues
   | CouldNotBlessStdErrWithMultipleValues
   deriving (Eq, Show)

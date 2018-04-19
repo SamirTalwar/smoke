@@ -3,6 +3,7 @@
 
 module Main where
 
+import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
@@ -75,6 +76,9 @@ printResult (TestError test (CouldNotExecuteCommand e)) = do
   printError $
     "The application \"" ++
     unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
+printResult (TestError test (BlessingFailed e)) = do
+  printTitle (testName test)
+  printError $ "Blessing failed.\n" ++ displayException e
 printResult (TestError test CouldNotBlessStdOutWithMultipleValues) = do
   printTitle (testName test)
   printError

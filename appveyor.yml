@@ -1,13 +1,12 @@
 build: off
 
 cache:
-  - stack.zip
   - '%LOCALAPPDATA%\Programs\stack'
   - '%APPDATA%\stack'
   - .stack-work
 
 before_build:
-  - if not exist stack.zip curl -o stack.zip -L --insecure https://www.stackage.org/stack/windows-x86_64
+  - curl -o stack.zip -L --insecure https://www.stackage.org/stack/windows-x86_64
   - 7z x stack.zip stack.exe
   - stack --no-terminal setup > nul
 

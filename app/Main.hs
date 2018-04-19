@@ -135,6 +135,7 @@ instance Printable String where
     where
       indentString = replicate n ' '
   stripTrailingNewline string
+    | string == "" = string
     | last string == '\n' = init string
     | otherwise = string
   isEmpty = (== "")
@@ -155,6 +156,7 @@ instance Printable ByteString where
     where
       indentString = ByteString.replicate n (fromIntegral $ ord ' ')
   stripTrailingNewline string
+    | string == ByteString.empty = string
     | ByteString.last string == newline = ByteString.init string
     | otherwise = string
   isEmpty string = ByteString.length string == 0

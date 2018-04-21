@@ -7,13 +7,14 @@ import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
-import Data.Algorithm.Diff (getGroupedDiff)
-import Data.Algorithm.DiffOutput (ppDiff)
+import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
+import Data.Algorithm.DiffOutput (DiffOperation(..))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.Char (ord)
 import Data.Maybe (fromJust)
+import Data.String (IsString(..))
 import Data.Word (Word8)
 import Options
 import System.Console.ANSI
@@ -112,7 +113,83 @@ printFailingOutput name (PartFailure expected actual) = do
     putDiff left right =
       putRedLn $
       indented outputIndentation $
-      ppDiff $ getGroupedDiff (lines (toString left)) (lines (toString right))
+      prettyPrintDiff $ getGroupedDiff (lines' left) (lines' right)
+
+data LineRange p =
+  LineRange (Int, Int)
+            [p]
+  deriving (Show, Read, Eq, Ord)
+
+prettyPrintDiff :: Printable p => [Diff [p]] -> p
+prettyPrintDiff = mconcat . map prettyPrintOperation . diffToLineRanges
+  where
+    diffToLineRanges :: [Diff [p]] -> [DiffOperation (LineRange p)]
+    diffToLineRanges = toLineRange 1 1
+      where
+        toLineRange :: Int -> Int -> [Diff [p]] -> [DiffOperation (LineRange p)]
+        toLineRange _ _ [] = []
+        toLineRange leftLine rightLine (Both ls _:rs) =
+          let lins = length ls
+           in toLineRange (leftLine + lins) (rightLine + lins) rs
+        toLineRange leftLine rightLine (Second lsS:First lsF:rs) =
+          toChange leftLine rightLine lsF lsS rs
+        toLineRange leftLine rightLine (First lsF:Second lsS:rs) =
+          toChange leftLine rightLine lsF lsS rs
+        toLineRange leftLine rightLine (Second lsS:rs) =
+          let linesS = length lsS
+              diff =
+                Addition
+                  (LineRange (rightLine, rightLine + linesS - 1) lsS)
+                  (leftLine - 1)
+           in diff : toLineRange leftLine (rightLine + linesS) rs
+        toLineRange leftLine rightLine (First lsF:rs) =
+          let linesF = length lsF
+              diff =
+                Deletion
+                  (LineRange (leftLine, leftLine + linesF - 1) lsF)
+                  (rightLine - 1)
+           in diff : toLineRange (leftLine + linesF) rightLine rs
+        toChange leftLine rightLine lsF lsS rs =
+          let linesS = length lsS
+              linesF = length lsF
+           in Change
+                (LineRange (leftLine, leftLine + linesF - 1) lsF)
+                (LineRange (rightLine, rightLine + linesS - 1) lsS) :
+              toLineRange (leftLine + linesF) (rightLine + linesS) rs
+    prettyPrintOperation :: Printable p => DiffOperation (LineRange p) -> p
+    prettyPrintOperation (Deletion (LineRange leftNumbers leftContents) lineNoRight) =
+      mconcat
+        [ prettyRange leftNumbers
+        , fromString "d"
+        , int lineNoRight
+        , fromString "\n"
+        , prettyLines '<' leftContents
+        ]
+    prettyPrintOperation (Addition (LineRange rightNumbers rightContents) lineNoLeft) =
+      mconcat
+        [ int lineNoLeft
+        , fromString "a"
+        , prettyRange rightNumbers
+        , fromString "\n"
+        , prettyLines '>' rightContents
+        ]
+    prettyPrintOperation (Change (LineRange leftNumbers leftContents) (LineRange rightNumbers rightContents)) =
+      mconcat
+        [ prettyRange leftNumbers
+        , fromString "c"
+        , prettyRange rightNumbers
+        , fromString "\n"
+        , prettyLines '<' leftContents
+        , fromString "---\n"
+        , prettyLines '>' rightContents
+        ]
+    prettyRange :: Printable p => (Int, Int) -> p
+    prettyRange (start, end) =
+      if start == end
+        then int start
+        else mconcat [int start, fromString ",", int end]
+    prettyLines :: Printable p => Char -> [p] -> p
+    prettyLines start = unlines' . map (mappend (fromString [start, ' ']))
 
 printError :: String -> Output ()
 printError = putRedLn . indentedAll messageIndentation
@@ -138,56 +215,54 @@ messageIndentation = 2
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
-class Printable p where
-  toString :: p -> String
-  printStr :: p -> IO ()
-  printStrLn :: p -> IO ()
+class (Eq p, Ord p, Monoid p, IsString p) =>
+      Printable p
+  where
+  int :: Int -> p
+  spaces :: Int -> p
+  lines' :: p -> [p]
+  unlines' :: [p] -> p
   indented :: Int -> p -> p
+  indented n = unlines' . indentedLines . lines'
+    where
+      indentedLines :: Printable p => [p] -> [p]
+      indentedLines [] = []
+      indentedLines (first:rest) = first : map (mappend (spaces n)) rest
   indentedAll :: Int -> p -> p
+  indentedAll n = unlines' . map (mappend (spaces n)) . lines'
   stripTrailingNewline :: p -> p
   isEmpty :: p -> Bool
   hasEsc :: p -> Bool
+  printStr :: p -> IO ()
+  printStrLn :: p -> IO ()
 
 instance Printable String where
-  toString = id
-  printStr = putStr
-  printStrLn = putStrLn
-  indented n = unlines . indentedLines . lines
-    where
-      indentString = replicate n ' '
-      indentedLines [] = []
-      indentedLines (first:rest) = first : map (indentString ++) rest
-  indentedAll n = unlines . map (indentString ++) . lines
-    where
-      indentString = replicate n ' '
+  int = show
+  spaces n = replicate n ' '
+  lines' = lines
+  unlines' = unlines
   stripTrailingNewline string
     | string == "" = string
     | last string == '\n' = init string
     | otherwise = string
   isEmpty = (== "")
   hasEsc string = '\ESC' `elem` string
+  printStr = putStr
+  printStrLn = putStrLn
 
 instance Printable ByteString where
-  toString = ByteStringChar.unpack
-  printStr = ByteStringChar.putStr
-  printStrLn = ByteStringChar.putStrLn
-  indented n = ByteStringChar.unlines . indentedLines . ByteStringChar.lines
-    where
-      indentString = ByteString.replicate n space
-      indentedLines [] = []
-      indentedLines (first:rest) =
-        first : map (\line -> ByteString.concat [indentString, line]) rest
-  indentedAll n =
-    ByteStringChar.unlines .
-    map (\line -> ByteString.concat [indentString, line]) . ByteStringChar.lines
-    where
-      indentString = ByteString.replicate n (fromIntegral $ ord ' ')
+  int = fromString . show
+  spaces n = ByteString.replicate n space
+  lines' = ByteStringChar.lines
+  unlines' = ByteStringChar.unlines
   stripTrailingNewline string
     | string == ByteString.empty = string
     | ByteString.last string == newline = ByteString.init string
     | otherwise = string
   isEmpty string = ByteString.length string == 0
   hasEsc string = esc `ByteString.elem` string
+  printStr = ByteStringChar.putStr
+  printStrLn = ByteStringChar.putStrLn
 
 space :: Word8
 space = fromIntegral $ ord ' '

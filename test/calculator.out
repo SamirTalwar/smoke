@@ -1,9 +1,11 @@
 addition
   succeeded
 complex
-  input:            (8 + 2i) + (7 - 4i)
-  actual output:    2
-  expected output:  15 - 2i
+  input:  (8 + 2i) + (7 - 4i)
+  output: 1c1
+          < 15 - 2i
+          ---
+          > 2
 division
   succeeded
 infix-words-error
@@ -13,14 +15,18 @@ multiple-digits
 multiplication
   succeeded
 parens
-  input:            (6 + 3) * 2
-  actual output:    3
-  expected output:  18
+  input:  (6 + 3) * 2
+  output: 1c1
+          < 18
+          ---
+          > 3
 subtraction
   succeeded
 three-numbers
-  input:            5 + 7 + 12
-  actual output:    12
-  expected output:  24
+  input:  5 + 7 + 12
+  output: 1c1
+          < 24
+          ---
+          > 12
 
 9 tests, 3 failures

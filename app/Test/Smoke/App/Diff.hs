@@ -2,7 +2,7 @@ module Test.Smoke.App.Diff
   ( prettyPrintDiff
   ) where
 
-import Data.Algorithm.Diff (Diff(..))
+import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation(..))
 import Data.String (fromString)
 import Test.Smoke.App.Printable
@@ -12,8 +12,11 @@ data LineRange p =
             [p]
   deriving (Show, Read, Eq, Ord)
 
-prettyPrintDiff :: Printable p => [Diff [p]] -> p
-prettyPrintDiff = mconcat . map prettyPrintOperation . diffToLineRanges
+prettyPrintDiff :: Printable p => p -> p -> p
+prettyPrintDiff left right =
+  mconcat $
+  map prettyPrintOperation $
+  diffToLineRanges $ getGroupedDiff (lines' left) (lines' right)
   where
     diffToLineRanges :: [Diff [p]] -> [DiffOperation (LineRange p)]
     diffToLineRanges = toLineRange 1 1

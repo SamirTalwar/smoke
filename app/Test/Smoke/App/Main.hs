@@ -4,7 +4,6 @@ import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
-import Data.Algorithm.Diff (getGroupedDiff)
 import Data.Maybe (fromJust)
 import System.Console.ANSI
 import System.Exit
@@ -132,7 +131,7 @@ putDiff :: Printable p => p -> p -> Output ()
 putDiff left right =
   putPlainLn $
   indented outputIndentation $
-  prettyPrintDiff $ getGroupedDiff (lines' left) (lines' right)
+  prettyPrintDiff left right
 
 putPlainLn :: Printable p => p -> Output ()
 putPlainLn string = do

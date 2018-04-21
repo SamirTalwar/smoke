@@ -1,7 +1,7 @@
 addition
 [32m  succeeded[0m
 complex
-[31m  input:  [0m[31m(8 + 2i) + (7 - 4i)[0m
+[31m  input:  [0m(8 + 2i) + (7 - 4i)
 [31m  output: [0m1c1
           < 15 - 2i
           ---
@@ -15,7 +15,7 @@ multiple-digits
 multiplication
 [32m  succeeded[0m
 parens
-[31m  input:  [0m[31m(6 + 3) * 2[0m
+[31m  input:  [0m(6 + 3) * 2
 [31m  output: [0m1c1
           < 18
           ---
@@ -23,7 +23,7 @@ parens
 subtraction
 [32m  succeeded[0m
 three-numbers
-[31m  input:  [0m[31m5 + 7 + 12[0m
+[31m  input:  [0m5 + 7 + 12
 [31m  output: [0m1c1
           < 24
           ---

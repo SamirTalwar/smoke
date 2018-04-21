@@ -89,8 +89,8 @@ printTitle = liftIO . putStrLn
 printFailingInput :: (Printable p, Foldable f) => String -> f p -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
-    putRed (indentedKey ("  " ++ name ++ ":"))
-    putRedLn (indented outputIndentation v)
+    putRed $ indentedKey ("  " ++ name ++ ":")
+    putPlainLn $ indented outputIndentation v
 
 printFailingOutput :: Printable p => String -> PartResult p -> Output ()
 printFailingOutput _ PartSuccess = return ()
@@ -130,10 +130,14 @@ printEmptyLn = liftIO $ putStrLn ""
 
 putDiff :: Printable p => p -> p -> Output ()
 putDiff left right =
-  liftIO $
-  printStr $
+  putPlainLn $
   indented outputIndentation $
   prettyPrintDiff $ getGroupedDiff (lines' left) (lines' right)
+
+putPlainLn :: Printable p => p -> Output ()
+putPlainLn string = do
+  liftIO $ printStr $ stripTrailingNewline string
+  printEmptyLn
 
 putGreen :: Printable p => p -> Output ()
 putGreen = putColor Green

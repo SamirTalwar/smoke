@@ -31,7 +31,6 @@ class (Eq p, Ord p, Monoid p, IsString p) =>
   isEmpty :: p -> Bool
   hasEsc :: p -> Bool
   printStr :: p -> IO ()
-  printStrLn :: p -> IO ()
 
 instance Printable String where
   int = show
@@ -45,7 +44,6 @@ instance Printable String where
   isEmpty = (== "")
   hasEsc string = '\ESC' `elem` string
   printStr = putStr
-  printStrLn = putStrLn
 
 instance Printable ByteString where
   int = fromString . show
@@ -59,7 +57,6 @@ instance Printable ByteString where
   isEmpty string = ByteString.length string == 0
   hasEsc string = esc `ByteString.elem` string
   printStr = ByteStringChar.putStr
-  printStrLn = ByteStringChar.putStrLn
 
 space :: Word8
 space = fromIntegral $ ord ' '

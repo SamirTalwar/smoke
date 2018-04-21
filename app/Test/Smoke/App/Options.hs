@@ -1,14 +1,14 @@
 {-# LANGUAGE ApplicativeDo #-}
 
-module Options
+module Test.Smoke.App.Options
   ( AppOptions(..)
   , parseOptions
   ) where
 
 import Data.Semigroup ((<>))
 import Options.Applicative
-import qualified Shell
 import Test.Smoke (Command, Options(..))
+import qualified Test.Smoke.App.Shell as Shell
 
 data AppOptions = AppOptions
   { optionsExecution :: Options

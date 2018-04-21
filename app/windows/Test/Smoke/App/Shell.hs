@@ -1,4 +1,4 @@
-module Shell
+module Test.Smoke.App.Shell
   ( isTTY
   ) where
 

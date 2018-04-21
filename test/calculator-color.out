@@ -2,10 +2,10 @@ addition
 [32m  succeeded[0m
 complex
 [31m  input:  [0m[31m(8 + 2i) + (7 - 4i)[0m
-[31m  output: [0m[31m1c1
+[31m  output: [0m1c1
           < 15 - 2i
           ---
-          > 2[0m
+          > 2
 division
 [32m  succeeded[0m
 infix-words-error
@@ -16,17 +16,17 @@ multiplication
 [32m  succeeded[0m
 parens
 [31m  input:  [0m[31m(6 + 3) * 2[0m
-[31m  output: [0m[31m1c1
+[31m  output: [0m1c1
           < 18
           ---
-          > 3[0m
+          > 3
 subtraction
 [32m  succeeded[0m
 three-numbers
 [31m  input:  [0m[31m5 + 7 + 12[0m
-[31m  output: [0m[31m1c1
+[31m  output: [0m1c1
           < 24
           ---
-          > 12[0m
+          > 12
 
 [31m9 tests, 3 failures[0m

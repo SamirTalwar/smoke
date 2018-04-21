@@ -100,12 +100,6 @@ printFailingOutput name (PartFailure expected actual) = do
   forM_ (tail expected) $ \e -> do
     putRed "      or: "
     putDiff e actual
-  where
-    putDiff :: Printable p => p -> p -> Output ()
-    putDiff left right =
-      putRedLn $
-      indented outputIndentation $
-      prettyPrintDiff $ getGroupedDiff (lines' left) (lines' right)
 
 printError :: String -> Output ()
 printError = putRedLn . indentedAll messageIndentation
@@ -133,6 +127,13 @@ indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
 printEmptyLn :: Output ()
 printEmptyLn = liftIO $ putStrLn ""
+
+putDiff :: Printable p => p -> p -> Output ()
+putDiff left right =
+  liftIO $
+  printStr $
+  indented outputIndentation $
+  prettyPrintDiff $ getGroupedDiff (lines' left) (lines' right)
 
 putGreen :: Printable p => p -> Output ()
 putGreen = putColor Green

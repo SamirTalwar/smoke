@@ -5,19 +5,16 @@ module Main where
 import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Trans.Reader (runReaderT)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.String (fromString)
-import System.Console.ANSI
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
 import Test.Smoke.App.Options
 import Test.Smoke.App.Print
 import Text.Printf (printf)
-
-type Output a = ReaderT AppOptions IO a
 
 main :: IO ()
 main = do
@@ -99,17 +96,14 @@ printFailingOutput :: String -> PartResult OutputString -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  putDiff (head expected) actual
+  printDiff (head expected) actual
   forM_ (tail expected) $ \e -> do
     putRed "      or: "
-    putDiff e actual
-
-printError :: String -> Output ()
-printError = putRedLn . indentedAll messageIndentation . fromString
+    printDiff e actual
 
 printSummary :: TestResults -> Output ()
 printSummary results = do
-  printEmptyLn
+  putEmptyLn
   let testCount = length results
   let failureCount = length failures
   case failureCount of
@@ -118,6 +112,9 @@ printSummary results = do
     n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
   where
     failures = filter isFailure results
+
+printError :: String -> Output ()
+printError = putRedLn . indentedAll messageIndentation . fromString
 
 outputIndentation :: Int
 outputIndentation = 10
@@ -128,44 +125,9 @@ messageIndentation = 2
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
-printEmptyLn :: Output ()
-printEmptyLn = liftIO $ putStrLn ""
-
-putDiff :: OutputString -> OutputString -> Output ()
-putDiff left right =
+printDiff :: OutputString -> OutputString -> Output ()
+printDiff left right =
   putPlainLn $ indented outputIndentation $ prettyPrintDiff left right
-
-putPlainLn :: OutputString -> Output ()
-putPlainLn string = do
-  liftIO $ printStr $ stripTrailingNewline string
-  printEmptyLn
-
-putGreen :: OutputString -> Output ()
-putGreen = putColor Green
-
-putGreenLn :: OutputString -> Output ()
-putGreenLn = putColorLn Green
-
-putRed :: OutputString -> Output ()
-putRed = putColor Red
-
-putRedLn :: OutputString -> Output ()
-putRedLn = putColorLn Red
-
-putColor :: Color -> OutputString -> Output ()
-putColor color string = do
-  options <- ask
-  if optionsColor options && not (hasEsc string)
-    then do
-      liftIO $ setSGR [SetColor Foreground Dull color]
-      liftIO $ printStr string
-      liftIO $ setSGR [Reset]
-    else liftIO $ printStr string
-
-putColorLn :: Color -> OutputString -> Output ()
-putColorLn color string = do
-  putColor color (stripTrailingNewline string)
-  printEmptyLn
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

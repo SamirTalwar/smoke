@@ -5,13 +5,12 @@ module Main where
 import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Reader (runReaderT)
+import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import System.Exit
 import Test.Smoke
-import Test.Smoke.App.Diff
 import Test.Smoke.App.Options
 import Test.Smoke.App.Print
 import Text.Printf (printf)
@@ -126,8 +125,9 @@ indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
 printDiff :: OutputString -> OutputString -> Output ()
-printDiff left right =
-  putPlainLn $ indented outputIndentation $ prettyPrintDiff left right
+printDiff left right = do
+  AppOptions {optionsDiffRenderer = renderDiff} <- ask
+  putPlainLn $ indented outputIndentation $ renderDiff left right
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

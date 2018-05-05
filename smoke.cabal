@@ -44,7 +44,7 @@ executable smoke-exe
   main-is:             Test/Smoke/App/Main.hs
   other-modules:       Test.Smoke.App.Diff
                        Test.Smoke.App.Options
-                       Test.Smoke.App.Printable
+                       Test.Smoke.App.Print
                        Test.Smoke.App.Shell
   default-language:    Haskell2010
   build-depends:       base

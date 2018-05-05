@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Control.Exception (displayException)
@@ -5,12 +7,14 @@ import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import Data.Maybe (fromJust)
+import Data.Monoid ((<>))
+import Data.String (fromString)
 import System.Console.ANSI
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
 import Test.Smoke.App.Options
-import Test.Smoke.App.Printable
+import Test.Smoke.App.Print
 import Text.Printf (printf)
 
 type Output a = ReaderT AppOptions IO a
@@ -41,9 +45,9 @@ printResult (TestSuccess test) = do
   putGreenLn "  succeeded"
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
-  printFailingInput "args" (unlines <$> testArgs test)
+  printFailingInput "args" (fromString . unlines <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
-  printFailingOutput "status" (show . unStatus <$> statusResult)
+  printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
@@ -85,23 +89,23 @@ printResult (TestError test CouldNotBlessStdErrWithMultipleValues) = do
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn
 
-printFailingInput :: (Printable p, Foldable f) => String -> f p -> Output ()
+printFailingInput :: Foldable f => String -> f OutputString -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
-    putRed $ indentedKey ("  " ++ name ++ ":")
+    putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
     putPlainLn $ indented outputIndentation v
 
-printFailingOutput :: Printable p => String -> PartResult p -> Output ()
+printFailingOutput :: String -> PartResult OutputString -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
-  putRed (indentedKey ("  " ++ name ++ ":"))
+  putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
   putDiff (head expected) actual
   forM_ (tail expected) $ \e -> do
     putRed "      or: "
     putDiff e actual
 
 printError :: String -> Output ()
-printError = putRedLn . indentedAll messageIndentation
+printError = putRedLn . indentedAll messageIndentation . fromString
 
 printSummary :: TestResults -> Output ()
 printSummary results = do
@@ -109,9 +113,9 @@ printSummary results = do
   let testCount = length results
   let failureCount = length failures
   case failureCount of
-    0 -> putGreenLn (show testCount ++ " tests, 0 failures")
-    1 -> putRedLn (show testCount ++ " tests, 1 failure")
-    n -> putRedLn (show testCount ++ " tests, " ++ show n ++ " failures")
+    0 -> putGreenLn (int testCount <> " tests, 0 failures")
+    1 -> putRedLn (int testCount <> " tests, 1 failure")
+    n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
   where
     failures = filter isFailure results
 
@@ -127,30 +131,28 @@ indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 printEmptyLn :: Output ()
 printEmptyLn = liftIO $ putStrLn ""
 
-putDiff :: Printable p => p -> p -> Output ()
+putDiff :: OutputString -> OutputString -> Output ()
 putDiff left right =
-  putPlainLn $
-  indented outputIndentation $
-  prettyPrintDiff left right
+  putPlainLn $ indented outputIndentation $ prettyPrintDiff left right
 
-putPlainLn :: Printable p => p -> Output ()
+putPlainLn :: OutputString -> Output ()
 putPlainLn string = do
   liftIO $ printStr $ stripTrailingNewline string
   printEmptyLn
 
-putGreen :: Printable p => p -> Output ()
+putGreen :: OutputString -> Output ()
 putGreen = putColor Green
 
-putGreenLn :: Printable p => p -> Output ()
+putGreenLn :: OutputString -> Output ()
 putGreenLn = putColorLn Green
 
-putRed :: Printable p => p -> Output ()
+putRed :: OutputString -> Output ()
 putRed = putColor Red
 
-putRedLn :: Printable p => p -> Output ()
+putRedLn :: OutputString -> Output ()
 putRedLn = putColorLn Red
 
-putColor :: Printable p => Color -> p -> Output ()
+putColor :: Color -> OutputString -> Output ()
 putColor color string = do
   options <- ask
   if optionsColor options && not (hasEsc string)
@@ -160,7 +162,7 @@ putColor color string = do
       liftIO $ setSGR [Reset]
     else liftIO $ printStr string
 
-putColorLn :: Printable p => Color -> p -> Output ()
+putColorLn :: Color -> OutputString -> Output ()
 putColorLn color string = do
   putColor color (stripTrailingNewline string)
   printEmptyLn

@@ -11,6 +11,7 @@ import Data.Monoid ((<>))
 import Data.String (fromString)
 import System.Exit
 import Test.Smoke
+import Test.Smoke.App.Diff
 import Test.Smoke.App.Options
 import Test.Smoke.App.Print
 import Text.Printf (printf)
@@ -126,7 +127,7 @@ indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
 printDiff :: OutputString -> OutputString -> Output ()
 printDiff left right = do
-  AppOptions {optionsDiffRenderer = renderDiff} <- ask
+  AppOptions {optionsDiffEngine = DiffEngine {engineRender = renderDiff}} <- ask
   putPlainLn $ indented outputIndentation $ renderDiff left right
 
 exitAccordingTo :: TestResults -> IO ()

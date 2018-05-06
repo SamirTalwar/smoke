@@ -1,7 +1,13 @@
 module Test.Smoke.App.Diff.Types
-  ( DiffRenderer
+  ( DiffEngine(..)
+  , RenderDiff
   ) where
 
 import Data.ByteString (ByteString)
 
-type DiffRenderer = ByteString -> ByteString -> ByteString
+data DiffEngine = DiffEngine
+  { engineName :: String
+  , engineRender :: RenderDiff
+  }
+
+type RenderDiff = ByteString -> ByteString -> ByteString

@@ -1,21 +1,26 @@
 module Test.Smoke.App.Diff
-  ( Renderer
-  , renderers
-  , findRenderer
-  , getRenderer
+  ( DiffEngine(..)
+  , Engine
+  , engines
+  , engineNames
+  , findEngine
+  , getEngine
   ) where
 
+import Data.List (find)
 import qualified Test.Smoke.App.Diff.Native as Native
 import Test.Smoke.App.Diff.Types
 
-type Renderer = DiffRenderer
+type Engine = DiffEngine
 
-renderers :: [String]
-renderers = ["native"]
+engines :: [DiffEngine]
+engines = [Native.engine]
 
-findRenderer :: IO Renderer
-findRenderer = return Native.render
+engineNames :: [String]
+engineNames = map engineName engines
 
-getRenderer :: String -> Maybe Renderer
-getRenderer "native" = Just Native.render
-getRenderer _ = Nothing
+findEngine :: IO DiffEngine
+findEngine = return $ head engines
+
+getEngine :: String -> Maybe DiffEngine
+getEngine name = find (\engine -> name == engineName engine) engines

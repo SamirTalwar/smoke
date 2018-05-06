@@ -1,5 +1,5 @@
 module Test.Smoke.App.Diff.Native
-  ( render
+  ( engine
   ) where
 
 import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
@@ -16,7 +16,13 @@ data LineRange =
             [OutputString]
   deriving (Eq, Ord)
 
-render :: DiffRenderer
+engine :: DiffEngine
+engine = DiffEngine {engineName = name, engineRender = render}
+
+name :: String
+name = "native"
+
+render :: RenderDiff
 render left right =
   mconcat $
   map prettyPrintOperation $

@@ -8,5 +8,5 @@ Available options:
   --bless                  Bless the results
   -c,--color               Color output
   --no-color               Do not color output
-  --diff ARG               Specify the diff renderer
+  --diff ARG               Specify the diff engine
   -h,--help                Show this help text

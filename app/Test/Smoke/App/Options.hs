@@ -16,28 +16,28 @@ data AppOptions = AppOptions
   { optionsExecution :: Options
   , optionsColor :: Bool
   , optionsBless :: Bool
-  , optionsDiffRenderer :: Diff.Renderer
+  , optionsDiffEngine :: Diff.Engine
   }
 
 parseOptions :: IO AppOptions
 parseOptions = do
   isTTY <- Shell.isTTY
-  foundDiffRenderer <- Diff.findRenderer
-  execParser (options isTTY foundDiffRenderer)
+  foundDiffEngine <- Diff.findEngine
+  execParser (options isTTY foundDiffEngine)
 
-options :: Bool -> Diff.Renderer -> ParserInfo AppOptions
-options isTTY foundDiffRenderer =
+options :: Bool -> Diff.Engine -> ParserInfo AppOptions
+options isTTY foundDiffEngine =
   info
-    (optionParser isTTY foundDiffRenderer <**> helper)
+    (optionParser isTTY foundDiffEngine <**> helper)
     (fullDesc <>
      header "Smoke: a framework for testing most things from the very edges.")
 
-optionParser :: Bool -> Diff.Renderer -> Parser AppOptions
-optionParser isTTY foundDiffRenderer = do
+optionParser :: Bool -> Diff.Engine -> Parser AppOptions
+optionParser isTTY foundDiffEngine = do
   executionCommand <- commandParser
   bless <- blessParser
   color <- colorParser isTTY
-  diffRenderer <- diffRendererParser foundDiffRenderer
+  diffEngine <- diffEngineParser foundDiffEngine
   testLocation <- testLocationParser
   return
     AppOptions
@@ -48,7 +48,7 @@ optionParser isTTY foundDiffRenderer = do
             }
       , optionsColor = color
       , optionsBless = bless
-      , optionsDiffRenderer = diffRenderer
+      , optionsDiffEngine = diffEngine
       }
 
 commandParser :: Parser (Maybe Command)
@@ -67,19 +67,17 @@ colorParser isTTY =
   flag' False (long "no-color" <> help "Do not color output") <|>
   pure isTTY
 
-diffRendererParser :: Diff.Renderer -> Parser Diff.Renderer
-diffRendererParser foundDiffRenderer =
+diffEngineParser :: Diff.Engine -> Parser Diff.Engine
+diffEngineParser foundDiffEngine =
   option
-    (str >>= readDiffRenderer)
-    (long "diff" <> help "Specify the diff renderer" <> value foundDiffRenderer)
+    (str >>= readDiffEngine)
+    (long "diff" <> help "Specify the diff engine" <> value foundDiffEngine)
   where
-    readDiffRenderer :: String -> ReadM Diff.Renderer
-    readDiffRenderer =
-      maybe
-        (readerError ("Valid diff renderers are: " ++ validDiffRenderers))
-        return .
-      Diff.getRenderer
-    validDiffRenderers = intercalate ", " Diff.renderers
+    readDiffEngine :: String -> ReadM Diff.Engine
+    readDiffEngine =
+      maybe (readerError ("Valid diff engines are: " ++ validDiffEngine)) return .
+      Diff.getEngine
+    validDiffEngine = intercalate ", " Diff.engineNames
 
 testLocationParser :: Parser [FilePath]
 testLocationParser = some (argument str (metavar "TEST-LOCATION..."))

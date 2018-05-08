@@ -128,7 +128,8 @@ indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 printDiff :: OutputString -> OutputString -> Output ()
 printDiff left right = do
   AppOptions {optionsDiffEngine = DiffEngine {engineRender = renderDiff}} <- ask
-  putPlainLn $ indented outputIndentation $ renderDiff left right
+  diff <- liftIO $ renderDiff left right
+  putPlainLn $ indented outputIndentation diff
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

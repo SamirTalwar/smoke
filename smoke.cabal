@@ -43,6 +43,7 @@ executable smoke-exe
     hs-source-dirs:    app/unix
   main-is:             Test/Smoke/App/Main.hs
   other-modules:       Test.Smoke.App.Diff
+                       Test.Smoke.App.Diff.DiffUtility
                        Test.Smoke.App.Diff.Native
                        Test.Smoke.App.Diff.Types
                        Test.Smoke.App.Options
@@ -56,6 +57,9 @@ executable smoke-exe
                      , Diff
                      , mtl
                      , optparse-applicative
+                     , process
+                     , process-extras
+                     , temporary
                      , transformers
   if !os(windows)
     build-depends:     unix

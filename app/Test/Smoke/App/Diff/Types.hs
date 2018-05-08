@@ -10,4 +10,4 @@ data DiffEngine = DiffEngine
   , engineRender :: RenderDiff
   }
 
-type RenderDiff = ByteString -> ByteString -> ByteString
+type RenderDiff = ByteString -> ByteString -> IO ByteString

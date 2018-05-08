@@ -8,13 +8,14 @@ module Test.Smoke.App.Diff
   ) where
 
 import Data.List (find)
+import qualified Test.Smoke.App.Diff.DiffUtility as DiffUtility
 import qualified Test.Smoke.App.Diff.Native as Native
 import Test.Smoke.App.Diff.Types
 
 type Engine = DiffEngine
 
 engines :: [DiffEngine]
-engines = [Native.engine]
+engines = [DiffUtility.engine, Native.engine]
 
 engineNames :: [String]
 engineNames = map engineName engines

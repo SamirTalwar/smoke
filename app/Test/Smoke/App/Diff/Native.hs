@@ -24,6 +24,7 @@ name = "native"
 
 render :: RenderDiff
 render left right =
+  return $
   mconcat $
   map prettyPrintOperation $
   diffToLineRanges $

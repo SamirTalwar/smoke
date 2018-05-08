@@ -7,6 +7,7 @@ import Data.ByteString (ByteString)
 
 data DiffEngine = DiffEngine
   { engineName :: String
+  , engineEnabled :: IO Bool
   , engineRender :: RenderDiff
   }
 

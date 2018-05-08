@@ -17,10 +17,14 @@ data LineRange =
   deriving (Eq, Ord)
 
 engine :: DiffEngine
-engine = DiffEngine {engineName = name, engineRender = render}
+engine =
+  DiffEngine {engineName = name, engineEnabled = enabled, engineRender = render}
 
 name :: String
 name = "native"
+
+enabled :: IO Bool
+enabled = return True
 
 render :: RenderDiff
 render left right =

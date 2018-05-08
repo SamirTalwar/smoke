@@ -7,6 +7,7 @@ module Test.Smoke.App.Diff
   , getEngine
   ) where
 
+import Control.Monad (filterM)
 import Data.List (find)
 import qualified Test.Smoke.App.Diff.DiffUtility as DiffUtility
 import qualified Test.Smoke.App.Diff.Native as Native
@@ -21,7 +22,7 @@ engineNames :: [String]
 engineNames = map engineName engines
 
 findEngine :: IO DiffEngine
-findEngine = return $ head engines
+findEngine = head <$> filterM engineEnabled engines
 
 getEngine :: String -> Maybe DiffEngine
 getEngine name = find (\engine -> name == engineName engine) engines

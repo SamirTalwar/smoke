@@ -55,6 +55,7 @@ executable smoke-exe
                      , ansi-terminal
                      , bytestring
                      , Diff
+                     , directory
                      , mtl
                      , optparse-applicative
                      , process

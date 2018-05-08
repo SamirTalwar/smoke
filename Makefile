@@ -15,7 +15,10 @@ endif
 
 CONF = Setup.hs smoke.cabal stack.yaml
 SRC = $(shell find app src -name '*.hs')
-BIN := out/build/smoke-exe
+OUT_DEBUG := out/build/debug
+BIN_DEBUG := $(OUT_DEBUG)/smoke-exe
+OUT_RELEASE := out/build/release
+BIN_RELEASE := $(OUT_RELEASE)/smoke-exe
 
 ifdef CI
   STACK := stack --no-terminal
@@ -24,18 +27,23 @@ else
 endif
 
 .PHONY: build
-build: out/smoke-$(OS)
+build: $(BIN_DEBUG)
 
-out/smoke-$(OS): $(BIN)
-	cp $(BIN) out/smoke-$(OS)
+.PHONY: dist
+dist: out/smoke-$(OS)
 
-$(BIN): $(CONF) $(SRC)
-	$(STACK) build
-	$(STACK) install --local-bin-path=out/build
+out/smoke-$(OS): $(BIN_RELEASE)
+	stack clean
+	stack build
+	stack install --local-bin-path=$(OUT_RELEASE)
+	cp $(BIN_RELEASE) out/smoke-$(OS)
+
+$(BIN_DEBUG): $(CONF) $(SRC)
+	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
 
 .PHONY: test
 test: build
-	$(BIN) --command=$(BIN) test
+	$(BIN_DEBUG) --command=$(BIN_DEBUG) test
 
 .PHONY: lint
 lint: ~/.local/bin/hlint

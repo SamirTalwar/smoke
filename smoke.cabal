@@ -45,6 +45,7 @@ executable smoke-exe
   other-modules:       Test.Smoke.App.Diff
                        Test.Smoke.App.Diff.DiffUtility
                        Test.Smoke.App.Diff.ExternalDiffCommand
+                       Test.Smoke.App.Diff.GitDiff
                        Test.Smoke.App.Diff.Native
                        Test.Smoke.App.Diff.Types
                        Test.Smoke.App.Options

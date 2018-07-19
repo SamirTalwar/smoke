@@ -10,13 +10,14 @@ module Test.Smoke.App.Diff
 import Control.Monad (filterM)
 import Data.List (find)
 import qualified Test.Smoke.App.Diff.DiffUtility as DiffUtility
+import qualified Test.Smoke.App.Diff.GitDiff as GitDiff
 import qualified Test.Smoke.App.Diff.Native as Native
 import Test.Smoke.App.Diff.Types
 
 type Engine = DiffEngine
 
 engines :: [DiffEngine]
-engines = [DiffUtility.engine, Native.engine]
+engines = [GitDiff.engine, DiffUtility.engine, Native.engine]
 
 engineNames :: [String]
 engineNames = map engineName engines

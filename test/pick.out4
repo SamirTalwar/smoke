@@ -8,25 +8,20 @@ wrong
           tres
           quatro
           cinqo
-  output: 1c1
-          < one
-          ---
-          > quatro
-      or: 1c1
-          < two
-          ---
-          > quatro
-      or: 1c1
-          < three
-          ---
-          > quatro
-      or: 1c1
-          < four
-          ---
-          > quatro
-      or: 1c1
-          < five
-          ---
-          > quatro
+  output: @@ -1 +1 @@
+          -one
+          +quatro
+      or: @@ -1 +1 @@
+          -two
+          +quatro
+      or: @@ -1 +1 @@
+          -three
+          +quatro
+      or: @@ -1 +1 @@
+          -four
+          +quatro
+      or: @@ -1 +1 @@
+          -five
+          +quatro
 
 3 tests, 1 failure

@@ -45,6 +45,10 @@ $(BIN_DEBUG): $(CONF) $(SRC)
 test: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) test
 
+.PHONY: bless
+bless: build
+	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless test
+
 .PHONY: lint
 lint: ~/.local/bin/hlint
 	$(STACK) exec -- hlint .

@@ -12,6 +12,7 @@ import Data.String (fromString)
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
+import Test.Smoke.App.OptionTypes
 import Test.Smoke.App.Options
 import Test.Smoke.App.Print
 import Text.Printf (printf)
@@ -21,9 +22,9 @@ main = do
   options <- parseOptions
   tests <- discoverTests (optionsExecution options)
   results <- runTests tests
-  if optionsBless options
-    then outputResults options =<< blessResults results
-    else outputResults options results
+  case optionsMode options of
+    Check -> outputResults options results
+    Bless -> outputResults options =<< blessResults results
 
 outputResults :: AppOptions -> TestResults -> IO ()
 outputResults options results = do

@@ -12,7 +12,7 @@ import Data.Char (ord)
 import Data.String (IsString(..))
 import Data.Word (Word8)
 import System.Console.ANSI
-import Test.Smoke.App.Options (AppOptions(..))
+import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
 type OutputString = ByteString
 
@@ -79,7 +79,7 @@ putRedLn = putColorLn Red
 putColor :: Color -> OutputString -> Output ()
 putColor color string = do
   options <- ask
-  if optionsColor options && not (hasEsc string)
+  if optionsColor options == Color && not (hasEsc string)
     then do
       liftIO $ setSGR [SetColor Foreground Dull color]
       liftIO $ ByteStringChar.putStr string

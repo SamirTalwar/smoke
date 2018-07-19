@@ -1,8 +1,7 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 module Test.Smoke.App.Options
-  ( AppOptions(..)
-  , parseOptions
+  ( parseOptions
   ) where
 
 import Data.List (intercalate)
@@ -10,14 +9,10 @@ import Data.Semigroup ((<>))
 import Options.Applicative
 import Test.Smoke (Command, Options(..))
 import qualified Test.Smoke.App.Diff as Diff
+import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell
 
-data AppOptions = AppOptions
-  { optionsExecution :: Options
-  , optionsColor :: Bool
-  , optionsBless :: Bool
-  , optionsDiffEngine :: Diff.Engine
-  }
+type IsTTY = Bool
 
 parseOptions :: IO AppOptions
 parseOptions = do
@@ -25,17 +20,17 @@ parseOptions = do
   foundDiffEngine <- Diff.findEngine
   execParser (options isTTY foundDiffEngine)
 
-options :: Bool -> Diff.Engine -> ParserInfo AppOptions
+options :: IsTTY -> Diff.Engine -> ParserInfo AppOptions
 options isTTY foundDiffEngine =
   info
     (optionParser isTTY foundDiffEngine <**> helper)
     (fullDesc <>
      header "Smoke: a framework for testing most things from the very edges.")
 
-optionParser :: Bool -> Diff.Engine -> Parser AppOptions
+optionParser :: IsTTY -> Diff.Engine -> Parser AppOptions
 optionParser isTTY foundDiffEngine = do
   executionCommand <- commandParser
-  bless <- blessParser
+  mode <- modeParser
   color <- colorParser isTTY
   diffEngine <- diffEngineParser foundDiffEngine
   testLocation <- testLocationParser
@@ -47,7 +42,7 @@ optionParser isTTY foundDiffEngine = do
             , optionsTestLocations = testLocation
             }
       , optionsColor = color
-      , optionsBless = bless
+      , optionsMode = mode
       , optionsDiffEngine = diffEngine
       }
 
@@ -57,15 +52,18 @@ commandParser =
     (words <$>
      strOption (long "command" <> help "Specify or override the command to run"))
 
-blessParser :: Parser Bool
-blessParser =
-  flag' True (long "bless" <> help "Bless the results") <|> pure False
+modeParser :: Parser Mode
+modeParser =
+  flag' Bless (long "bless" <> help "Bless the results") <|> pure Check
 
-colorParser :: Bool -> Parser Bool
+colorParser :: IsTTY -> Parser ColorOutput
 colorParser isTTY =
-  flag' True (short 'c' <> long "color" <> help "Color output") <|>
-  flag' False (long "no-color" <> help "Do not color output") <|>
-  pure isTTY
+  flag' Color (short 'c' <> long "color" <> help "Color output") <|>
+  flag' NoColor (long "no-color" <> help "Do not color output") <|>
+  pure
+    (if isTTY
+       then Color
+       else NoColor)
 
 diffEngineParser :: Diff.Engine -> Parser Diff.Engine
 diffEngineParser foundDiffEngine =

@@ -49,6 +49,7 @@ executable smoke-exe
                        Test.Smoke.App.Diff.Native
                        Test.Smoke.App.Diff.Types
                        Test.Smoke.App.Options
+                       Test.Smoke.App.OptionTypes
                        Test.Smoke.App.Print
                        Test.Smoke.App.Shell
   default-language:    Haskell2010

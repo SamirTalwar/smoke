@@ -44,6 +44,7 @@ executable smoke-exe
   main-is:             Test/Smoke/App/Main.hs
   other-modules:       Test.Smoke.App.Diff
                        Test.Smoke.App.Diff.DiffUtility
+                       Test.Smoke.App.Diff.ExternalDiffCommand
                        Test.Smoke.App.Diff.Native
                        Test.Smoke.App.Diff.Types
                        Test.Smoke.App.Options

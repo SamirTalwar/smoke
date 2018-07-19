@@ -26,8 +26,8 @@ name = "native"
 enabled :: IO Bool
 enabled = return True
 
-render :: RenderDiff
-render left right =
+render :: PrintDiff
+render _ left right =
   return $
   mconcat $
   map prettyPrintOperation $

@@ -21,8 +21,8 @@ import Test.Smoke.App.Diff.Types
 
 type Command = NonEmpty String
 
-enabled :: Command -> IO Bool
-enabled (executable :| _) = isJust <$> findExecutable executable
+enabled :: String -> IO Bool
+enabled executable = isJust <$> findExecutable executable
 
 render :: Command -> RenderDiff
 render (command@(executable :| args)) left right =

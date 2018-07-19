@@ -6,6 +6,7 @@ module Test.Smoke.App.OptionTypes
 
 import Test.Smoke (Options(..))
 import Test.Smoke.App.Diff.Types
+import Test.Smoke.App.OptionColorOutput
 
 data AppOptions = AppOptions
   { optionsExecution :: Options
@@ -13,11 +14,6 @@ data AppOptions = AppOptions
   , optionsMode :: Mode
   , optionsDiffEngine :: DiffEngine
   }
-
-data ColorOutput
-  = Color
-  | NoColor
-  deriving (Eq)
 
 data Mode
   = Check

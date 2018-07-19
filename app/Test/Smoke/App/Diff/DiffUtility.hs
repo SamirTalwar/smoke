@@ -10,12 +10,15 @@ engine :: DiffEngine
 engine =
   DiffEngine
     { engineName = name
-    , engineEnabled = enabled command
-    , engineRender = render command
+    , engineEnabled = enabled executable
+    , engineRender = \_ -> render command
     }
 
 name :: String
 name = "diff"
 
 command :: Command
-command = NonEmpty.fromList ["diff"]
+command = NonEmpty.fromList [executable]
+
+executable :: String
+executable = "diff"

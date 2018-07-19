@@ -4,7 +4,7 @@
 
 _An integration test framework for practically anything._
 
-![Smoke output](https://s3-eu-west-1.amazonaws.com/samirtalwar-smoke/screenshot.png)
+![Smoke output](./screenshot.png)
 
 Smoke is designed to test anything that can be wrapped with a command-line interface. In practice, this amounts to almost any application or large piece of code. Whatever you're working on, no matter how big or complicated, you can usually wrap a CLI around it with minimum effort.
 

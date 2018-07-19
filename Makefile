@@ -38,6 +38,11 @@ out/smoke-$(OS): $(BIN_RELEASE)
 	stack install --local-bin-path=$(OUT_RELEASE)
 	cp $(BIN_RELEASE) out/smoke-$(OS)
 
+$(BIN_RELEASE):
+	stack clean
+	stack build
+	stack install --local-bin-path=$(OUT_RELEASE)
+
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
 

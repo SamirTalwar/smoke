@@ -20,6 +20,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Test.Smoke
   other-modules:       Test.Smoke.Bless
+                       Test.Smoke.Compare
                        Test.Smoke.Discovery
                        Test.Smoke.FileTypes
                        Test.Smoke.Runner

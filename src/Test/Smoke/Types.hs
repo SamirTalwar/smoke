@@ -2,7 +2,6 @@ module Test.Smoke.Types where
 
 import Control.Exception (IOException)
 import Data.ByteString (ByteString)
-import Test.Smoke.Compare
 
 type TestName = String
 
@@ -17,25 +16,16 @@ newtype Status = Status
   } deriving (Eq, Show)
 
 newtype StdIn = StdIn
-  { unStdIn :: ByteString
-  } deriving (Show)
-
-instance Eq StdIn where
-  StdIn a == StdIn b = compareByteStrings a b
+  { unStdIn :: [ByteString]
+  } deriving (Eq, Show)
 
 newtype StdOut = StdOut
-  { unStdOut :: ByteString
-  } deriving (Show)
-
-instance Eq StdOut where
-  StdOut a == StdOut b = compareByteStrings a b
+  { unStdOut :: [ByteString]
+  } deriving (Eq, Show)
 
 newtype StdErr = StdErr
-  { unStdErr :: ByteString
-  } deriving (Show)
-
-instance Eq StdErr where
-  StdErr a == StdErr b = compareByteStrings a b
+  { unStdErr :: [ByteString]
+  } deriving (Eq, Show)
 
 data Options = Options
   { optionsCommand :: Maybe Command

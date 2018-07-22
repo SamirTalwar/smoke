@@ -5,12 +5,14 @@ module Test.Smoke.Runner
 import Control.Monad (forM, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
-import Data.ByteString as ByteString (empty, readFile)
+import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.ByteString (readProcessWithExitCode)
+import Test.Smoke.Lines
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
@@ -51,17 +53,19 @@ readExecutionPlan test = do
            liftIO (findExecutable executableName)
   let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
   stdIn <-
-    liftIO $ sequence ((StdIn <$>) . ByteString.readFile <$> testStdIn test)
+    liftIO $
+    ((StdIn . normalizeLines) <$>) <$>
+    sequence (ByteString.readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
   expectedStdOuts <-
-    map StdOut . ifEmpty ByteString.empty <$>
+    map StdOut . ifEmpty [] . map normalizeLines <$>
     mapM ByteString.readFile (testStdOut test)
   expectedStdErrs <-
-    map StdErr . ifEmpty ByteString.empty <$>
+    map StdErr . ifEmpty [] . map normalizeLines <$>
     mapM ByteString.readFile (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
@@ -70,9 +74,12 @@ executeTest (TestExecutionPlan _ executable args stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
     handleExecutionError =<<
     liftIO (tryIOError (readProcessWithExitCode executable args processStdIn))
-  return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
+  return
+    ( convertExitCode exitCode
+    , StdOut (normalizeLines processStdOut)
+    , StdErr (normalizeLines processStdErr))
   where
-    processStdIn = unStdIn (fromMaybe (StdIn ByteString.empty) stdIn)
+    processStdIn = ByteStringChar.unlines $ unStdIn $ fromMaybe (StdIn []) stdIn
 
 handleExecutionError :: Either IOError a -> Execution a
 handleExecutionError (Left e) =

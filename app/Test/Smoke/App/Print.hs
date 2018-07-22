@@ -3,7 +3,7 @@
 
 module Test.Smoke.App.Print where
 
-import Control.Monad (unless)
+import Control.Monad (forM_, mapM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import Data.ByteString (ByteString)
@@ -15,20 +15,28 @@ import Data.Word (Word8)
 import System.Console.ANSI
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
-type OutputString = ByteString
+type OutputString = [OutputLine]
+
+type OutputLine = ByteString
 
 type Output a = ReaderT AppOptions IO a
 
-int :: Int -> OutputString
+single :: OutputLine -> OutputString
+single = return
+
+serialize :: OutputString -> ByteString
+serialize = ByteStringChar.unlines
+
+deserialize :: ByteString -> OutputString
+deserialize = ByteStringChar.lines
+
+int :: Int -> OutputLine
 int = fromString . show
 
-isEmpty :: OutputString -> Bool
-isEmpty string = ByteString.length string == 0
+hasEsc :: OutputLine -> Bool
+hasEsc = ByteString.elem esc
 
-hasEsc :: OutputString -> Bool
-hasEsc string = esc `ByteString.elem` string
-
-spaces :: Int -> OutputString
+spaces :: Int -> OutputLine
 spaces n = ByteString.replicate n space
 
 space :: Word8
@@ -41,41 +49,28 @@ esc :: Word8
 esc = fromIntegral $ ord '\ESC'
 
 indented :: Int -> OutputString -> OutputString
-indented n = ByteStringChar.unlines . indentedLines . ByteStringChar.lines
-  where
-    indentedLines :: [OutputString] -> [OutputString]
-    indentedLines [] = []
-    indentedLines (first:rest) = first : map (mappend (spaces n)) rest
+indented _ [] = []
+indented n (first:rest) = first : map (mappend (spaces n)) rest
 
 indentedAll :: Int -> OutputString -> OutputString
-indentedAll n =
-  ByteStringChar.unlines . map (mappend (spaces n)) . ByteStringChar.lines
-
-hasTrailingNewline :: OutputString -> Bool
-hasTrailingNewline string =
-  string /= ByteString.empty && ByteString.last string == newline
+indentedAll n = map (mappend (spaces n))
 
 putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
 putPlainLn :: OutputString -> Output ()
-putPlainLn string = do
-  liftIO $ ByteStringChar.putStr string
-  unless (hasTrailingNewline string) putEmptyLn
-
-putGreen :: OutputString -> Output ()
-putGreen = putColor Green
+putPlainLn string = liftIO $ mapM_ ByteStringChar.putStrLn string
 
 putGreenLn :: OutputString -> Output ()
 putGreenLn = putColorLn Green
 
-putRed :: OutputString -> Output ()
+putRed :: OutputLine -> Output ()
 putRed = putColor Red
 
 putRedLn :: OutputString -> Output ()
 putRedLn = putColorLn Red
 
-putColor :: Color -> OutputString -> Output ()
+putColor :: Color -> OutputLine -> Output ()
 putColor color string = do
   options <- ask
   if optionsColor options == Color && not (hasEsc string)
@@ -86,6 +81,7 @@ putColor color string = do
     else liftIO $ ByteStringChar.putStr string
 
 putColorLn :: Color -> OutputString -> Output ()
-putColorLn color string = do
-  putColor color string
-  unless (hasTrailingNewline string) putEmptyLn
+putColorLn color string =
+  forM_ string $ \line -> do
+    putColor color line
+    putEmptyLn

@@ -6,6 +6,7 @@ import Control.Exception (catch)
 import Control.Monad (unless)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.Maybe (fromMaybe, listToMaybe)
 import System.Directory (doesFileExist, removeFile)
 import Test.Smoke.FileTypes (filePath)
@@ -27,10 +28,12 @@ blessResult (TestFailure (TestExecutionPlan test@(Test name location _ _ _ stdOu
          writeFile statusPath (show actual ++ "\n")
        _ -> return ()
      case stdOut of
-       PartFailure _ (StdOut actual) -> writeOutput stdOutPath actual
+       PartFailure _ (StdOut actual) ->
+         writeOutput stdOutPath $ ByteStringChar.unlines actual
        _ -> return ()
      case stdErr of
-       PartFailure _ (StdErr actual) -> writeOutput stdErrPath actual
+       PartFailure _ (StdErr actual) ->
+         writeOutput stdErrPath $ ByteStringChar.unlines actual
        _ -> return ()
      stdOutExists <- doesFileExist stdOutPath
      stdErrExists <- doesFileExist stdErrPath

@@ -40,12 +40,12 @@ printResults = mapM_ printResult
 printResult :: TestResult -> Output ()
 printResult (TestSuccess test) = do
   printTitle (testName test)
-  putGreenLn "  succeeded"
+  putGreenLn $ single "  succeeded"
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
-  printFailingInput "args" (fromString . unlines <$> testArgs test)
+  printFailingInput "args" (map fromString <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
-  printFailingOutput "status" (int . unStatus <$> statusResult)
+  printFailingOutput "status" (single . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
@@ -108,14 +108,14 @@ printSummary results = do
   let testCount = length results
   let failureCount = length failures
   case failureCount of
-    0 -> putGreenLn (int testCount <> " tests, 0 failures")
-    1 -> putRedLn (int testCount <> " tests, 1 failure")
-    n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
+    0 -> putGreenLn (single $ int testCount <> " tests, 0 failures")
+    1 -> putRedLn (single $ int testCount <> " tests, 1 failure")
+    n -> putRedLn (single $ int testCount <> " tests, " <> int n <> " failures")
   where
     failures = filter isFailure results
 
 printError :: String -> Output ()
-printError = putRedLn . indentedAll messageIndentation . fromString
+printError = putRedLn . indentedAll messageIndentation . return . fromString
 
 outputIndentation :: Int
 outputIndentation = 10
@@ -131,8 +131,8 @@ printDiff left right = do
   AppOptions { optionsColor = color
              , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
              } <- ask
-  diff <- liftIO $ renderDiff color left right
-  putPlainLn $ indented outputIndentation diff
+  diff <- liftIO $ renderDiff color (serialize left) (serialize right)
+  putPlainLn $ indented outputIndentation $ deserialize diff
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

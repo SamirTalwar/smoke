@@ -3,6 +3,7 @@
 
 module Test.Smoke.App.Print where
 
+import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import Data.ByteString (ByteString)
@@ -50,19 +51,17 @@ indentedAll :: Int -> OutputString -> OutputString
 indentedAll n =
   ByteStringChar.unlines . map (mappend (spaces n)) . ByteStringChar.lines
 
-stripTrailingNewline :: OutputString -> OutputString
-stripTrailingNewline string
-  | string == ByteString.empty = string
-  | ByteString.last string == newline = ByteString.init string
-  | otherwise = string
+hasTrailingNewline :: OutputString -> Bool
+hasTrailingNewline string =
+  string /= ByteString.empty && ByteString.last string == newline
 
 putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
 putPlainLn :: OutputString -> Output ()
 putPlainLn string = do
-  liftIO $ ByteStringChar.putStr $ stripTrailingNewline string
-  putEmptyLn
+  liftIO $ ByteStringChar.putStr string
+  unless (hasTrailingNewline string) putEmptyLn
 
 putGreen :: OutputString -> Output ()
 putGreen = putColor Green
@@ -88,5 +87,5 @@ putColor color string = do
 
 putColorLn :: Color -> OutputString -> Output ()
 putColorLn color string = do
-  putColor color (stripTrailingNewline string)
-  putEmptyLn
+  putColor color string
+  unless (hasTrailingNewline string) putEmptyLn

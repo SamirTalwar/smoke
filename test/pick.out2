@@ -3,16 +3,25 @@ args
 in
   succeeded
 wrong
-  args:             uno
-                    dos
-                    tres
-                    quatro
-                    cinqo
-  actual output:    dos
-  expected output:  one
-               or:  two
-               or:  three
-               or:  four
-               or:  five
+  args:   uno
+          dos
+          tres
+          quatro
+          cinqo
+  output: @@ -1 +1 @@
+          -one
+          +dos
+      or: @@ -1 +1 @@
+          -two
+          +dos
+      or: @@ -1 +1 @@
+          -three
+          +dos
+      or: @@ -1 +1 @@
+          -four
+          +dos
+      or: @@ -1 +1 @@
+          -five
+          +dos
 
 3 tests, 1 failure

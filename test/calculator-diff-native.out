@@ -2,9 +2,10 @@ addition
   succeeded
 complex
   input:  (8 + 2i) + (7 - 4i)
-  output: @@ -1 +1 @@
-          -15 - 2i
-          +2
+  output: 1c1
+          < 15 - 2i
+          ---
+          > 2
 division
   succeeded
 infix-words-error
@@ -15,15 +16,17 @@ multiplication
   succeeded
 parens
   input:  (6 + 3) * 2
-  output: @@ -1 +1 @@
-          -18
-          +3
+  output: 1c1
+          < 18
+          ---
+          > 3
 subtraction
   succeeded
 three-numbers
   input:  5 + 7 + 12
-  output: @@ -1 +1 @@
-          -24
-          +12
+  output: 1c1
+          < 24
+          ---
+          > 12
 
 9 tests, 3 failures

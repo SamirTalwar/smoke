@@ -2,56 +2,56 @@
 
 # Smoke
 
-*An integration test framework for practically anything.*
+_An integration test framework for practically anything._
 
-![Smoke output](https://s3-eu-west-1.amazonaws.com/samirtalwar-smoke/screenshot.png)
+![Smoke output](./screenshot.png)
 
 Smoke is designed to test anything that can be wrapped with a command-line interface. In practice, this amounts to almost any application or large piece of code. Whatever you're working on, no matter how big or complicated, you can usually wrap a CLI around it with minimum effort.
 
-Smoke works especially well for testing large applications, especially after the fact. It allows you to create regression tests, [golden master tests][Testing legacy code with Golden Master], and other things that make refactoring a legacy application much easier.
+Smoke works especially well for testing large applications, especially after the fact. It allows you to create regression tests, [golden master tests][testing legacy code with golden master], and other things that make refactoring a legacy application much easier.
 
-It's not a replacement for other, smaller tests. We recommend writing unit tests ([perhaps even first][Test-driven development]), especially for new code.
+It's not a replacement for other, smaller tests. We recommend writing unit tests ([perhaps even first][test-driven development]), especially for new code.
 
-[Testing legacy code with Golden Master]: https://craftedsw.blogspot.co.uk/2012/11/testing-legacy-code-with-golden-master.html
-[Test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
+[testing legacy code with golden master]: https://craftedsw.blogspot.co.uk/2012/11/testing-legacy-code-with-golden-master.html
+[test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
 
 ## Installation
 
 Currently, Smoke is in alpha, and as such is not packaged. You will need to build it yourself.
 
-1. Install [Stack][], which we will use to compile the Haskell code.
-2. Clone the repository and `cd` into the directory.
-3. Run `stack setup` to download the correct version of GHC.
-4. Run `stack install --local-bin-path=out/build` to build the application.
-5. Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
+1.  Install [Stack][], which we will use to compile the Haskell code.
+2.  Clone the repository and `cd` into the directory.
+3.  Run `stack setup` to download the correct version of GHC.
+4.  Run `stack install --local-bin-path=out/build` to build the application.
+5.  Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
 
 If you are using [Nix][] you can build Smoke via `nix-build`.
 
-Smoke is distributed under [the MIT license][MIT License].
+Smoke is distributed under [the MIT license][mit license].
 
-[Stack]: https://docs.haskellstack.org/en/stable/README/
-[Nix]: https://nixos.org/nix
-[MIT License]: http://samirtalwar.mit-license.org/
+[stack]: https://docs.haskellstack.org/en/stable/README/
+[nix]: https://nixos.org/nix
+[mit license]: http://samirtalwar.mit-license.org/
 
 ## Writing Test Cases
 
-A test case consists of *input* and *expected output*. It is constructed of a number of files with the same name and different extensions.
+A test case consists of _input_ and _expected output_. It is constructed of a number of files with the same name and different extensions.
 
-First off, you need to specify the *command* itself.
+First off, you need to specify the _command_ itself.
 
-  * The command is specified in a file named `command`, with parameters each on a new line. It is executed from the current working directory.
-  * The command can be overriden for each individual test case by creating a file with the `.command` extension.
+- The command is specified in a file named `command`, with parameters each on a new line. It is executed from the current working directory.
+- The command can be overriden for each individual test case by creating a file with the `.command` extension.
 
-Input can come in two forms: *standard input* and *command-line arguments*.
+Input can come in two forms: _standard input_ and _command-line arguments_.
 
-  * Standard input is specified by naming the file with the extension `.in`.
-  * Command-line arguments are specified in a file with the `.args` extension, one per line.
+- Standard input is specified by naming the file with the extension `.in`.
+- Command-line arguments are specified in a file with the `.args` extension, one per line.
 
-Outputs that can be observed by Smoke consist of *standard output*, *standard error* and the *exit status* of the program.
+Outputs that can be observed by Smoke consist of _standard output_, _standard error_ and the _exit status_ of the program.
 
-  * Expected standard output is specified with the `.out` extension. Alternatively, multiple possible expected outputs can be specified by using an extension that starts with `.out`—for example, `.out-one`, `.out2` and `.outc`. If there are multiple outputs, a match with any of them will be considered a success.
-  * Expected standard error uses the `.err` extension, but otherwise works in exactly the same way as expected standard output.
-  * The expected exit status is a file with the `.status` extension. It contains a single number between `0` and `255`.
+- Expected standard output is specified with the `.out` extension. Alternatively, multiple possible expected outputs can be specified by using an extension that starts with `.out`—for example, `.out-one`, `.out2` and `.outc`. If there are multiple outputs, a match with any of them will be considered a success.
+- Expected standard error uses the `.err` extension, but otherwise works in exactly the same way as expected standard output.
+- The expected exit status is a file with the `.status` extension. It contains a single number between `0` and `255`.
 
 At least one of standard output and standard error must be specified, though it can be empty. If no exit status is specified, it will be assumed to be `0`.
 
@@ -90,7 +90,7 @@ We might want to assert that certain things fail. For example, postfix notation 
 
 ## Running Tests
 
-In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the *test* directory, we would run the tests as follows:
+In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the _test_ directory, we would run the tests as follows:
 
     smoke test
 
@@ -114,7 +114,7 @@ Enjoy. Any feedback is welcome.
 
 We had a problem at work. It was a pretty nice problem to have. We were getting too many job applicants and we needed to screen them quickly. So we put some tests online and pointed the <del>guinea pigs</del> <ins>candidates</ins> at 'em.
 
-We quickly found we had another problem: it was taking a lot of developer time to decide whether we should bring in the furballs for real-life interviews. So one night, while more than a little tipsy, I wrote *Smoke*.
+We quickly found we had another problem: it was taking a lot of developer time to decide whether we should bring in the furballs for real-life interviews. So one night, while more than a little tipsy, I wrote _Smoke_.
 
 We let our interview candidates write code in whatever they like: Java, C#, Python, Ruby… I needed a test framework that could handle any language under the sun. At first, I thought about ways to crowbar RSpec into running tests for applications in any and all languages. This was a stupid idea. Eventually I decided the only thing every language has in common is the command line: every language can pretty easily support standard input and output (with the obvious exception of Java, which makes everything difficult).
 
@@ -148,4 +148,4 @@ On Windows, Makefiles don't work very well, so run the commands directly:
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 
-[Contributor Covenant]: http://contributor-covenant.org/version/1/4/
+[contributor covenant]: http://contributor-covenant.org/version/1/4/

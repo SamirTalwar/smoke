@@ -1,23 +1,26 @@
 color
-  input:            this is a [32mgreen[0m word
-  actual output:    guvf vf n [32mterra[0m jbeq
-  expected output:  uijt jt b [32mhsffo[0m xpse
+  input:  this is a [32mgreen[0m word
+  output: @@ -1 +1 @@
+          -uijt jt b [32mhsffo[0m xpse
+          +guvf vf n [32mterra[0m jbeq
 lines
-  input:            one
-                    two
-                    three
-                    four
-  actual output:    bar
-                    gjb
-                    guerr
-                    sbhe
-  expected output:  pof
-                    uxp
-                    uisff
-                    gpvs
+  input:  one
+          two
+          three
+          four
+  output: @@ -1,4 +1,4 @@
+          -pof
+          -uxp
+          -uisff
+          -gpvs
+          +bar
+          +gjb
+          +guerr
+          +sbhe
 word
-  input:            word
-  actual output:    jbeq
-  expected output:  xpse
+  input:  word
+  output: @@ -1 +1 @@
+          -xpse
+          +jbeq
 
 3 tests, 3 failures

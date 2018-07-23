@@ -115,7 +115,8 @@ printSummary results = do
     failures = filter isFailure results
 
 printError :: String -> Output ()
-printError = putRedLn . indentedAll messageIndentation . return . fromString
+printError =
+  putRedLn . indentedAll messageIndentation . deserialize . fromString
 
 outputIndentation :: Int
 outputIndentation = 10

@@ -16,15 +16,15 @@ newtype Status = Status
   } deriving (Eq, Show)
 
 newtype StdIn = StdIn
-  { unStdIn :: ByteString
+  { unStdIn :: [ByteString]
   } deriving (Eq, Show)
 
 newtype StdOut = StdOut
-  { unStdOut :: ByteString
+  { unStdOut :: [ByteString]
   } deriving (Eq, Show)
 
 newtype StdErr = StdErr
-  { unStdErr :: ByteString
+  { unStdErr :: [ByteString]
   } deriving (Eq, Show)
 
 data Options = Options

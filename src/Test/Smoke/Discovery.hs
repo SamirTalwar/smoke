@@ -69,15 +69,15 @@ constructTestFromGroup location commandForLocation group = do
   status <- Status <$> maybe (return 0) readStatusFile (part FileTypes.Status)
   return
     Test
-    { testName = name
-    , testLocation = location
-    , testCommand = command
-    , testArgs = args
-    , testStdIn = stdIn
-    , testStdOut = stdOut
-    , testStdErr = stdErr
-    , testStatus = status
-    }
+      { testName = name
+      , testLocation = location
+      , testCommand = command
+      , testArgs = args
+      , testStdIn = stdIn
+      , testStdOut = stdOut
+      , testStdErr = stdErr
+      , testStatus = status
+      }
 
 readCommandFileIfExists :: FilePath -> IO (Maybe Command)
 readCommandFileIfExists path = do

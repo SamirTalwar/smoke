@@ -10,12 +10,18 @@ apt:
     - libssl-dev
     - ruby
 before_install:
+  - |
+    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
+      brew install openssl
+    elif [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
+      apt-get install libssl-dev
+    fi
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - |
-    if [[ "$(uname -s)" == 'Darwin' ]]; then
+    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
       travis_retry curl -sSL 'https://www.stackage.org/stack/osx-x86_64' | tar xz --strip-components=1 -C ~/.local/bin '*/stack'
-    else
+    elif [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
       travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
     fi
   - stack setup

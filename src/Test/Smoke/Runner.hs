@@ -5,13 +5,13 @@ module Test.Smoke.Runner
 import Control.Monad (forM, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
-import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.Maybe (fromJust, fromMaybe, isNothing)
+import qualified Data.Text as Text
+import qualified Data.Text.IO as TextIO
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
-import System.Process.ByteString (readProcessWithExitCode)
+import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Lines
 import Test.Smoke.Types
 
@@ -55,18 +55,18 @@ readExecutionPlan test = do
   stdIn <-
     liftIO $
     ((StdIn . normalizeLines) <$>) <$>
-    sequence (ByteString.readFile <$> testStdIn test)
+    sequence (TextIO.readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
   expectedStdOuts <-
-    map StdOut . ifEmpty [] . map normalizeLines <$>
-    mapM ByteString.readFile (testStdOut test)
+    map StdOut . ifEmpty Text.empty . map normalizeLines <$>
+    mapM TextIO.readFile (testStdOut test)
   expectedStdErrs <-
-    map StdErr . ifEmpty [] . map normalizeLines <$>
-    mapM ByteString.readFile (testStdErr test)
+    map StdErr . ifEmpty Text.empty . map normalizeLines <$>
+    mapM TextIO.readFile (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
@@ -79,7 +79,7 @@ executeTest (TestExecutionPlan _ executable args stdIn) = do
     , StdOut (normalizeLines processStdOut)
     , StdErr (normalizeLines processStdErr))
   where
-    processStdIn = ByteStringChar.unlines $ unStdIn $ fromMaybe (StdIn []) stdIn
+    processStdIn = unStdIn $ fromMaybe (StdIn Text.empty) stdIn
 
 handleExecutionError :: Either IOError a -> Execution a
 handleExecutionError (Left e) =

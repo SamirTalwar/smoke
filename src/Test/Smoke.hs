@@ -1,5 +1,6 @@
 module Test.Smoke
-  ( Command
+  ( Contents
+  , Command
   , Args
   , Status(..)
   , StdIn(..)

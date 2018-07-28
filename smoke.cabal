@@ -27,12 +27,12 @@ library
                        Test.Smoke.Types
   default-language:    Haskell2010
   build-depends:       base >= 4.9.1 && < 5
-                     , bytestring
                      , directory
                      , filepath
                      , Glob
                      , process
                      , process-extras
+                     , text
                      , transformers
   ghc-options:         -Wall -Werror
 
@@ -58,7 +58,6 @@ executable smoke-exe
   build-depends:       base
                      , smoke
                      , ansi-terminal
-                     , bytestring
                      , Diff
                      , directory
                      , mtl
@@ -66,6 +65,7 @@ executable smoke-exe
                      , process
                      , process-extras
                      , temporary
+                     , text
                      , transformers
   if !os(windows)
     build-depends:     unix

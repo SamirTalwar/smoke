@@ -9,6 +9,7 @@ import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.String (fromString)
+import qualified Data.Text as Text
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
@@ -40,12 +41,12 @@ printResults = mapM_ printResult
 printResult :: TestResult -> Output ()
 printResult (TestSuccess test) = do
   printTitle (testName test)
-  putGreenLn $ single "  succeeded"
+  putGreenLn "  succeeded"
 printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle (testName test)
-  printFailingInput "args" (map fromString <$> testArgs test)
+  printFailingInput "args" (Text.unlines . map fromString <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
-  printFailingOutput "status" (single . int . unStatus <$> statusResult)
+  printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError test NoCommandFile) = do
@@ -60,21 +61,25 @@ printResult (TestError test NoOutputFiles) = do
 printResult (TestError test NonExistentCommand) = do
   printTitle (testName test)
   printError $
-    "The application \"" ++
-    unwords (fromJust (testCommand test)) ++ "\" does not exist."
+    "The application \"" <>
+    Text.unwords (map fromString $ fromJust $ testCommand test) <>
+    "\" does not exist."
 printResult (TestError test NonExecutableCommand) = do
   printTitle (testName test)
   printError $
-    "The application \"" ++
-    unwords (fromJust (testCommand test)) ++ "\" is not executable."
+    "The application \"" <>
+    Text.unwords (map fromString $ fromJust $ testCommand test) <>
+    "\" is not executable."
 printResult (TestError test (CouldNotExecuteCommand e)) = do
   printTitle (testName test)
   printError $
-    "The application \"" ++
-    unwords (fromJust (testCommand test)) ++ "\" could not be executed.\n" ++ e
+    "The application \"" <>
+    Text.unwords (map fromString $ fromJust $ testCommand test) <>
+    "\" could not be executed.\n" <>
+    fromString e
 printResult (TestError test (BlessingFailed e)) = do
   printTitle (testName test)
-  printError $ "Blessing failed.\n" ++ displayException e
+  printError $ "Blessing failed.\n" <> fromString (displayException e)
 printResult (TestError test CouldNotBlessStdOutWithMultipleValues) = do
   printTitle (testName test)
   printError
@@ -87,13 +92,13 @@ printResult (TestError test CouldNotBlessStdErrWithMultipleValues) = do
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn
 
-printFailingInput :: Foldable f => String -> f OutputString -> Output ()
+printFailingInput :: Foldable f => String -> f Contents -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
     putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
     putPlainLn $ indented outputIndentation v
 
-printFailingOutput :: String -> PartResult OutputString -> Output ()
+printFailingOutput :: String -> PartResult Contents -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
@@ -108,15 +113,14 @@ printSummary results = do
   let testCount = length results
   let failureCount = length failures
   case failureCount of
-    0 -> putGreenLn (single $ int testCount <> " tests, 0 failures")
-    1 -> putRedLn (single $ int testCount <> " tests, 1 failure")
-    n -> putRedLn (single $ int testCount <> " tests, " <> int n <> " failures")
+    0 -> putGreenLn (int testCount <> " tests, 0 failures")
+    1 -> putRedLn (int testCount <> " tests, 1 failure")
+    n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
   where
     failures = filter isFailure results
 
-printError :: String -> Output ()
-printError =
-  putRedLn . indentedAll messageIndentation . deserialize . fromString
+printError :: Contents -> Output ()
+printError = putRedLn . indentedAll messageIndentation
 
 outputIndentation :: Int
 outputIndentation = 10
@@ -127,13 +131,13 @@ messageIndentation = 2
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
-printDiff :: OutputString -> OutputString -> Output ()
+printDiff :: Contents -> Contents -> Output ()
 printDiff left right = do
   AppOptions { optionsColor = color
              , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
              } <- ask
-  diff <- liftIO $ renderDiff color (serialize left) (serialize right)
-  putPlainLn $ indented outputIndentation $ deserialize diff
+  diff <- liftIO $ renderDiff color left right
+  putPlainLn $ indented outputIndentation diff
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

@@ -4,7 +4,7 @@ module Test.Smoke.App.Diff.Types
   , RenderDiff
   ) where
 
-import Data.ByteString (ByteString)
+import Test.Smoke (Contents)
 import Test.Smoke.App.OptionColorOutput
 
 data DiffEngine = DiffEngine
@@ -15,4 +15,4 @@ data DiffEngine = DiffEngine
 
 type PrintDiff = ColorOutput -> RenderDiff
 
-type RenderDiff = ByteString -> ByteString -> IO ByteString
+type RenderDiff = Contents -> Contents -> IO Contents

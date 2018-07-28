@@ -4,12 +4,11 @@ module Test.Smoke.App.Diff.Native
 
 import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation(..))
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.String (fromString)
+import qualified Data.Text as Text
 import Test.Smoke.App.Diff.Types
 
-type OutputString = ByteString
+type OutputString = Text.Text
 
 data LineRange =
   LineRange (Int, Int)
@@ -31,8 +30,7 @@ render _ left right =
   return $
   mconcat $
   map prettyPrintOperation $
-  diffToLineRanges $
-  getGroupedDiff (ByteStringChar.lines left) (ByteStringChar.lines right)
+  diffToLineRanges $ getGroupedDiff (Text.lines left) (Text.lines right)
   where
     diffToLineRanges :: [Diff [OutputString]] -> [DiffOperation LineRange]
     diffToLineRanges = toLineRange 1 1
@@ -102,5 +100,4 @@ render _ left right =
         else mconcat
                [fromString (show start), fromString ",", fromString (show end)]
     prettyLines :: Char -> [OutputString] -> OutputString
-    prettyLines start =
-      ByteStringChar.unlines . map (mappend (fromString [start, ' ']))
+    prettyLines start = Text.unlines . map (mappend (fromString [start, ' ']))

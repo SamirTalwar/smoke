@@ -7,16 +7,16 @@ module Test.Smoke.App.Diff.ExternalDiffCommand
   ) where
 
 import Control.Exception (throwIO)
-import qualified Data.ByteString as ByteString
-import Data.ByteString.Char8 (unpack)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (isJust)
+import qualified Data.Text as Text
+import qualified Data.Text.IO as TextIO
 import System.Directory (findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
-import System.Process.ByteString (readProcessWithExitCode)
+import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.App.Diff.Types
 
 type Command = NonEmpty String
@@ -28,8 +28,8 @@ render :: Command -> RenderDiff
 render (command@(executable :| args)) left right =
   withSystemTempFile "smoke-left-" $ \leftFilePath leftFile ->
     withSystemTempFile "smoke-right-" $ \rightFilePath rightFile -> do
-      ByteString.hPut leftFile left
-      ByteString.hPut rightFile right
+      TextIO.hPutStr leftFile left
+      TextIO.hPutStr rightFile right
       hClose leftFile
       hClose rightFile
       (exitCode, stdout, stderr) <-
@@ -46,4 +46,5 @@ render (command@(executable :| args)) left right =
           "`" ++
           unwords (NonEmpty.toList command) ++
           "`" ++
-          " failed with status " ++ show code ++ "." ++ "\n" ++ unpack stderr
+          " failed with status " ++
+          show code ++ "." ++ "\n" ++ Text.unpack stderr

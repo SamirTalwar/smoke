@@ -4,16 +4,13 @@ module Test.Smoke.App.Diff.Native
 
 import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation(..))
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.String (fromString)
+import qualified Data.Text as Text
 import Test.Smoke.App.Diff.Types
-
-type OutputString = ByteString
 
 data LineRange =
   LineRange (Int, Int)
-            [OutputString]
+            [Contents]
   deriving (Eq, Ord)
 
 engine :: DiffEngine
@@ -31,14 +28,13 @@ render _ left right =
   return $
   mconcat $
   map prettyPrintOperation $
-  diffToLineRanges $
-  getGroupedDiff (ByteStringChar.lines left) (ByteStringChar.lines right)
+  diffToLineRanges $ getGroupedDiff (Text.lines left) (Text.lines right)
   where
-    diffToLineRanges :: [Diff [OutputString]] -> [DiffOperation LineRange]
+    diffToLineRanges :: [Diff [Contents]] -> [DiffOperation LineRange]
     diffToLineRanges = toLineRange 1 1
       where
         toLineRange ::
-             Int -> Int -> [Diff [OutputString]] -> [DiffOperation LineRange]
+             Int -> Int -> [Diff [Contents]] -> [DiffOperation LineRange]
         toLineRange _ _ [] = []
         toLineRange leftLine rightLine (Both ls _:rs) =
           let lins = length ls
@@ -68,7 +64,7 @@ render _ left right =
                 (LineRange (leftLine, leftLine + linesF - 1) lsF)
                 (LineRange (rightLine, rightLine + linesS - 1) lsS) :
               toLineRange (leftLine + linesF) (rightLine + linesS) rs
-    prettyPrintOperation :: DiffOperation LineRange -> OutputString
+    prettyPrintOperation :: DiffOperation LineRange -> Contents
     prettyPrintOperation (Deletion (LineRange leftNumbers leftContents) lineNoRight) =
       mconcat
         [ prettyRange leftNumbers
@@ -95,12 +91,11 @@ render _ left right =
         , fromString "---\n"
         , prettyLines '>' rightContents
         ]
-    prettyRange :: (Int, Int) -> OutputString
+    prettyRange :: (Int, Int) -> Contents
     prettyRange (start, end) =
       if start == end
         then fromString (show start)
         else mconcat
                [fromString (show start), fromString ",", fromString (show end)]
-    prettyLines :: Char -> [OutputString] -> OutputString
-    prettyLines start =
-      ByteStringChar.unlines . map (mappend (fromString [start, ' ']))
+    prettyLines :: Char -> [Contents] -> Contents
+    prettyLines start = Text.unlines . map (mappend (fromString [start, ' ']))

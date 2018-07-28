@@ -1,7 +1,7 @@
 module Test.Smoke.Types where
 
 import Control.Exception (IOException)
-import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 type TestName = String
 
@@ -11,20 +11,22 @@ type Command = [String]
 
 type Args = [String]
 
+type Contents = Text
+
 newtype Status = Status
   { unStatus :: Int
   } deriving (Eq, Show)
 
 newtype StdIn = StdIn
-  { unStdIn :: [ByteString]
+  { unStdIn :: Contents
   } deriving (Eq, Show)
 
 newtype StdOut = StdOut
-  { unStdOut :: [ByteString]
+  { unStdOut :: Contents
   } deriving (Eq, Show)
 
 newtype StdErr = StdErr
-  { unStdErr :: [ByteString]
+  { unStdErr :: Contents
   } deriving (Eq, Show)
 
 data Options = Options

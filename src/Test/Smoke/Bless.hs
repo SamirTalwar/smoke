@@ -4,10 +4,9 @@ module Test.Smoke.Bless
 
 import Control.Exception (catch)
 import Control.Monad (unless)
-import Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Char8 as ByteStringChar
 import Data.Maybe (fromMaybe, listToMaybe)
+import qualified Data.Text as Text
+import qualified Data.Text.IO as TextIO
 import System.Directory (doesFileExist, removeFile)
 import Test.Smoke.FileTypes (filePath)
 import qualified Test.Smoke.FileTypes as FileTypes
@@ -28,17 +27,14 @@ blessResult (TestFailure (TestExecutionPlan test@(Test name location _ _ _ stdOu
          writeFile statusPath (show actual ++ "\n")
        _ -> return ()
      case stdOut of
-       PartFailure _ (StdOut actual) ->
-         writeOutput stdOutPath $ ByteStringChar.unlines actual
+       PartFailure _ (StdOut actual) -> writeOutput stdOutPath actual
        _ -> return ()
      case stdErr of
-       PartFailure _ (StdErr actual) ->
-         writeOutput stdErrPath $ ByteStringChar.unlines actual
+       PartFailure _ (StdErr actual) -> writeOutput stdErrPath actual
        _ -> return ()
      stdOutExists <- doesFileExist stdOutPath
      stdErrExists <- doesFileExist stdErrPath
-     unless (stdOutExists || stdErrExists) $
-       writeOutput stdOutPath ByteString.empty
+     unless (stdOutExists || stdErrExists) $ writeOutput stdOutPath Text.empty
      return $ TestSuccess test
      `catch` \e -> return (TestError test (BlessingFailed e))
   where
@@ -53,7 +49,7 @@ blessResult (TestFailure (TestExecutionPlan test@(Test name location _ _ _ stdOu
         (listToMaybe stdErrPaths)
 blessResult result = return result
 
-writeOutput :: FilePath -> ByteString -> IO ()
+writeOutput :: FilePath -> Contents -> IO ()
 writeOutput path contents
-  | contents == ByteString.empty = removeFile path
-  | otherwise = ByteString.writeFile path contents
+  | contents == Text.empty = removeFile path
+  | otherwise = TextIO.writeFile path contents

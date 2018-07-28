@@ -2,9 +2,8 @@ module Test.Smoke.App.Diff.GitDiff
   ( engine
   ) where
 
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as ByteStringChar
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Text as Text
 import Test.Smoke.App.Diff.ExternalDiffCommand
 import Test.Smoke.App.Diff.Types
 import Test.Smoke.App.OptionColorOutput
@@ -33,5 +32,5 @@ command color =
 executable :: String
 executable = "git"
 
-dropHeader :: ByteString -> ByteString
-dropHeader = ByteStringChar.unlines . drop 4 . ByteStringChar.lines
+dropHeader :: Contents -> Contents
+dropHeader = Text.unlines . drop 4 . Text.lines

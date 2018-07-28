@@ -4,9 +4,9 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, ansi-terminal, base, bytestring, directory
-      , filepath, Glob, optparse-applicative, process, process-extras
-      , stdenv, transformers, unix
+  f = { mkDerivation, ansi-terminal, base, bytestring, Diff
+      , directory, filepath, Glob, mtl, optparse-applicative, process
+      , process-extras, stdenv, temporary, transformers, unix
       }:
       mkDerivation {
         pname = "smoke";
@@ -19,7 +19,8 @@ let
           transformers
         ];
         executableHaskellDepends = [
-          ansi-terminal base bytestring optparse-applicative transformers
+          ansi-terminal base bytestring Diff directory mtl
+          optparse-applicative process process-extras temporary transformers
           unix
         ];
         homepage = "https://github.com/SamirTalwar/smoke#readme";

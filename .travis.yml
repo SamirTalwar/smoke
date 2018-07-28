@@ -2,24 +2,34 @@ os:
   - linux
   - osx
 sudo: false
+language: generic
+
 cache:
   directories:
     - $HOME/.stack
-apt:
-  packages:
-    - ruby
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libssl-dev
+
 before_install:
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - |
-    if [[ "$(uname -s)" == 'Darwin' ]]; then
+    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
       travis_retry curl -sSL 'https://www.stackage.org/stack/osx-x86_64' | tar xz --strip-components=1 -C ~/.local/bin '*/stack'
-    else
+    elif [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
       travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
     fi
   - stack setup
-  - make build-dependencies
 install:
   - stack --no-terminal install --only-dependencies
+
 script:
-  - make check
+  - make test
+  - |
+    if [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
+      make lint
+    fi

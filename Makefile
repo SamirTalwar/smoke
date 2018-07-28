@@ -55,15 +55,22 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless test
 
 .PHONY: lint
-lint: ~/.local/bin/hlint
+lint: ~/.local/bin/cabal2nix ~/.local/bin/hindent ~/.local/bin/hlint
 	$(STACK) exec -- hlint .
+	echo Setup.hs $(SRC) | xargs -n1 $(STACK) exec -- hindent --validate
+	@ (set -ex; \
+		NIX_FILE="$$(mktemp)"; \
+		$(STACK) exec -- cabal2nix --shell . > "$$NIX_FILE"; \
+		git diff --no-index --exit-code default.nix "$$NIX_FILE" && SUCCESS=true || SUCCESS=false; \
+		rm "$$NIX_FILE"; \
+		$$SUCCESS)
 
 .PHONY: check
 check: test lint
 
 .PHONY: reformat
 reformat:
-	$(STACK) exec -- hindent Setup.hs $(SRC)
+	echo Setup.hs $(SRC) | xargs -n1 $(STACK) exec -- hindent
 
 .PHONY: dependencies
 dependencies: build-dependencies editor-dependencies
@@ -75,8 +82,11 @@ build-dependencies: ~/.local/bin/hlint
 .PHONY: editor-dependencies
 editor-dependencies: ~/.local/bin/ghc-mod ~/.local/bin/hindent
 
-default.nix: smoke.cabal
-	cabal2nix --shell . > default.nix
+default.nix: smoke.cabal ~/.local/bin/cabal2nix
+	$(STACK) exec -- cabal2nix --shell . > default.nix
+
+~/.local/bin/cabal2nix:
+	$(STACK) install cabal2nix
 
 ~/.local/bin/ghc-mod:
 	$(STACK) install ghc-mod

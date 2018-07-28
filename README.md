@@ -128,7 +128,7 @@ Developers of Smoke pledge to follow the [Contributor Covenant][].
 
 You will need to set up Stack as above, and install a few dependencies:
 
-    stack install ghc-mod hindent hlint
+    stack install cabal2nix ghc-mod hindent hlint
 
 We dog-food. Smoke is tested using itself.
 

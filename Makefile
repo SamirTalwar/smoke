@@ -72,16 +72,6 @@ check: test lint
 reformat:
 	echo Setup.hs $(SRC) | xargs -n1 $(STACK) exec -- hindent
 
-.PHONY: dependencies
-dependencies: build-dependencies editor-dependencies
-	$(STACK) install --only-dependencies
-
-.PHONY: build-dependencies
-build-dependencies: ~/.local/bin/hlint
-
-.PHONY: editor-dependencies
-editor-dependencies: ~/.local/bin/ghc-mod ~/.local/bin/hindent
-
 default.nix: smoke.cabal ~/.local/bin/cabal2nix
 	$(STACK) exec -- cabal2nix --shell . > default.nix
 

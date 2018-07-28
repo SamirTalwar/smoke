@@ -24,7 +24,6 @@ before_install:
       travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
     fi
   - stack setup
-  - make build-dependencies
 install:
   - stack --no-terminal install --only-dependencies
 

@@ -2,6 +2,7 @@ module Test.Smoke.App.Diff.Types
   ( DiffEngine(..)
   , PrintDiff
   , RenderDiff
+  , Contents
   ) where
 
 import Test.Smoke (Contents)

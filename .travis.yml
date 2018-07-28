@@ -10,12 +10,6 @@ apt:
     - libssl-dev
     - ruby
 before_install:
-  - |
-    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
-      brew install openssl
-    elif [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
-      apt-get install libssl-dev
-    fi
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - |
@@ -29,4 +23,8 @@ before_install:
 install:
   - stack --no-terminal install --only-dependencies
 script:
-  - make check
+  - make test
+  - |
+    if [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
+      make lint
+    fi

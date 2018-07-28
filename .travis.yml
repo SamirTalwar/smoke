@@ -2,13 +2,18 @@ os:
   - linux
   - osx
 sudo: false
+language: generic
+
 cache:
   directories:
     - $HOME/.stack
-apt:
-  packages:
-    - libssl-dev
-    - ruby
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libssl-dev
+
 before_install:
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
@@ -22,6 +27,7 @@ before_install:
   - make build-dependencies
 install:
   - stack --no-terminal install --only-dependencies
+
 script:
   - make test
   - |

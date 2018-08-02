@@ -1,3 +1,4 @@
-.stack-work
 out
-result
+
+.stack-work
+*.cabal

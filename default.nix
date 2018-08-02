@@ -19,8 +19,9 @@ let
           transformers
         ];
         executableHaskellDepends = [
-          ansi-terminal base Diff directory mtl optparse-applicative process
-          process-extras temporary text transformers unix
+          ansi-terminal base Diff directory filepath Glob mtl
+          optparse-applicative process process-extras temporary text
+          transformers unix
         ];
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";

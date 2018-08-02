@@ -15,4 +15,4 @@ build_script:
   - stack --no-terminal install --local-bin-path=out\build
 
 test_script:
-  - '.\out\build\smoke-exe --command=.\out\build\smoke-exe test'
+  - '.\out\build\smoke --command=.\out\build\smoke test'

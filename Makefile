@@ -16,9 +16,9 @@ endif
 CONF = Setup.hs smoke.cabal stack.yaml
 SRC = $(shell find app src -name '*.hs')
 OUT_DEBUG := out/build/debug
-BIN_DEBUG := $(OUT_DEBUG)/smoke-exe
+BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := out/build/release
-BIN_RELEASE := $(OUT_RELEASE)/smoke-exe
+BIN_RELEASE := $(OUT_RELEASE)/smoke
 
 ifdef CI
   STACK := stack --no-terminal

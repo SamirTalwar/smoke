@@ -32,15 +32,18 @@ discoverTestsInLocation commandFromOptions location = do
         if isDirectory
           then FileTypes.directoryGlobs
           else FileTypes.fileGlobs (takeFileName location)
-  discoverTestsByGlob commandFromOptions directory globs
+  (command, files) <- discoverFilesByGlob commandFromOptions directory globs
+  groupTests directory command files
 
-discoverTestsByGlob ::
-     Maybe Command -> FilePath -> [(FileType, Pattern)] -> IO [Test]
-discoverTestsByGlob commandFromOptions directory globs = do
+discoverFilesByGlob ::
+     Maybe Command
+  -> FilePath
+  -> [(FileType, Pattern)]
+  -> IO (Maybe Command, [(FileType, FilePath)])
+discoverFilesByGlob commandFromOptions directory globs = do
   command <- findCommand
   files <- allFiles
-  let grouped = groupBy ((==) `on` (dropExtension . snd)) files
-  forM grouped (constructTestFromGroup directory command)
+  return (command, files)
   where
     findCommand =
       return commandFromOptions <<|>>
@@ -52,6 +55,11 @@ discoverTestsByGlob commandFromOptions directory globs = do
         (\fileTypeGlob paths -> zip (repeat fileTypeGlob) paths)
         (map fst globs) <$>
       globDir (map snd globs) directory
+
+groupTests :: FilePath -> Maybe Command -> [(FileType, FilePath)] -> IO [Test]
+groupTests directory command files = do
+  let grouped = groupBy ((==) `on` (dropExtension . snd)) files
+  forM grouped (constructTestFromGroup directory command)
 
 constructTestFromGroup ::
      FilePath -> Maybe Command -> [(FileType, FilePath)] -> IO Test

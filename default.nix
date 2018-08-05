@@ -7,6 +7,7 @@ let
   f = { mkDerivation, ansi-terminal, base, Diff, directory
       , filepath, Glob, mtl, optparse-applicative, process
       , process-extras, stdenv, temporary, text, transformers, unix
+      , unordered-containers, yaml
       }:
       mkDerivation {
         pname = "smoke";
@@ -16,12 +17,12 @@ let
         isExecutable = true;
         libraryHaskellDepends = [
           base directory filepath Glob process process-extras text
-          transformers
+          transformers unordered-containers yaml
         ];
         executableHaskellDepends = [
           ansi-terminal base Diff directory filepath Glob mtl
           optparse-applicative process process-extras temporary text
-          transformers unix
+          transformers unix unordered-containers yaml
         ];
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";

@@ -1,18 +1,42 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Test.Smoke.Discovery
   ( discoverTests
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, liftM2)
+import Control.Monad (forM, liftM2, mzero)
 import Data.Function (on)
+import qualified Data.HashMap.Strict as HashMap
 import Data.List (find, groupBy, sortBy)
 import Data.Maybe (maybe)
+import Data.Yaml
 import System.Directory
 import System.FilePath
-import System.FilePath.Glob
+import System.FilePath.Glob as Glob
 import Test.Smoke.FileTypes (FileType)
 import qualified Test.Smoke.FileTypes as FileTypes
 import Test.Smoke.Types
+
+newtype TestSuite =
+  TestSuite [TestSpecification]
+
+data TestSpecification = TestSpecification
+  { specName :: TestName
+  , specArgs :: Maybe Args
+  , specStdOut :: TestSpecificationFile
+  , specStatus :: Status
+  }
+
+newtype TestSpecificationFile =
+  TestSpecificationFile FilePath
+
+instance FromJSON TestSuite where
+  parseJSON =
+    withObject "TestSuite" $ \v -> do
+      testObjects <- v .: "tests"
+      TestSuite <$>
+        forM (HashMap.toList testObjects) (uncurry parseTestSpecification)
 
 discoverTests :: Options -> IO Tests
 discoverTests options =
@@ -23,6 +47,21 @@ discoverTests options =
 
 discoverTestsInLocation :: Maybe Command -> FilePath -> IO [Test]
 discoverTestsInLocation commandFromOptions location = do
+  specifications <-
+    discoverTestSpecificationsInLocation commandFromOptions location
+  byGlob <- discoverTestsByGlobInLocation commandFromOptions location
+  return $ specifications ++ byGlob
+
+discoverTestSpecificationsInLocation :: Maybe Command -> FilePath -> IO [Test]
+discoverTestSpecificationsInLocation commandFromOptions location = do
+  specificationFiles <- globDir1 (Glob.compile "*.yaml") location
+  testsBySuite <-
+    forM specificationFiles $
+    fmap (convertToTests commandFromOptions location) . decodeFileThrow
+  return $ concat testsBySuite
+
+discoverTestsByGlobInLocation :: Maybe Command -> FilePath -> IO [Test]
+discoverTestsByGlobInLocation commandFromOptions location = do
   isDirectory <- doesDirectoryExist location
   let directory =
         if isDirectory
@@ -99,6 +138,38 @@ readCommandFile path = lines <$> readFile path
 
 readStatusFile :: FilePath -> IO Int
 readStatusFile path = read <$> readFile path
+
+parseTestSpecification :: TestName -> Value -> Parser TestSpecification
+parseTestSpecification name (Object spec) =
+  TestSpecification name <$> (spec .:? "args") <*> (spec .: "stdout") <*>
+  (Status <$> spec .:? "exit-status" .!= 0)
+parseTestSpecification _ _ = mzero
+
+instance FromJSON TestSpecificationFile where
+  parseJSON =
+    withObject "TestSpecificationFile" $ \v ->
+      TestSpecificationFile <$> v .: "file"
+
+convertToTests :: Maybe Command -> FilePath -> TestSuite -> Tests
+convertToTests commandFromOptions location (TestSuite specs) =
+  map (convertToTest commandFromOptions location) specs
+
+convertToTest :: Maybe Command -> FilePath -> TestSpecification -> Test
+convertToTest commandFromOptions location TestSpecification { specName = name
+                                                            , specArgs = args
+                                                            , specStdOut = (TestSpecificationFile stdOut)
+                                                            , specStatus = status
+                                                            } =
+  Test
+    { testName = name
+    , testLocation = location
+    , testCommand = commandFromOptions
+    , testArgs = args
+    , testStdIn = Nothing
+    , testStdOut = [location </> stdOut]
+    , testStdErr = []
+    , testStatus = status
+    }
 
 (<<|>>) :: IO (Maybe a) -> IO (Maybe a) -> IO (Maybe a)
 (<<|>>) = liftM2 (<|>)

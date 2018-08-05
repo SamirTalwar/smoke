@@ -22,6 +22,8 @@ dependencies:
   - process-extras
   - text
   - transformers
+  - unordered-containers
+  - yaml
 
 library:
   source-dirs:

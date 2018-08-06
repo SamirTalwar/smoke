@@ -56,8 +56,10 @@ discoverTestSpecificationsInLocation :: Maybe Command -> FilePath -> IO [Test]
 discoverTestSpecificationsInLocation commandFromOptions location = do
   specificationFiles <- globDir1 (Glob.compile "*.yaml") location
   testsBySuite <-
-    forM specificationFiles $
-    fmap (convertToTests commandFromOptions location) . decodeFileThrow
+    forM specificationFiles $ \file -> do
+      let suiteName = makeRelative location $ dropExtension file
+      suite <- decodeFileThrow file
+      return $ convertToTests commandFromOptions location suiteName suite
   return $ concat testsBySuite
 
 discoverTestsByGlobInLocation :: Maybe Command -> FilePath -> IO [Test]
@@ -150,18 +152,19 @@ instance FromJSON TestSpecificationFile where
     withObject "TestSpecificationFile" $ \v ->
       TestSpecificationFile <$> v .: "file"
 
-convertToTests :: Maybe Command -> FilePath -> TestSuite -> Tests
-convertToTests commandFromOptions location (TestSuite specs) =
-  map (convertToTest commandFromOptions location) specs
+convertToTests :: Maybe Command -> FilePath -> TestName -> TestSuite -> Tests
+convertToTests commandFromOptions location suiteName (TestSuite specs) =
+  map (convertToTest commandFromOptions location suiteName) specs
 
-convertToTest :: Maybe Command -> FilePath -> TestSpecification -> Test
-convertToTest commandFromOptions location TestSpecification { specName = name
-                                                            , specArgs = args
-                                                            , specStdOut = (TestSpecificationFile stdOut)
-                                                            , specStatus = status
-                                                            } =
+convertToTest ::
+     Maybe Command -> FilePath -> TestName -> TestSpecification -> Test
+convertToTest commandFromOptions location suiteName TestSpecification { specName = name
+                                                                      , specArgs = args
+                                                                      , specStdOut = (TestSpecificationFile stdOut)
+                                                                      , specStatus = status
+                                                                      } =
   Test
-    { testName = name
+    { testName = suiteName ++ "/" ++ name
     , testLocation = location
     , testCommand = commandFromOptions
     , testArgs = args

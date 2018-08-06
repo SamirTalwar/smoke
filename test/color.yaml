@@ -1,0 +1,8 @@
+tests:
+  color:
+    args:
+      - --color
+      - fixtures/calculator
+    exit-status: 1
+    stdout:
+      file: io/calculator-color.out

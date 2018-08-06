@@ -1,0 +1,7 @@
+tests:
+  hexify:
+    args:
+      - --command=ruby fixtures/hexify.rb
+      - fixtures/hexify
+    stdout:
+      file: io/hexify.out

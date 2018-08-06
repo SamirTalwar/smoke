@@ -1,7 +1,0 @@
-tests:
-  calculator:
-    args:
-      - fixtures/calculator
-    exit-status: 1
-    stdout:
-      file: io/calculator.out

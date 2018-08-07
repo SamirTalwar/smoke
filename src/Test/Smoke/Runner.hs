@@ -12,7 +12,6 @@ import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
-import Test.Smoke.Lines
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
@@ -52,21 +51,16 @@ readExecutionPlan test = do
       else onNothingThrow NonExistentCommand =<<
            liftIO (findExecutable executableName)
   let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
-  stdIn <-
-    liftIO $
-    ((StdIn . normalizeLines) <$>) <$>
-    sequence (TextIO.readFile <$> testStdIn test)
+  stdIn <- liftIO $ sequence ((StdIn <$>) . TextIO.readFile <$> testStdIn test)
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
   let expectedStatus = testStatus test
   expectedStdOuts <-
-    map StdOut . ifEmpty Text.empty . map normalizeLines <$>
-    mapM TextIO.readFile (testStdOut test)
+    map StdOut . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdOut test)
   expectedStdErrs <-
-    map StdErr . ifEmpty Text.empty . map normalizeLines <$>
-    mapM TextIO.readFile (testStdErr test)
+    map StdErr . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
@@ -74,10 +68,7 @@ executeTest (TestExecutionPlan _ executable args stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
     handleExecutionError =<<
     liftIO (tryIOError (readProcessWithExitCode executable args processStdIn))
-  return
-    ( convertExitCode exitCode
-    , StdOut (normalizeLines processStdOut)
-    , StdErr (normalizeLines processStdErr))
+  return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
   where
     processStdIn = unStdIn $ fromMaybe (StdIn Text.empty) stdIn
 

@@ -1,19 +1,19 @@
 tests:
-  calculator:
+  - name: calculator
     args:
       - fixtures/calculator
     exit-status: 1
     stdout:
       file: io/calculator.out
 
-  encrypter:
+  - name: encrypter
     args:
       - fixtures/encrypter
     exit-status: 1
     stdout:
       file: io/encrypter.out
 
-  long-output:
+  - name: long-output
     args:
       - fixtures/bottles
     exit-status: 1

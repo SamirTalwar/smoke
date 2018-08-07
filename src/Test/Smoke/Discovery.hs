@@ -5,9 +5,8 @@ module Test.Smoke.Discovery
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, liftM2, mzero)
+import Control.Monad (forM, liftM2)
 import Data.Function (on)
-import qualified Data.HashMap.Strict as HashMap
 import Data.List (find, groupBy, sortBy)
 import Data.Maybe (maybe)
 import Data.Yaml
@@ -32,11 +31,13 @@ newtype TestSpecificationFile =
   TestSpecificationFile FilePath
 
 instance FromJSON TestSuite where
+  parseJSON = withObject "TestSuite" $ \v -> TestSuite <$> v .: "tests"
+
+instance FromJSON TestSpecification where
   parseJSON =
-    withObject "TestSuite" $ \v -> do
-      testObjects <- v .: "tests"
-      TestSuite <$>
-        forM (HashMap.toList testObjects) (uncurry parseTestSpecification)
+    withObject "TestSpecification" $ \v ->
+      TestSpecification <$> (v .: "name") <*> (v .:? "args") <*> (v .: "stdout") <*>
+      (Status <$> v .:? "exit-status" .!= 0)
 
 discoverTests :: Options -> IO Tests
 discoverTests options =
@@ -140,12 +141,6 @@ readCommandFile path = lines <$> readFile path
 
 readStatusFile :: FilePath -> IO Int
 readStatusFile path = read <$> readFile path
-
-parseTestSpecification :: TestName -> Value -> Parser TestSpecification
-parseTestSpecification name (Object spec) =
-  TestSpecification name <$> (spec .:? "args") <*> (spec .: "stdout") <*>
-  (Status <$> spec .:? "exit-status" .!= 0)
-parseTestSpecification _ _ = mzero
 
 instance FromJSON TestSpecificationFile where
   parseJSON =

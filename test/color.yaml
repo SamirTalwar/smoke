@@ -1,5 +1,5 @@
 tests:
-  color:
+  - name: color
     args:
       - --color
       - fixtures/calculator

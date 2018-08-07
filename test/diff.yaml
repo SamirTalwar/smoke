@@ -1,5 +1,5 @@
 tests:
-  native:
+  - name: native
     args:
       - --diff=native
       - fixtures/calculator
@@ -7,7 +7,7 @@ tests:
     stdout:
       file: io/calculator-diff.out
 
-  utility:
+  - name: utility
     args:
       - --diff=diff
       - fixtures/calculator
@@ -15,7 +15,7 @@ tests:
     stdout:
       file: io/calculator-diff.out
 
-  git:
+  - name: git
     args:
       - --diff=git
       - fixtures/calculator

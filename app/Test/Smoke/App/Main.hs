@@ -77,6 +77,10 @@ printResult (TestError test (CouldNotExecuteCommand e)) = do
     Text.unwords (map fromString $ fromJust $ testCommand test) <>
     "\" could not be executed.\n" <>
     fromString e
+printResult (TestError test (CouldNotWriteFixture name value)) = do
+  printTitle (testName test)
+  printError $
+    "Could not write the fixture \"" <> Text.pack name <> "\":\n" <> value
 printResult (TestError test (BlessingFailed e)) = do
   printTitle (testName test)
   printError $ "Blessing failed.\n" <> fromString (displayException e)

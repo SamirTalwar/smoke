@@ -7,11 +7,11 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
+import Test.Smoke.Fixtures
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
@@ -50,16 +50,16 @@ readExecutionPlan test = do
       else onNothingThrow NonExistentCommand =<<
            liftIO (findExecutable executableName)
   let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
-  stdIn <- liftIO $ sequence ((StdIn <$>) . TextIO.readFile <$> testStdIn test)
+  stdIn <- liftIO $ sequence $ readFixture <$> testStdIn test
   return $ TestExecutionPlan test executable args stdIn
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
-  let expectedStatus = testStatus test
+  expectedStatus <- readFixture $ testStatus test
   expectedStdOuts <-
-    map StdOut . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdOut test)
+    ifEmpty (StdOut Text.empty) <$> mapM readFixture (testStdOut test)
   expectedStdErrs <-
-    map StdErr . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdErr test)
+    ifEmpty (StdErr Text.empty) <$> mapM readFixture (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs

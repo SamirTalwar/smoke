@@ -1,7 +1,12 @@
 module Test.Smoke.Types where
 
-import Control.Exception (IOException)
+import Control.Exception (Exception, IOException)
 import Data.Text (Text)
+
+data Options = Options
+  { optionsCommand :: Maybe Command
+  , optionsTestLocations :: [FilePath]
+  } deriving (Eq, Show)
 
 type TestName = String
 
@@ -29,23 +34,23 @@ newtype StdErr = StdErr
   { unStdErr :: Contents
   } deriving (Eq, Show)
 
-data Options = Options
-  { optionsCommand :: Maybe Command
-  , optionsTestLocations :: [FilePath]
-  } deriving (Eq, Show)
-
-type Tests = [Test]
+data Fixture a
+  = InlineFixture a
+  | FileFixture FilePath
+  deriving (Eq, Show)
 
 data Test = Test
   { testName :: TestName
   , testLocation :: FilePath
   , testCommand :: Maybe Command
   , testArgs :: Maybe Args
-  , testStdIn :: Maybe FilePath
-  , testStdOut :: [FilePath]
-  , testStdErr :: [FilePath]
-  , testStatus :: Status
+  , testStdIn :: Maybe (Fixture StdIn)
+  , testStdOut :: [Fixture StdOut]
+  , testStdErr :: [Fixture StdErr]
+  , testStatus :: Fixture Status
   } deriving (Eq, Show)
+
+type Tests = [Test]
 
 data TestExecutionPlan = TestExecutionPlan
   { planTest :: Test
@@ -84,7 +89,11 @@ data TestErrorMessage
   | NonExistentCommand
   | NonExecutableCommand
   | CouldNotExecuteCommand String
+  | CouldNotWriteFixture String
+                         Text
   | BlessingFailed IOException
   | CouldNotBlessStdOutWithMultipleValues
   | CouldNotBlessStdErrWithMultipleValues
   deriving (Eq, Show)
+
+instance Exception TestErrorMessage

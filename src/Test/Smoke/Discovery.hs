@@ -129,10 +129,10 @@ constructTestFromGroup location commandForLocation group = do
       , testLocation = location
       , testCommand = command
       , testArgs = args
-      , testStdIn = stdIn
-      , testStdOut = stdOut
-      , testStdErr = stdErr
-      , testStatus = status
+      , testStdIn = FileFixture <$> stdIn
+      , testStdOut = map FileFixture stdOut
+      , testStdErr = map FileFixture stdErr
+      , testStatus = InlineFixture status
       }
 
 readCommandFileIfExists :: FilePath -> IO (Maybe Command)
@@ -173,9 +173,9 @@ convertToTest command location suiteName TestSpecification { specName = name
     , testCommand = command
     , testArgs = args
     , testStdIn = Nothing
-    , testStdOut = [location </> stdOut]
+    , testStdOut = [FileFixture (location </> stdOut)]
     , testStdErr = []
-    , testStatus = status
+    , testStatus = InlineFixture status
     }
 
 (<<|>>) :: IO (Maybe a) -> IO (Maybe a) -> IO (Maybe a)

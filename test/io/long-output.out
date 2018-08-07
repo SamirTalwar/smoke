@@ -2,7 +2,9 @@
   succeeded
 100
   succeeded
-1000-broken
+1000
+  succeeded
+broken
   args:   --broken
           1000
   output: @@ -1,7 +1,7 @@
@@ -103,7 +105,5 @@
            110 bottles of beer on the wall, 110 bottles of beer.
            Take one down and pass it around, 109 bottles of beer on the wall.
            109 bottles of beer on the wall, 109 bottles of beer.
-1000
-  succeeded
 
 4 tests, 1 failure

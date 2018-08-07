@@ -17,8 +17,9 @@ import Test.Smoke.FileTypes (FileType)
 import qualified Test.Smoke.FileTypes as FileTypes
 import Test.Smoke.Types
 
-newtype TestSuite =
-  TestSuite [TestSpecification]
+data TestSuite =
+  TestSuite (Maybe Command)
+            [TestSpecification]
 
 data TestSpecification = TestSpecification
   { specName :: TestName
@@ -31,7 +32,9 @@ newtype TestSpecificationFile =
   TestSpecificationFile FilePath
 
 instance FromJSON TestSuite where
-  parseJSON = withObject "TestSuite" $ \v -> TestSuite <$> v .: "tests"
+  parseJSON =
+    withObject "TestSuite" $ \v ->
+      TestSuite <$> (v .:? "command") <*> (v .: "tests")
 
 instance FromJSON TestSpecification where
   parseJSON =
@@ -58,7 +61,10 @@ discoverTestSpecificationsInLocation commandFromOptions location = do
   specificationFiles <- globDir1 (Glob.compile "*.yaml") location
   testsBySuite <-
     forM specificationFiles $ \file -> do
-      let suiteName = makeRelative location $ dropExtension file
+      let suiteName =
+            if length specificationFiles > 1
+              then Just $ makeRelative location (dropExtension file)
+              else Nothing
       suite <- decodeFileThrow file
       return $ convertToTests commandFromOptions location suiteName suite
   return $ concat testsBySuite
@@ -147,21 +153,24 @@ instance FromJSON TestSpecificationFile where
     withObject "TestSpecificationFile" $ \v ->
       TestSpecificationFile <$> v .: "file"
 
-convertToTests :: Maybe Command -> FilePath -> TestName -> TestSuite -> Tests
-convertToTests commandFromOptions location suiteName (TestSuite specs) =
-  map (convertToTest commandFromOptions location suiteName) specs
+convertToTests ::
+     Maybe Command -> FilePath -> Maybe TestName -> TestSuite -> Tests
+convertToTests commandFromOptions location suiteName (TestSuite suiteCommand specs) =
+  map
+    (convertToTest (commandFromOptions <|> suiteCommand) location suiteName)
+    specs
 
 convertToTest ::
-     Maybe Command -> FilePath -> TestName -> TestSpecification -> Test
-convertToTest commandFromOptions location suiteName TestSpecification { specName = name
-                                                                      , specArgs = args
-                                                                      , specStdOut = (TestSpecificationFile stdOut)
-                                                                      , specStatus = status
-                                                                      } =
+     Maybe Command -> FilePath -> Maybe TestName -> TestSpecification -> Test
+convertToTest command location suiteName TestSpecification { specName = name
+                                                           , specArgs = args
+                                                           , specStdOut = (TestSpecificationFile stdOut)
+                                                           , specStatus = status
+                                                           } =
   Test
-    { testName = suiteName ++ "/" ++ name
+    { testName = maybe name (++ "/" ++ name) suiteName
     , testLocation = location
-    , testCommand = commandFromOptions
+    , testCommand = command
     , testArgs = args
     , testStdIn = Nothing
     , testStdOut = [location </> stdOut]

@@ -84,14 +84,16 @@ printResult (TestError test (CouldNotWriteFixture name value)) = do
 printResult (TestError test (BlessingFailed e)) = do
   printTitle (testName test)
   printError $ "Blessing failed.\n" <> fromString (displayException e)
-printResult (TestError test CouldNotBlessStdOutWithMultipleValues) = do
+printResult (TestError test (CouldNotBlessAMissingValue propertyName)) = do
   printTitle (testName test)
-  printError
-    "There are multiple expected STDOUT values, so the result cannot be blessed.\n"
-printResult (TestError test CouldNotBlessStdErrWithMultipleValues) = do
+  printError $
+    "There are no expected \"" <> Text.pack propertyName <>
+    "\" values, so the result cannot be blessed.\n"
+printResult (TestError test (CouldNotBlessWithMultipleValues propertyName)) = do
   printTitle (testName test)
-  printError
-    "There are multiple expected STDERR values, so the result cannot be blessed.\n"
+  printError $
+    "There are multiple expected \"" <> Text.pack propertyName <>
+    "\" values, so the result cannot be blessed.\n"
 
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn

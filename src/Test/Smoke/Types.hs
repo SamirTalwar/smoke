@@ -1,9 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Test.Smoke.Types where
 
 import Control.Exception (Exception, IOException, throwIO)
+import Data.Aeson hiding (Options)
+import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
+import qualified Data.Vector as Vector
 
 data Options = Options
   { optionsCommand :: Maybe Command
@@ -41,6 +47,10 @@ data Fixture a
   | FileFixture FilePath
   deriving (Eq, Show)
 
+newtype Fixtures a =
+  Fixtures [Fixture a]
+  deriving (Eq, Show)
+
 class FixtureContents a where
   fixtureName :: a -> String
   serializeFixture :: a -> Contents
@@ -67,14 +77,37 @@ instance FixtureContents StdErr where
   deserializeFixture = StdErr
 
 readFixture :: FixtureContents a => Fixture a -> IO a
-readFixture (InlineFixture fixture) = return fixture
+readFixture (InlineFixture contents) = return contents
 readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
 
+readFixtures :: FixtureContents a => Fixtures a -> IO [a]
+readFixtures (Fixtures fixtures) = mapM readFixture fixtures
+
 writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
-writeFixture (InlineFixture value) _ =
-  throwIO $ CouldNotWriteFixture (fixtureName value) (serializeFixture value)
+writeFixture (InlineFixture contents) _ =
+  throwIO $
+  CouldNotWriteFixture (fixtureName contents) (serializeFixture contents)
 writeFixture (FileFixture path) value =
   TextIO.writeFile path (serializeFixture value)
+
+writeFixtures ::
+     forall a. FixtureContents a
+  => Fixtures a
+  -> a
+  -> IO ()
+writeFixtures (Fixtures [fixture]) value = writeFixture fixture value
+writeFixtures Fixtures {} _ =
+  throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))
+
+instance FixtureContents a => FromJSON (Fixture a) where
+  parseJSON (String contents) =
+    return $ InlineFixture (deserializeFixture contents)
+  parseJSON (Object v) = FileFixture <$> v .: "file"
+  parseJSON invalid = typeMismatch "Fixture" invalid
+
+instance FixtureContents a => FromJSON (Fixtures a) where
+  parseJSON (Array v) = Fixtures <$> mapM parseJSON (Vector.toList v)
+  parseJSON v = Fixtures . return <$> (parseJSON v :: Parser (Fixture a))
 
 data Test = Test
   { testName :: TestName
@@ -82,8 +115,8 @@ data Test = Test
   , testCommand :: Maybe Command
   , testArgs :: Maybe Args
   , testStdIn :: Maybe (Fixture StdIn)
-  , testStdOut :: [Fixture StdOut]
-  , testStdErr :: [Fixture StdErr]
+  , testStdOut :: Fixtures StdOut
+  , testStdErr :: Fixtures StdErr
   , testStatus :: Fixture Status
   } deriving (Eq, Show)
 
@@ -129,8 +162,8 @@ data TestErrorMessage
   | CouldNotWriteFixture String
                          Text
   | BlessingFailed IOException
-  | CouldNotBlessStdOutWithMultipleValues
-  | CouldNotBlessStdErrWithMultipleValues
+  | CouldNotBlessAMissingValue String
+  | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)
 
 instance Exception TestErrorMessage

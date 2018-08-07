@@ -21,15 +21,12 @@ data TestSuite =
   TestSuite (Maybe Command)
             [TestSpecification]
 
-data TestSpecification = TestSpecification
-  { specName :: TestName
-  , specArgs :: Maybe Args
-  , specStdOut :: TestSpecificationFile
-  , specStatus :: Status
-  }
-
-newtype TestSpecificationFile =
-  TestSpecificationFile FilePath
+data TestSpecification =
+  TestSpecification TestName
+                    (Maybe Args)
+                    (Maybe (Fixture StdIn))
+                    (Fixtures StdOut)
+                    (Fixture Status)
 
 instance FromJSON TestSuite where
   parseJSON =
@@ -39,8 +36,9 @@ instance FromJSON TestSuite where
 instance FromJSON TestSpecification where
   parseJSON =
     withObject "TestSpecification" $ \v ->
-      TestSpecification <$> (v .: "name") <*> (v .:? "args") <*> (v .: "stdout") <*>
-      (Status <$> v .:? "exit-status" .!= 0)
+      TestSpecification <$> (v .: "name") <*> (v .:? "args") <*> (v .:? "stdin") <*>
+      (v .:? "stdout" .!= Fixtures []) <*>
+      (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
 
 discoverTests :: Options -> IO Tests
 discoverTests options =
@@ -130,8 +128,8 @@ constructTestFromGroup location commandForLocation group = do
       , testCommand = command
       , testArgs = args
       , testStdIn = FileFixture <$> stdIn
-      , testStdOut = map FileFixture stdOut
-      , testStdErr = map FileFixture stdErr
+      , testStdOut = Fixtures $ map FileFixture stdOut
+      , testStdErr = Fixtures $ map FileFixture stdErr
       , testStatus = InlineFixture status
       }
 
@@ -148,11 +146,6 @@ readCommandFile path = lines <$> readFile path
 readStatusFile :: FilePath -> IO Int
 readStatusFile path = read <$> readFile path
 
-instance FromJSON TestSpecificationFile where
-  parseJSON =
-    withObject "TestSpecificationFile" $ \v ->
-      TestSpecificationFile <$> v .: "file"
-
 convertToTests ::
      Maybe Command -> FilePath -> Maybe TestName -> TestSuite -> Tests
 convertToTests commandFromOptions location suiteName (TestSuite suiteCommand specs) =
@@ -162,21 +155,25 @@ convertToTests commandFromOptions location suiteName (TestSuite suiteCommand spe
 
 convertToTest ::
      Maybe Command -> FilePath -> Maybe TestName -> TestSpecification -> Test
-convertToTest command location suiteName TestSpecification { specName = name
-                                                           , specArgs = args
-                                                           , specStdOut = (TestSpecificationFile stdOut)
-                                                           , specStatus = status
-                                                           } =
+convertToTest command location suiteName (TestSpecification name args stdIn stdOut status) =
   Test
     { testName = maybe name (++ "/" ++ name) suiteName
     , testLocation = location
     , testCommand = command
     , testArgs = args
-    , testStdIn = Nothing
-    , testStdOut = [FileFixture (location </> stdOut)]
-    , testStdErr = []
-    , testStatus = InlineFixture status
+    , testStdIn = prefixFixtureWith location <$> stdIn
+    , testStdOut = prefixFixturesWith location stdOut
+    , testStdErr = Fixtures []
+    , testStatus = status
     }
+
+prefixFixtureWith :: FilePath -> Fixture a -> Fixture a
+prefixFixtureWith _ fixture@InlineFixture {} = fixture
+prefixFixtureWith location (FileFixture path) = FileFixture (location </> path)
+
+prefixFixturesWith :: FilePath -> Fixtures a -> Fixtures a
+prefixFixturesWith location (Fixtures fixtures) =
+  Fixtures $ map (prefixFixtureWith location) fixtures
 
 (<<|>>) :: IO (Maybe a) -> IO (Maybe a) -> IO (Maybe a)
 (<<|>>) = liftM2 (<|>)

@@ -37,7 +37,11 @@ validateTest test = do
   when (isNothing (testCommand test)) $ throwE NoCommandFile
   when (isNothing (testArgs test) && isNothing (testStdIn test)) $
     throwE NoInputFiles
-  when (null (testStdOut test) && null (testStdErr test)) $ throwE NoOutputFiles
+  when (isEmpty (testStdOut test) && isEmpty (testStdErr test)) $
+    throwE NoOutputFiles
+  where
+    isEmpty (Fixtures []) = True
+    isEmpty Fixtures {} = False
 
 readExecutionPlan :: Test -> Execution TestExecutionPlan
 readExecutionPlan test = do
@@ -54,11 +58,11 @@ readExecutionPlan test = do
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
-  expectedStatus <- readFixture $ testStatus test
+  expectedStatus <- readFixture (testStatus test)
   expectedStdOuts <-
-    ifEmpty (StdOut Text.empty) <$> mapM readFixture (testStdOut test)
+    ifEmpty (StdOut Text.empty) <$> readFixtures (testStdOut test)
   expectedStdErrs <-
-    ifEmpty (StdErr Text.empty) <$> mapM readFixture (testStdErr test)
+    ifEmpty (StdErr Text.empty) <$> readFixtures (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs

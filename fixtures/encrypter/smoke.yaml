@@ -1,0 +1,28 @@
+command:
+  - ruby
+  - fixtures/encrypter.rb
+
+tests:
+  - name: word
+    stdin: |
+      word
+    stdout: |
+      xpse
+
+  - name: lines
+    stdin: |
+      one
+      two
+      three
+      four
+    stdout: |
+      pof
+      uxp
+      uisff
+      gpvs
+
+  - name: color
+    stdin:
+      file: io/color.in
+    stdout:
+      file: io/color.out

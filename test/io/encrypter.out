@@ -1,8 +1,8 @@
-color
-  input:  this is a [32mgreen[0m word
+word
+  input:  word
   output: @@ -1 +1 @@
-          -uijt jt b [32mhsffo[0m xpse
-          +guvf vf n [32mterra[0m jbeq
+          -xpse
+          +jbeq
 lines
   input:  one
           two
@@ -17,10 +17,10 @@ lines
           +gjb
           +guerr
           +sbhe
-word
-  input:  word
+color
+  input:  this is a [32mgreen[0m word
   output: @@ -1 +1 @@
-          -xpse
-          +jbeq
+          -uijt jt b [32mhsffo[0m xpse
+          +guvf vf n [32mterra[0m jbeq
 
 3 tests, 3 failures

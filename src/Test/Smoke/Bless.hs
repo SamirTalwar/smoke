@@ -3,7 +3,6 @@ module Test.Smoke.Bless
   ) where
 
 import Control.Exception (catch)
-import Test.Smoke.Fixtures
 import Test.Smoke.Types
 
 blessResults :: TestResults -> IO TestResults

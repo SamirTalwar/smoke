@@ -11,7 +11,6 @@ import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
-import Test.Smoke.Fixtures
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO

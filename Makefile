@@ -19,6 +19,7 @@ OUT_DEBUG := out/build/debug
 BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := out/build/release
 BIN_RELEASE := $(OUT_RELEASE)/smoke
+TOOLS_BIN_DIR := .stack-work/tools
 
 ifdef CI
   STACK := stack --no-terminal
@@ -55,12 +56,12 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless test
 
 .PHONY: lint
-lint: ~/.local/bin/cabal2nix ~/.local/bin/hindent ~/.local/bin/hlint
-	$(STACK) exec -- hlint .
-	echo Setup.hs $(SRC) | xargs -n1 $(STACK) exec -- hindent --validate
+lint: tools
+	$(TOOLS_BIN_DIR)/hlint .
+	echo Setup.hs $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent --validate
 	@ (set -ex; \
 		NIX_FILE="$$(mktemp)"; \
-		$(STACK) exec -- cabal2nix --shell . > "$$NIX_FILE"; \
+		$(TOOLS_BIN_DIR)/cabal2nix --shell . > "$$NIX_FILE"; \
 		git diff --no-index --exit-code default.nix "$$NIX_FILE" && SUCCESS=true || SUCCESS=false; \
 		rm "$$NIX_FILE"; \
 		$$SUCCESS)
@@ -69,20 +70,20 @@ lint: ~/.local/bin/cabal2nix ~/.local/bin/hindent ~/.local/bin/hlint
 check: test lint
 
 .PHONY: reformat
-reformat:
-	echo Setup.hs $(SRC) | xargs -n1 $(STACK) exec -- hindent
+reformat: $(TOOLS_BIN_DIR)/hindent
+	echo Setup.hs $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent
 
-default.nix: smoke.cabal ~/.local/bin/cabal2nix
-	$(STACK) exec -- cabal2nix --shell . > default.nix
+default.nix: smoke.cabal $(TOOLS_BIN_DIR)/cabal2nix
+	$(TOOLS_BIN_DIR)/cabal2nix --shell . > default.nix
 
-~/.local/bin/cabal2nix:
-	$(STACK) install cabal2nix
+.PHONY: tools
+tools: $(TOOLS_BIN_DIR)/cabal2nix $(TOOLS_BIN_DIR)/hindent $(TOOLS_BIN_DIR)/hlint
 
-~/.local/bin/ghc-mod:
-	$(STACK) install ghc-mod
+$(TOOLS_BIN_DIR)/cabal2nix:
+	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) cabal2nix
 
-~/.local/bin/hindent:
-	$(STACK) install hindent
+$(TOOLS_BIN_DIR)/hindent:
+	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) hindent
 
-~/.local/bin/hlint:
-	$(STACK) install hlint
+$(TOOLS_BIN_DIR)/hlint:
+	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) hlint

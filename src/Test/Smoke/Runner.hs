@@ -39,7 +39,6 @@ validateTest test = do
   when (isNothing (testArgs test) && isNothing (testStdIn test)) $
     throwE NoInputFiles
   when (null (testStdOut test) && null (testStdErr test)) $ throwE NoOutputFiles
-  return ()
 
 readExecutionPlan :: Test -> Execution TestExecutionPlan
 readExecutionPlan test = do

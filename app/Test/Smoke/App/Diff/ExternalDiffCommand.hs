@@ -25,7 +25,7 @@ enabled :: String -> IO Bool
 enabled executable = isJust <$> findExecutable executable
 
 render :: Command -> RenderDiff
-render (command@(executable :| args)) left right =
+render command@(executable :| args) left right =
   withSystemTempFile "smoke-left-" $ \leftFilePath leftFile ->
     withSystemTempFile "smoke-right-" $ \rightFilePath rightFile -> do
       TextIO.hPutStr leftFile left

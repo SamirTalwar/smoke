@@ -27,6 +27,7 @@ data TestSpecification =
                     (Maybe Args)
                     (Maybe (Fixture StdIn))
                     (Fixtures StdOut)
+                    (Fixtures StdErr)
                     (Fixture Status)
 
 instance FromJSON TestSuite where
@@ -41,6 +42,7 @@ instance FromJSON TestSpecification where
       (v .:? "args") <*>
       (v .:? "stdin") <*>
       (v .:? "stdout" .!= Fixtures []) <*>
+      (v .:? "stderr" .!= Fixtures []) <*>
       (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
 
 discoverTests :: Options -> IO Tests
@@ -158,7 +160,7 @@ convertToTests commandFromOptions location suiteName (TestSuite suiteCommand spe
 
 convertToTest ::
      FilePath -> Maybe TestName -> Maybe Command -> TestSpecification -> Test
-convertToTest location suiteName suiteCommand (TestSpecification name command args stdIn stdOut status) =
+convertToTest location suiteName suiteCommand (TestSpecification name command args stdIn stdOut stdErr status) =
   Test
     { testName = maybe name (++ "/" ++ name) suiteName
     , testLocation = location
@@ -166,7 +168,7 @@ convertToTest location suiteName suiteCommand (TestSpecification name command ar
     , testArgs = args
     , testStdIn = prefixFixtureWith location <$> stdIn
     , testStdOut = prefixFixturesWith location stdOut
-    , testStdErr = Fixtures []
+    , testStdErr = prefixFixturesWith location stdErr
     , testStatus = status
     }
 

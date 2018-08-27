@@ -5,3 +5,10 @@ tests:
     stdout:
       - file: io/help.out-unix
       - file: io/help.out-windows
+
+  - name: nothing
+    exit-status: 1
+    args: []
+    stderr:
+      - file: io/nothing.err-unix
+      - file: io/nothing.err-windows

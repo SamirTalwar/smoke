@@ -1,0 +1,7 @@
+tests:
+  - name: help
+    args:
+      - --help
+    stdout:
+      - file: io/help.out-unix
+      - file: io/help.out-windows

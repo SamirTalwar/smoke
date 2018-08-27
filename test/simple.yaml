@@ -19,3 +19,10 @@ tests:
     exit-status: 1
     stdout:
       file: io/long-output.out
+
+  - name: unicode
+    exit-status: 1
+    args:
+      - fixtures/unicode
+    stdout:
+      file: io/unicode.out

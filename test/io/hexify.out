@@ -1,10 +1,10 @@
 character
   succeeded
-multiple-lines
+word
   succeeded
 sentence
   succeeded
-word
+paragraph
   succeeded
 
 4 tests, 0 failures

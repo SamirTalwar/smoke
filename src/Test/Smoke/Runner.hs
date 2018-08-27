@@ -5,7 +5,7 @@ module Test.Smoke.Runner
 import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
+import Control.Monad.Trans.Except (runExceptT, throwE)
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
@@ -14,8 +14,6 @@ import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Types
-
-type Execution = ExceptT TestErrorMessage IO
 
 type ExpectedOutputs = (Status, [StdOut], [StdErr])
 
@@ -123,15 +121,6 @@ readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
 
 readFixtures :: FixtureContents a => Fixtures a -> IO [a]
 readFixtures (Fixtures fixtures) = mapM readFixture fixtures
-
-handleError :: (a -> b) -> Either a b -> b
-handleError handler = either handler id
-
-onNothingThrow :: Monad m => e -> Maybe a -> ExceptT e m a
-onNothingThrow exception = maybe (throwE exception) return
-
-onNothingThrow_ :: Monad m => e -> Maybe a -> ExceptT e m ()
-onNothingThrow_ exception = maybe (throwE exception) (const $ return ())
 
 ifEmpty :: a -> [a] -> [a]
 ifEmpty value [] = [value]

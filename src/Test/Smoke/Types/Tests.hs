@@ -2,9 +2,9 @@
 
 module Test.Smoke.Types.Tests where
 
-import Control.Exception (Exception, IOException)
 import Data.Aeson hiding (Options)
 import Test.Smoke.Types.Base
+import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Fixtures
 
 data Options = Options
@@ -83,20 +83,3 @@ instance Functor PartResult where
   _ `fmap` PartSuccess = PartSuccess
   f `fmap` (PartFailure expected actual) =
     PartFailure (map f expected) (f actual)
-
-data TestErrorMessage
-  = NoCommand
-  | NoInput
-  | NoOutput
-  | NonExistentCommand Executable
-  | NonExecutableCommand Executable
-  | CouldNotExecuteCommand Executable
-                           String
-  | CouldNotWriteFixture String
-                         Contents
-  | BlessingFailed IOException
-  | CouldNotBlessAMissingValue String
-  | CouldNotBlessWithMultipleValues String
-  deriving (Eq, Show)
-
-instance Exception TestErrorMessage

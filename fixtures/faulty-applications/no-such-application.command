@@ -1,1 +1,0 @@
-fixtures/no_such_application

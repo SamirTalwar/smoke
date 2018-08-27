@@ -23,6 +23,7 @@ data TestSuite =
 
 data TestSpecification =
   TestSpecification TestName
+                    (Maybe Command)
                     (Maybe Args)
                     (Maybe (Fixture StdIn))
                     (Fixtures StdOut)
@@ -36,7 +37,9 @@ instance FromJSON TestSuite where
 instance FromJSON TestSpecification where
   parseJSON =
     withObject "TestSpecification" $ \v ->
-      TestSpecification <$> (v .: "name") <*> (v .:? "args") <*> (v .:? "stdin") <*>
+      TestSpecification <$> (v .: "name") <*> (v .:? "command") <*>
+      (v .:? "args") <*>
+      (v .:? "stdin") <*>
       (v .:? "stdout" .!= Fixtures []) <*>
       (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
 
@@ -150,16 +153,16 @@ convertToTests ::
      Maybe Command -> FilePath -> Maybe TestName -> TestSuite -> Tests
 convertToTests commandFromOptions location suiteName (TestSuite suiteCommand specs) =
   map
-    (convertToTest (commandFromOptions <|> suiteCommand) location suiteName)
+    (convertToTest location suiteName (commandFromOptions <|> suiteCommand))
     specs
 
 convertToTest ::
-     Maybe Command -> FilePath -> Maybe TestName -> TestSpecification -> Test
-convertToTest command location suiteName (TestSpecification name args stdIn stdOut status) =
+     FilePath -> Maybe TestName -> Maybe Command -> TestSpecification -> Test
+convertToTest location suiteName suiteCommand (TestSpecification name command args stdIn stdOut status) =
   Test
     { testName = maybe name (++ "/" ++ name) suiteName
     , testLocation = location
-    , testCommand = command
+    , testCommand = command <|> suiteCommand
     , testArgs = args
     , testStdIn = prefixFixtureWith location <$> stdIn
     , testStdOut = prefixFixturesWith location stdOut

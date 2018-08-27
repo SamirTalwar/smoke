@@ -153,9 +153,9 @@ instance Functor PartResult where
     PartFailure (map f expected) (f actual)
 
 data TestErrorMessage
-  = NoCommandFile
-  | NoInputFiles
-  | NoOutputFiles
+  = NoCommand
+  | NoInput
+  | NoOutput
   | NonExistentCommand
   | NonExecutableCommand
   | CouldNotExecuteCommand String

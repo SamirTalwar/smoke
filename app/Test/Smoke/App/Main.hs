@@ -49,15 +49,15 @@ printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutR
   printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestError test NoCommandFile) = do
+printResult (TestError test NoCommand) = do
   printTitle (testName test)
-  printError "There is no command file."
-printResult (TestError test NoInputFiles) = do
+  printError "There is no command."
+printResult (TestError test NoInput) = do
   printTitle (testName test)
-  printError "There are no args or STDIN files."
-printResult (TestError test NoOutputFiles) = do
+  printError "There are no args or STDIN."
+printResult (TestError test NoOutput) = do
   printTitle (testName test)
-  printError "There are no STDOUT or STDERR files."
+  printError "There are no STDOUT or STDERR."
 printResult (TestError test NonExistentCommand) = do
   printTitle (testName test)
   printError $

@@ -1,9 +1,9 @@
-no-command-file
-  There is no command file.
+no-command
+  There is no command.
 no-inputs
-  There are no args or STDIN files.
+  There are no args or STDIN.
 no-outputs
-  There are no STDOUT or STDERR files.
+  There are no STDOUT or STDERR.
 no-such-application
   The application "fixtures/no_such_application" does not exist.
 non-executable-application

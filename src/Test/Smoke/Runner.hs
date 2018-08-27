@@ -34,18 +34,18 @@ runTest test =
 
 validateTest :: Test -> Execution ()
 validateTest test = do
-  when (isNothing (testCommand test)) $ throwE NoCommandFile
+  when (isNothing (testCommand test)) $ throwE NoCommand
   when (isNothing (testArgs test) && isNothing (testStdIn test)) $
-    throwE NoInputFiles
+    throwE NoInput
   when (isEmpty (testStdOut test) && isEmpty (testStdErr test)) $
-    throwE NoOutputFiles
+    throwE NoOutput
   where
     isEmpty (Fixtures []) = True
     isEmpty Fixtures {} = False
 
 readExecutionPlan :: Test -> Execution TestExecutionPlan
 readExecutionPlan test = do
-  executableName <- onNothingThrow NoCommandFile (head <$> testCommand test)
+  executableName <- onNothingThrow NoCommand (head <$> testCommand test)
   executableExists <- liftIO (doesFileExist executableName)
   executable <-
     if executableExists

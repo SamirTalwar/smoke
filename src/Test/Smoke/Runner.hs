@@ -3,7 +3,7 @@ module Test.Smoke.Runner
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, when)
+import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.Maybe (fromMaybe, isNothing)
@@ -53,17 +53,21 @@ validateTest defaultCommand test = do
 readExecutionPlan ::
      Maybe SuiteName -> Maybe Command -> Test -> Execution TestExecutionPlan
 readExecutionPlan suiteName defaultCommand test = do
-  command <- onNothingThrow NoCommand (testCommand test <|> defaultCommand)
-  let executableName = head command
+  (executable@(Executable executableName), args) <-
+    splitCommand (testCommand test <|> defaultCommand) (testArgs test)
   executableExists <- liftIO (doesFileExist executableName)
-  executable <-
-    if executableExists
-      then return executableName
-      else onNothingThrow (NonExistentCommand executableName) =<<
-           liftIO (findExecutable executableName)
-  let args = tail command ++ fromMaybe [] (testArgs test)
+  unless executableExists $
+    onNothingThrow_ (NonExistentCommand executable) =<<
+    liftIO (findExecutable executableName)
   stdIn <- liftIO $ sequence $ readFixture <$> testStdIn test
   return $ TestExecutionPlan suiteName test executable args stdIn
+
+splitCommand :: Maybe Command -> Maybe Args -> Execution (Executable, Args)
+splitCommand maybeCommand maybeArgs = do
+  (executableName:commandArgs) <-
+    onNothingThrow NoCommand (unCommand <$> maybeCommand)
+  let args = commandArgs ++ maybe [] unArgs maybeArgs
+  return (Executable executableName, Args args)
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
@@ -75,10 +79,11 @@ readExpectedOutputs test = do
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
-executeTest (TestExecutionPlan _ _ executable args stdIn) = do
+executeTest (TestExecutionPlan _ _ executable@(Executable executableName) (Args args) stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
     handleExecutionError executable =<<
-    liftIO (tryIOError (readProcessWithExitCode executable args processStdIn))
+    liftIO
+      (tryIOError (readProcessWithExitCode executableName args processStdIn))
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
   where
     processStdIn = unStdIn $ fromMaybe (StdIn Text.empty) stdIn
@@ -123,8 +128,10 @@ handleError :: (a -> b) -> Either a b -> b
 handleError handler = either handler id
 
 onNothingThrow :: Monad m => e -> Maybe a -> ExceptT e m a
-onNothingThrow _ (Just value) = return value
-onNothingThrow exception Nothing = throwE exception
+onNothingThrow exception = maybe (throwE exception) return
+
+onNothingThrow_ :: Monad m => e -> Maybe a -> ExceptT e m ()
+onNothingThrow_ exception = maybe (throwE exception) (const $ return ())
 
 ifEmpty :: a -> [a] -> [a]
 ifEmpty value [] = [value]

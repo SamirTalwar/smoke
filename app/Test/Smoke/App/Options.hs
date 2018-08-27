@@ -7,7 +7,7 @@ module Test.Smoke.App.Options
 import Data.List (intercalate)
 import Data.Semigroup ((<>))
 import Options.Applicative
-import Test.Smoke (Command, Options(..))
+import Test.Smoke (Command(..), Options(..))
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell
@@ -49,7 +49,7 @@ optionParser isTTY foundDiffEngine = do
 commandParser :: Parser (Maybe Command)
 commandParser =
   optional
-    (words <$>
+    (Command . words <$>
      strOption (long "command" <> help "Specify or override the command to run"))
 
 modeParser :: Parser Mode

@@ -43,7 +43,9 @@ printResult (TestSuccess name) = do
   putGreenLn "  succeeded"
 printResult (TestFailure name (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle name
-  printFailingInput "args" (Text.unlines . map fromString <$> testArgs test)
+  printFailingInput
+    "args"
+    (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
   printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
@@ -57,15 +59,15 @@ printResult (TestError name NoInput) = do
 printResult (TestError name NoOutput) = do
   printTitle name
   printError "There are no STDOUT or STDERR."
-printResult (TestError name (NonExistentCommand executableName)) = do
+printResult (TestError name (NonExistentCommand (Executable executableName))) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <> "\" does not exist."
-printResult (TestError name (NonExecutableCommand executableName)) = do
+printResult (TestError name (NonExecutableCommand (Executable executableName))) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <> "\" is not executable."
-printResult (TestError name (CouldNotExecuteCommand executableName e)) = do
+printResult (TestError name (CouldNotExecuteCommand (Executable executableName) e)) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <>

@@ -1,1 +1,0 @@
-fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)

@@ -1,0 +1,56 @@
+command:
+  - ruby
+  - fixtures/calculator.rb
+
+tests:
+  - name: addition
+    stdin: |
+      2 + 2
+    stdout: |
+      4
+
+  - name: subtraction
+    stdin: |
+      6 - 3
+    stdout: |
+      3
+
+  - name: multiplication
+    stdin: |
+      25 * 16
+    stdout: |
+      400
+
+  - name: division
+    stdin: |
+      24 / 6
+    stdout: |
+      4
+
+  - name: three-numbers
+    stdin: |
+      5 + 7 + 12
+    stdout: |
+      24
+
+  - name: parentheses
+    stdin: |
+      (6 + 3) * 2
+    stdout: |
+      18
+
+  - name: complex
+    stdin: |
+      (8 + 2i) + (7 - 4i)
+    stdout: |
+      15 - 2i
+
+  - name: infix-words-error
+    stdin: |
+      3 to-the-power-of 3
+    exit-status: 1
+    stderr:
+      - |
+        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
+      - |
+        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Integer (NoMethodError)

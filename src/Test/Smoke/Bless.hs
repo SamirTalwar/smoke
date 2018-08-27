@@ -1,8 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Test.Smoke.Bless
   ( blessResults
   ) where
 
-import Control.Exception (catch)
+import Control.Exception (catch, throwIO)
+import qualified Data.Text.IO as TextIO
 import Test.Smoke.Types
 
 blessResults :: TestResults -> IO TestResults
@@ -26,3 +29,19 @@ blessResult (TestFailure TestExecutionPlan {planTest = test} status stdOut stdEr
      return $ TestSuccess test
      `catch` \e -> return (TestError test (BlessingFailed e))
 blessResult result = return result
+
+writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
+writeFixture (InlineFixture contents) _ =
+  throwIO $
+  CouldNotWriteFixture (fixtureName contents) (serializeFixture contents)
+writeFixture (FileFixture path) value =
+  TextIO.writeFile path (serializeFixture value)
+
+writeFixtures ::
+     forall a. FixtureContents a
+  => Fixtures a
+  -> a
+  -> IO ()
+writeFixtures (Fixtures [fixture]) value = writeFixture fixture value
+writeFixtures Fixtures {} _ =
+  throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))

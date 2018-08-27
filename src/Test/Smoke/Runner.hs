@@ -7,6 +7,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
 import Data.Maybe (fromJust, fromMaybe, isNothing)
 import qualified Data.Text as Text
+import qualified Data.Text.IO as TextIO
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
@@ -101,6 +102,13 @@ processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expe
       if actualStdErr `elem` expectedStdErrs
         then PartSuccess
         else PartFailure expectedStdErrs actualStdErr
+
+readFixture :: FixtureContents a => Fixture a -> IO a
+readFixture (InlineFixture contents) = return contents
+readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
+
+readFixtures :: FixtureContents a => Fixtures a -> IO [a]
+readFixtures (Fixtures fixtures) = mapM readFixture fixtures
 
 handleError :: (a -> b) -> Either a b -> b
 handleError handler = either handler id

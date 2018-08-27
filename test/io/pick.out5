@@ -1,9 +1,9 @@
 args
   succeeded
-in
+stdin
   succeeded
 wrong
-  args:   uno
+  input:  uno
           dos
           tres
           quatro

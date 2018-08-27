@@ -1,27 +1,27 @@
 args
   succeeded
-in
+stdin
   succeeded
 wrong
-  args:   uno
+  input:  uno
           dos
           tres
           quatro
           cinqo
   output: @@ -1 +1 @@
           -one
-          +quatro
+          +dos
       or: @@ -1 +1 @@
           -two
-          +quatro
+          +dos
       or: @@ -1 +1 @@
           -three
-          +quatro
+          +dos
       or: @@ -1 +1 @@
           -four
-          +quatro
+          +dos
       or: @@ -1 +1 @@
           -five
-          +quatro
+          +dos
 
 3 tests, 1 failure

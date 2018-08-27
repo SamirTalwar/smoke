@@ -7,8 +7,11 @@ module Test.Smoke
   , StdOut(..)
   , StdErr(..)
   , Options(..)
+  , Plan(..)
+  , Specs
+  , Suite(..)
+  , Suites(..)
   , Test(..)
-  , Tests
   , TestExecutionPlan(..)
   , TestResult(..)
   , TestResults

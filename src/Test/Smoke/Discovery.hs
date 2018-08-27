@@ -4,51 +4,19 @@ module Test.Smoke.Discovery
   ( discoverTests
   ) where
 
-import Control.Applicative ((<|>))
 import Control.Monad (forM)
-import Data.Maybe (maybe)
 import Data.Yaml
 import System.FilePath
 import System.FilePath.Glob as Glob
 import Test.Smoke.Types
 
-data TestSuite =
-  TestSuite (Maybe Command)
-            [TestSpecification]
-
-data TestSpecification =
-  TestSpecification TestName
-                    (Maybe Command)
-                    (Maybe Args)
-                    (Maybe (Fixture StdIn))
-                    (Fixtures StdOut)
-                    (Fixtures StdErr)
-                    (Fixture Status)
-
-instance FromJSON TestSuite where
-  parseJSON =
-    withObject "TestSuite" $ \v ->
-      TestSuite <$> (v .:? "command") <*> (v .: "tests")
-
-instance FromJSON TestSpecification where
-  parseJSON =
-    withObject "TestSpecification" $ \v ->
-      TestSpecification <$> (v .: "name") <*> (v .:? "command") <*>
-      (v .:? "args") <*>
-      (v .:? "stdin") <*>
-      (v .:? "stdout" .!= Fixtures []) <*>
-      (v .:? "stderr" .!= Fixtures []) <*>
-      (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
-
-discoverTests :: Options -> IO Tests
+discoverTests :: Options -> IO Plan
 discoverTests options =
-  concat <$>
-  forM
-    (optionsTestLocations options)
-    (discoverTestsInLocation (optionsCommand options))
+  Plan (optionsCommand options) <$>
+  forM (optionsTestLocations options) discoverTestsInLocation
 
-discoverTestsInLocation :: Maybe Command -> FilePath -> IO [Test]
-discoverTestsInLocation commandFromOptions location = do
+discoverTestsInLocation :: FilePath -> IO Suites
+discoverTestsInLocation location = do
   specificationFiles <- globDir1 (Glob.compile "*.yaml") location
   testsBySuite <-
     forM specificationFiles $ \file -> do
@@ -57,28 +25,19 @@ discoverTestsInLocation commandFromOptions location = do
               then Just $ makeRelative location (dropExtension file)
               else Nothing
       suite <- decodeFileThrow file
-      return $ convertToTests commandFromOptions location suiteName suite
-  return $ concat testsBySuite
+      return (suiteName, prefixSuiteFixturesWith location suite)
+  return $ Suites testsBySuite
 
-convertToTests ::
-     Maybe Command -> FilePath -> Maybe TestName -> TestSuite -> Tests
-convertToTests commandFromOptions location suiteName (TestSuite suiteCommand specs) =
-  map
-    (convertToTest location suiteName (commandFromOptions <|> suiteCommand))
-    specs
+prefixSuiteFixturesWith :: FilePath -> Suite -> Suite
+prefixSuiteFixturesWith location (Suite command tests) =
+  Suite command (map (prefixTestFixturesWith location) tests)
 
-convertToTest ::
-     FilePath -> Maybe TestName -> Maybe Command -> TestSpecification -> Test
-convertToTest location suiteName suiteCommand (TestSpecification name command args stdIn stdOut stdErr status) =
-  Test
-    { testName = maybe name (++ "/" ++ name) suiteName
-    , testLocation = location
-    , testCommand = command <|> suiteCommand
-    , testArgs = args
-    , testStdIn = prefixFixtureWith location <$> stdIn
-    , testStdOut = prefixFixturesWith location stdOut
-    , testStdErr = prefixFixturesWith location stdErr
-    , testStatus = status
+prefixTestFixturesWith :: FilePath -> Test -> Test
+prefixTestFixturesWith location test =
+  test
+    { testStdIn = prefixFixtureWith location <$> testStdIn test
+    , testStdOut = prefixFixturesWith location $ testStdOut test
+    , testStdErr = prefixFixturesWith location $ testStdErr test
     }
 
 prefixFixtureWith :: FilePath -> Fixture a -> Fixture a

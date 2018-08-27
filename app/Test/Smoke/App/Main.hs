@@ -6,7 +6,6 @@ import Control.Exception (displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
-import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import qualified Data.Text as Text
@@ -39,58 +38,54 @@ printResults :: TestResults -> Output ()
 printResults = mapM_ printResult
 
 printResult :: TestResult -> Output ()
-printResult (TestSuccess test) = do
-  printTitle (testName test)
+printResult (TestSuccess name) = do
+  printTitle name
   putGreenLn "  succeeded"
-printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
-  printTitle (testName test)
+printResult (TestFailure name (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
+  printTitle name
   printFailingInput "args" (Text.unlines . map fromString <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
   printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestError test NoCommand) = do
-  printTitle (testName test)
+printResult (TestError name NoCommand) = do
+  printTitle name
   printError "There is no command."
-printResult (TestError test NoInput) = do
-  printTitle (testName test)
+printResult (TestError name NoInput) = do
+  printTitle name
   printError "There are no args or STDIN."
-printResult (TestError test NoOutput) = do
-  printTitle (testName test)
+printResult (TestError name NoOutput) = do
+  printTitle name
   printError "There are no STDOUT or STDERR."
-printResult (TestError test NonExistentCommand) = do
-  printTitle (testName test)
+printResult (TestError name (NonExistentCommand executableName)) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
-    "\" does not exist."
-printResult (TestError test NonExecutableCommand) = do
-  printTitle (testName test)
+    "The application \"" <> Text.pack executableName <> "\" does not exist."
+printResult (TestError name (NonExecutableCommand executableName)) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
-    "\" is not executable."
-printResult (TestError test (CouldNotExecuteCommand e)) = do
-  printTitle (testName test)
+    "The application \"" <> Text.pack executableName <> "\" is not executable."
+printResult (TestError name (CouldNotExecuteCommand executableName e)) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
+    "The application \"" <> Text.pack executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult (TestError test (CouldNotWriteFixture name value)) = do
-  printTitle (testName test)
+printResult (TestError name (CouldNotWriteFixture fixtureName fixtureValue)) = do
+  printTitle name
   printError $
-    "Could not write the fixture \"" <> Text.pack name <> "\":\n" <> value
-printResult (TestError test (BlessingFailed e)) = do
-  printTitle (testName test)
+    "Could not write the fixture \"" <> Text.pack fixtureName <> "\":\n" <>
+    fixtureValue
+printResult (TestError name (BlessingFailed e)) = do
+  printTitle name
   printError $ "Blessing failed.\n" <> fromString (displayException e)
-printResult (TestError test (CouldNotBlessAMissingValue propertyName)) = do
-  printTitle (testName test)
+printResult (TestError name (CouldNotBlessAMissingValue propertyName)) = do
+  printTitle name
   printError $
     "There are no expected \"" <> Text.pack propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult (TestError test (CouldNotBlessWithMultipleValues propertyName)) = do
-  printTitle (testName test)
+printResult (TestError name (CouldNotBlessWithMultipleValues propertyName)) = do
+  printTitle name
   printError $
     "There are multiple expected \"" <> Text.pack propertyName <>
     "\" values, so the result cannot be blessed.\n"

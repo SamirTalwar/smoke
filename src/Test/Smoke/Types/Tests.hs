@@ -1,6 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Test.Smoke.Types.Tests where
 
 import Control.Exception (Exception, IOException)
+import Data.Aeson hiding (Options)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Fixtures
 
@@ -9,9 +12,10 @@ data Options = Options
   , optionsTestLocations :: [FilePath]
   } deriving (Eq, Show)
 
+type TestName = String
+
 data Test = Test
   { testName :: TestName
-  , testLocation :: FilePath
   , testCommand :: Maybe Command
   , testArgs :: Maybe Args
   , testStdIn :: Maybe (Fixture StdIn)
@@ -20,10 +24,37 @@ data Test = Test
   , testStatus :: Fixture Status
   } deriving (Eq, Show)
 
-type Tests = [Test]
+instance FromJSON Test where
+  parseJSON =
+    withObject "Test" $ \v ->
+      Test <$> (v .: "name") <*> (v .:? "command") <*> (v .:? "args") <*>
+      (v .:? "stdin") <*>
+      (v .:? "stdout" .!= Fixtures []) <*>
+      (v .:? "stderr" .!= Fixtures []) <*>
+      (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
+
+type SuiteName = String
+
+data Suite =
+  Suite (Maybe Command)
+        [Test]
+
+instance FromJSON Suite where
+  parseJSON =
+    withObject "Suite" $ \v -> Suite <$> (v .:? "command") <*> (v .: "tests")
+
+newtype Suites =
+  Suites [(Maybe SuiteName, Suite)]
+
+type Specs = [Suites]
+
+data Plan =
+  Plan (Maybe Command)
+       Specs
 
 data TestExecutionPlan = TestExecutionPlan
-  { planTest :: Test
+  { planSuiteName :: Maybe SuiteName
+  , planTest :: Test
   , planExecutable :: Executable
   , planArgs :: Args
   , planStdIn :: Maybe StdIn
@@ -32,12 +63,13 @@ data TestExecutionPlan = TestExecutionPlan
 type TestResults = [TestResult]
 
 data TestResult
-  = TestSuccess Test
-  | TestFailure TestExecutionPlan
+  = TestSuccess TestName
+  | TestFailure TestName
+                TestExecutionPlan
                 (PartResult Status)
                 (PartResult StdOut)
                 (PartResult StdErr)
-  | TestError Test
+  | TestError TestName
               TestErrorMessage
   deriving (Eq, Show)
 
@@ -56,9 +88,10 @@ data TestErrorMessage
   = NoCommand
   | NoInput
   | NoOutput
-  | NonExistentCommand
-  | NonExecutableCommand
-  | CouldNotExecuteCommand String
+  | NonExistentCommand Executable
+  | NonExecutableCommand Executable
+  | CouldNotExecuteCommand Executable
+                           String
   | CouldNotWriteFixture String
                          Contents
   | BlessingFailed IOException

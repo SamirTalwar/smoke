@@ -2,8 +2,6 @@ module Test.Smoke.Types.Base where
 
 import Data.Text (Text)
 
-type TestName = String
-
 type Executable = String
 
 type Command = [String]

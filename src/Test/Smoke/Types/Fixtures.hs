@@ -3,7 +3,7 @@
 
 module Test.Smoke.Types.Fixtures where
 
-import Data.Aeson hiding (Options)
+import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector

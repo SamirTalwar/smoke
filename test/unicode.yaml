@@ -1,0 +1,7 @@
+tests:
+  - name: unicode
+    exit-status: 1
+    args:
+      - fixtures/unicode
+    stdout:
+      file: io/unicode.out

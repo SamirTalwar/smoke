@@ -5,9 +5,9 @@ module Test.Smoke.Discovery
   ) where
 
 import Control.Exception (throwIO)
-import Control.Monad (forM, unless)
+import Control.Monad (forM)
 import Data.Yaml
-import System.Directory (doesPathExist)
+import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
 import System.FilePath.Glob as Glob
 import Test.Smoke.Types
@@ -19,9 +19,12 @@ discoverTests options =
 
 discoverTestsInLocation :: FilePath -> IO Suites
 discoverTestsInLocation location = do
-  locationExists <- doesPathExist location
-  unless locationExists $ throwIO (NoSuchLocation location)
-  specificationFiles <- globDir1 (Glob.compile "*.yaml") location
+  locationType <- getFileType location
+  specificationFiles <-
+    case locationType of
+      Directory -> globDir1 (Glob.compile "*.yaml") location
+      File -> return [location]
+      NonExistent -> throwIO (NoSuchLocation location)
   testsBySuite <-
     forM specificationFiles $ \file -> do
       let suiteName =
@@ -51,3 +54,19 @@ prefixFixtureWith location (FileFixture path) = FileFixture (location </> path)
 prefixFixturesWith :: FilePath -> Fixtures a -> Fixtures a
 prefixFixturesWith location (Fixtures fixtures) =
   Fixtures $ map (prefixFixtureWith location) fixtures
+
+data FileType
+  = Directory
+  | File
+  | NonExistent
+
+getFileType :: FilePath -> IO FileType
+getFileType path = do
+  isDirectory <- doesDirectoryExist path
+  isFile <- doesFileExist path
+  case (isDirectory, isFile) of
+    (True, True) ->
+      fail $ "The path \"" ++ path ++ "\" is both a directory and a file."
+    (True, False) -> return Directory
+    (False, True) -> return File
+    (False, False) -> return NonExistent

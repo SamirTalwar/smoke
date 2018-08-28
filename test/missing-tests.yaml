@@ -5,3 +5,10 @@ tests:
     exit-status: 2
     stderr: |
       There is no such location "fixtures/missing".
+
+  - name: missing-file
+    args:
+      - fixtures/calculator/complex.yaml
+    exit-status: 2
+    stderr: |
+      There is no such location "fixtures/calculator/complex.yaml".

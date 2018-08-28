@@ -1,0 +1,11 @@
+tests:
+  - name: individual-files
+    args:
+      - fixtures/pick/good.yaml
+    stdout: |
+      args
+        succeeded
+      stdin
+        succeeded
+
+      2 tests, 0 failures

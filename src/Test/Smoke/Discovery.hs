@@ -4,8 +4,10 @@ module Test.Smoke.Discovery
   ( discoverTests
   ) where
 
-import Control.Monad (forM)
+import Control.Exception (throwIO)
+import Control.Monad (forM, unless)
 import Data.Yaml
+import System.Directory (doesPathExist)
 import System.FilePath
 import System.FilePath.Glob as Glob
 import Test.Smoke.Types
@@ -17,6 +19,8 @@ discoverTests options =
 
 discoverTestsInLocation :: FilePath -> IO Suites
 discoverTestsInLocation location = do
+  locationExists <- doesPathExist location
+  unless locationExists $ throwIO (NoSuchLocation location)
   specificationFiles <- globDir1 (Glob.compile "*.yaml") location
   testsBySuite <-
     forM specificationFiles $ \file -> do

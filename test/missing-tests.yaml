@@ -1,0 +1,7 @@
+tests:
+  - name: missing-directory
+    args:
+      - fixtures/missing
+    exit-status: 2
+    stderr: |
+      There is no such location "fixtures/missing".

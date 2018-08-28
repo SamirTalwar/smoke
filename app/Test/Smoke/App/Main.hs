@@ -2,7 +2,7 @@
 
 module Main where
 
-import Control.Exception (displayException)
+import Control.Exception (catch, displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
@@ -20,18 +20,18 @@ import Text.Printf (printf)
 main :: IO ()
 main = do
   options <- parseOptions
-  tests <- discoverTests (optionsExecution options)
-  results <- runTests tests
-  case optionsMode options of
-    Check -> outputResults options results
-    Bless -> outputResults options =<< blessResults results
+  (do tests <- discoverTests (optionsExecution options)
+      results <- runTests tests
+      case optionsMode options of
+        Check -> outputResults options results
+        Bless -> outputResults options =<< blessResults results) `catch`
+    handleDiscoveryError options
 
 outputResults :: AppOptions -> TestResults -> IO ()
 outputResults options results = do
-  runReaderT
-    (do printResults results
-        printSummary results)
-    options
+  flip runReaderT options $ do
+    printResults results
+    printSummary results
   exitAccordingTo results
 
 printResults :: TestResults -> Output ()
@@ -110,6 +110,14 @@ printFailingOutput name (PartFailure expected actual) = do
     putRed "      or: "
     printDiff e actual
 
+printDiff :: Contents -> Contents -> Output ()
+printDiff left right = do
+  AppOptions { optionsColor = color
+             , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
+             } <- ask
+  diff <- liftIO $ renderDiff color left right
+  putPlainLn $ indented outputIndentation diff
+
 printSummary :: TestResults -> Output ()
 printSummary results = do
   putEmptyLn
@@ -125,6 +133,15 @@ printSummary results = do
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation
 
+handleDiscoveryError :: AppOptions -> TestDiscoveryErrorMessage -> IO ()
+handleDiscoveryError options e = do
+  flip runReaderT options $
+    putError $
+    case e of
+      NoSuchLocation location ->
+        "There is no such location \"" <> Text.pack location <> "\"."
+  exitWith (ExitFailure 2)
+
 outputIndentation :: Int
 outputIndentation = 10
 
@@ -133,14 +150,6 @@ messageIndentation = 2
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
-
-printDiff :: Contents -> Contents -> Output ()
-printDiff left right = do
-  AppOptions { optionsColor = color
-             , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
-             } <- ask
-  diff <- liftIO $ renderDiff color left right
-  putPlainLn $ indented outputIndentation diff
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

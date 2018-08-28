@@ -17,6 +17,7 @@ module Test.Smoke
   , TestResult(..)
   , TestResults
   , PartResult(..)
+  , TestDiscoveryErrorMessage(..)
   , TestErrorMessage(..)
   , blessResults
   , discoverTests

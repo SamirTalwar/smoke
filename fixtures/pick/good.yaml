@@ -40,22 +40,3 @@ tests:
         four
       - |
         five
-
-  - name: wrong
-    stdin: |
-      uno
-      dos
-      tres
-      quatro
-      cinqo
-    stdout:
-      - |
-        one
-      - |
-        two
-      - |
-        three
-      - |
-        four
-      - |
-        five

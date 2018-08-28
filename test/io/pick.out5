@@ -1,8 +1,4 @@
-args
-  succeeded
-stdin
-  succeeded
-wrong
+bad/wrong
   input:  uno
           dos
           tres
@@ -23,5 +19,9 @@ wrong
       or: @@ -1 +1 @@
           -five
           +cinqo
+good/args
+  succeeded
+good/stdin
+  succeeded
 
 3 tests, 1 failure

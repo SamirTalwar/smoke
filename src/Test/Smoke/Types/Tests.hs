@@ -43,8 +43,7 @@ instance FromJSON Suite where
   parseJSON =
     withObject "Suite" $ \v -> Suite <$> (v .:? "command") <*> (v .: "tests")
 
-newtype Suites =
-  Suites [(Maybe SuiteName, Suite)]
+type Suites = [(Maybe SuiteName, Suite)]
 
 type Specs = [Suites]
 

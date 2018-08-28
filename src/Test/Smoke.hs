@@ -11,7 +11,7 @@ module Test.Smoke
   , Plan(..)
   , Specs
   , Suite(..)
-  , Suites(..)
+  , Suites
   , Test(..)
   , TestExecutionPlan(..)
   , TestResult(..)

@@ -6,6 +6,7 @@ module Test.Smoke.Discovery
 
 import Control.Exception (throwIO)
 import Control.Monad (forM)
+import Data.List (sortOn)
 import Data.Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
@@ -33,7 +34,7 @@ discoverTestsInLocation location = do
               else Nothing
       suite <- decodeFileThrow file
       return (suiteName, prefixSuiteFixturesWith location suite)
-  return $ Suites testsBySuite
+  return $ sortOn fst testsBySuite
 
 prefixSuiteFixturesWith :: FilePath -> Suite -> Suite
 prefixSuiteFixturesWith location (Suite command tests) =

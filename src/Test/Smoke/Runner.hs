@@ -22,7 +22,7 @@ type ActualOutputs = (Status, StdOut, StdErr)
 runTests :: Plan -> IO TestResults
 runTests (Plan planCommand specs) = do
   results <-
-    forM specs $ \(Suites suites) ->
+    forM specs $ \suites ->
       forM suites $ \(suiteName, Suite suiteCommand tests) ->
         forM tests (runTest suiteName (suiteCommand <|> planCommand))
   return $ concat $ concat results

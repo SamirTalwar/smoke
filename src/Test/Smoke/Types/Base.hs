@@ -5,6 +5,10 @@ module Test.Smoke.Types.Base where
 import Data.Aeson
 import Data.Text (Text)
 
+type SuiteName = String
+
+type TestName = String
+
 type Contents = Text
 
 newtype Executable = Executable

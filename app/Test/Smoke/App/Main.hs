@@ -140,6 +140,16 @@ handleDiscoveryError options e = do
     case e of
       NoSuchLocation location ->
         "There is no such location \"" <> Text.pack location <> "\"."
+      NoSuchTest location selectedTestName ->
+        "There is no such test \"" <> Text.pack selectedTestName <> "\" in \"" <>
+        Text.pack location <>
+        "\"."
+      CannotSelectTestInDirectory location selectedTestName ->
+        "The test \"" <> Text.pack selectedTestName <>
+        "\" cannot be selected from the directory \"" <>
+        Text.pack location <>
+        "\".\n" <>
+        "Tests must be selected from a single specification file."
   exitWith (ExitFailure 2)
 
 outputIndentation :: Int

@@ -9,7 +9,6 @@ module Test.Smoke
   , StdErr(..)
   , Options(..)
   , Plan(..)
-  , Specs
   , Suite(..)
   , Suites
   , Test(..)

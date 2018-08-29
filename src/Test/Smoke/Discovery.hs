@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.Discovery
@@ -6,35 +7,50 @@ module Test.Smoke.Discovery
 
 import Control.Exception (throwIO)
 import Control.Monad (forM)
-import Data.List (sortOn)
+import qualified Data.List as List
+import qualified Data.Text as Text
 import Data.Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
 import System.FilePath.Glob as Glob
 import Test.Smoke.Types
 
+data Root
+  = Directory FilePath
+  | File FilePath
+  | Single FilePath
+           TestName
+
 discoverTests :: Options -> IO Plan
 discoverTests options =
   Plan (optionsCommand options) <$>
-  forM (optionsTestLocations options) discoverTestsInLocation
+  discoverTestsInLocations (optionsTestLocations options)
 
-discoverTestsInLocation :: FilePath -> IO Suites
-discoverTestsInLocation location = do
-  locationType <- getFileType location
-  specificationFiles <-
-    case locationType of
-      Directory -> globDir1 (Glob.compile "*.yaml") location
-      File -> return [location]
-      NonExistent -> throwIO (NoSuchLocation location)
+discoverTestsInLocations :: [FilePath] -> IO Suites
+discoverTestsInLocations locations = do
+  roots <- mapM parseRoot locations
   testsBySuite <-
-    forM specificationFiles $ \file -> do
-      let suiteName =
-            if length specificationFiles > 1
-              then Just $ makeRelative location (dropExtension file)
-              else Nothing
-      suite <- decodeFileThrow file
-      return (suiteName, prefixSuiteFixturesWith location suite)
-  return $ sortOn fst testsBySuite
+    forM roots $ \case
+      Directory path -> do
+        specificationFiles <- globDir1 (Glob.compile "*.yaml") path
+        mapM decodeSpecificationFile specificationFiles
+      File path -> return <$> decodeSpecificationFile path
+      Single path selectedTestName -> do
+        (suiteName, Suite command tests) <- decodeSpecificationFile path
+        case List.find ((== selectedTestName) . testName) tests of
+          Nothing -> throwIO (NoSuchTest path selectedTestName)
+          Just selectedTest ->
+            return [(suiteName, Suite command [selectedTest])]
+  return $ List.sortOn fst $ concat testsBySuite
+
+decodeSpecificationFile :: FilePath -> IO (SuiteName, Suite)
+decodeSpecificationFile file = do
+  let (directory, fileName) = splitFileName file
+  let suiteName = dropExtension fileName
+  suite <- decodeFileThrow file
+  return
+    ( suiteName
+    , prefixSuiteFixturesWith (dropTrailingPathSeparator directory) suite)
 
 prefixSuiteFixturesWith :: FilePath -> Suite -> Suite
 prefixSuiteFixturesWith location (Suite command tests) =
@@ -56,18 +72,25 @@ prefixFixturesWith :: FilePath -> Fixtures a -> Fixtures a
 prefixFixturesWith location (Fixtures fixtures) =
   Fixtures $ map (prefixFixtureWith location) fixtures
 
-data FileType
-  = Directory
-  | File
-  | NonExistent
-
-getFileType :: FilePath -> IO FileType
-getFileType path = do
+parseRoot :: FilePath -> IO Root
+parseRoot location = do
+  let (path, selectedTestName) =
+        let (p, s) = List.break (== '@') location
+         in ( strip p
+            , if null s
+                then Nothing
+                else Just (strip (tail s)))
   isDirectory <- doesDirectoryExist path
   isFile <- doesFileExist path
-  case (isDirectory, isFile) of
-    (True, True) ->
+  case (isDirectory, isFile, selectedTestName) of
+    (True, True, _) ->
       fail $ "The path \"" ++ path ++ "\" is both a directory and a file."
-    (True, False) -> return Directory
-    (False, True) -> return File
-    (False, False) -> return NonExistent
+    (False, False, _) -> throwIO $ NoSuchLocation path
+    (True, _, Just selected) ->
+      throwIO $ CannotSelectTestInDirectory path selected
+    (True, False, Nothing) -> return $ Directory path
+    (False, True, Nothing) -> return $ File path
+    (False, True, Just selected) -> return $ Single path selected
+
+strip :: String -> String
+strip = Text.unpack . Text.strip . Text.pack

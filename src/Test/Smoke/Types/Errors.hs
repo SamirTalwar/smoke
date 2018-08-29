@@ -3,8 +3,12 @@ module Test.Smoke.Types.Errors where
 import Control.Exception (Exception, IOException)
 import Test.Smoke.Types.Base
 
-newtype TestDiscoveryErrorMessage =
-  NoSuchLocation FilePath
+data TestDiscoveryErrorMessage
+  = NoSuchLocation FilePath
+  | NoSuchTest FilePath
+               TestName
+  | CannotSelectTestInDirectory FilePath
+                                TestName
   deriving (Eq, Show)
 
 instance Exception TestDiscoveryErrorMessage

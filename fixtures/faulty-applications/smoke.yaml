@@ -1,18 +1,4 @@
 tests:
-  - name: no-command
-
-  - name: no-inputs
-    command:
-      - echo
-    stdout: |
-      output
-
-  - name: no-outputs
-    command:
-      - echo
-    stdin: |
-      input
-
   - name: no-such-application
     command:
       - fixtures/no_such_application

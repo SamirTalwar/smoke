@@ -55,10 +55,10 @@ printResult (TestError name NoCommand) = do
   printError "There is no command."
 printResult (TestError name NoInput) = do
   printTitle name
-  printError "There are no args or STDIN."
+  printError "There are no args or STDIN values in the specification."
 printResult (TestError name NoOutput) = do
   printTitle name
-  printError "There are no STDOUT or STDERR."
+  printError "There are no STDOUT or STDERR values in the specification."
 printResult (TestError name (NonExistentCommand (Executable executableName))) = do
   printTitle name
   printError $

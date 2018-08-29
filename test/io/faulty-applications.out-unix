@@ -1,12 +1,6 @@
-no-command
-  There is no command.
-no-inputs
-  There are no args or STDIN.
-no-outputs
-  There are no STDOUT or STDERR.
 no-such-application
   The application "fixtures/no_such_application" does not exist.
 non-executable-application
   The application "fixtures/non_executable_application" is not executable.
 
-5 tests, 5 failures
+2 tests, 2 failures

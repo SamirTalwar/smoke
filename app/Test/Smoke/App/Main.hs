@@ -38,10 +38,10 @@ printResults :: TestResults -> Output ()
 printResults = mapM_ printResult
 
 printResult :: TestResult -> Output ()
-printResult (TestSuccess name) = do
+printResult (TestSuccess (TestName name)) = do
   printTitle name
   putGreenLn "  succeeded"
-printResult (TestFailure name (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
+printResult (TestFailure (TestName name) (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
   printTitle name
   printFailingInput
     "args"
@@ -50,43 +50,43 @@ printResult (TestFailure name (TestExecutionPlan _ test _ _ stdIn) statusResult 
   printFailingOutput "status" (int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestError name NoCommand) = do
+printResult (TestError (TestName name) NoCommand) = do
   printTitle name
   printError "There is no command."
-printResult (TestError name NoInput) = do
+printResult (TestError (TestName name) NoInput) = do
   printTitle name
   printError "There are no args or STDIN values in the specification."
-printResult (TestError name NoOutput) = do
+printResult (TestError (TestName name) NoOutput) = do
   printTitle name
   printError "There are no STDOUT or STDERR values in the specification."
-printResult (TestError name (NonExistentCommand (Executable executableName))) = do
+printResult (TestError (TestName name) (NonExistentCommand (Executable executableName))) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <> "\" does not exist."
-printResult (TestError name (NonExecutableCommand (Executable executableName))) = do
+printResult (TestError (TestName name) (NonExecutableCommand (Executable executableName))) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <> "\" is not executable."
-printResult (TestError name (CouldNotExecuteCommand (Executable executableName) e)) = do
+printResult (TestError (TestName name) (CouldNotExecuteCommand (Executable executableName) e)) = do
   printTitle name
   printError $
     "The application \"" <> Text.pack executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult (TestError name (CouldNotWriteFixture fixtureName fixtureValue)) = do
+printResult (TestError (TestName name) (CouldNotWriteFixture fixtureName fixtureValue)) = do
   printTitle name
   printError $
     "Could not write the fixture \"" <> Text.pack fixtureName <> "\":\n" <>
     fixtureValue
-printResult (TestError name (BlessingFailed e)) = do
+printResult (TestError (TestName name) (BlessingFailed e)) = do
   printTitle name
   printError $ "Blessing failed.\n" <> fromString (displayException e)
-printResult (TestError name (CouldNotBlessAMissingValue propertyName)) = do
+printResult (TestError (TestName name) (CouldNotBlessAMissingValue propertyName)) = do
   printTitle name
   printError $
     "There are no expected \"" <> Text.pack propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult (TestError name (CouldNotBlessWithMultipleValues propertyName)) = do
+printResult (TestError (TestName name) (CouldNotBlessWithMultipleValues propertyName)) = do
   printTitle name
   printError $
     "There are multiple expected \"" <> Text.pack propertyName <>
@@ -140,11 +140,11 @@ handleDiscoveryError options e = do
     case e of
       NoSuchLocation location ->
         "There is no such location \"" <> Text.pack location <> "\"."
-      NoSuchTest location selectedTestName ->
+      NoSuchTest location (TestName selectedTestName) ->
         "There is no such test \"" <> Text.pack selectedTestName <> "\" in \"" <>
         Text.pack location <>
         "\"."
-      CannotSelectTestInDirectory location selectedTestName ->
+      CannotSelectTestInDirectory location (TestName selectedTestName) ->
         "The test \"" <> Text.pack selectedTestName <>
         "\" cannot be selected from the directory \"" <>
         Text.pack location <>

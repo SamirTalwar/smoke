@@ -1,5 +1,7 @@
 module Test.Smoke
   ( Contents
+  , SuiteName(..)
+  , TestName(..)
   , Executable(..)
   , Command(..)
   , Args(..)

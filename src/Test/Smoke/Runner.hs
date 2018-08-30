@@ -105,7 +105,7 @@ processOutput ::
   -> ExpectedOutputs
   -> ActualOutputs
   -> TestResult
-processOutput showSuiteNames executionPlan@(TestExecutionPlan suiteName test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
+processOutput showSuiteNames executionPlan@(TestExecutionPlan (SuiteName suiteName) test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
   if statusResult == PartSuccess &&
      stdOutResult == PartSuccess && stdErrResult == PartSuccess
     then TestSuccess name
@@ -113,7 +113,7 @@ processOutput showSuiteNames executionPlan@(TestExecutionPlan suiteName test _ _
   where
     name =
       if showSuiteNames
-        then suiteName <> "/" <> testName test
+        then TestName $ suiteName <> "/" <> unTestName (testName test)
         else testName test
     statusResult =
       if expectedStatus == actualStatus

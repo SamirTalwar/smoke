@@ -25,7 +25,8 @@ data Test = Test
 instance FromJSON Test where
   parseJSON =
     withObject "Test" $ \v ->
-      Test <$> (v .: "name") <*> (v .:? "command") <*> (v .:? "args") <*>
+      Test <$> (TestName <$> v .: "name") <*> (v .:? "command") <*>
+      (v .:? "args") <*>
       (v .:? "stdin") <*>
       (v .:? "stdout" .!= Fixtures []) <*>
       (v .:? "stderr" .!= Fixtures []) <*>

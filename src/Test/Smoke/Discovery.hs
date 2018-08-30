@@ -46,7 +46,7 @@ discoverTestsInLocations locations = do
 decodeSpecificationFile :: FilePath -> IO (SuiteName, Suite)
 decodeSpecificationFile file = do
   let (directory, fileName) = splitFileName file
-  let suiteName = dropExtension fileName
+  let suiteName = SuiteName $ dropExtension fileName
   suite <- decodeFileThrow file
   return
     ( suiteName
@@ -79,7 +79,7 @@ parseRoot location = do
          in ( strip p
             , if null s
                 then Nothing
-                else Just (strip (tail s)))
+                else Just (TestName (strip (tail s))))
   isDirectory <- doesDirectoryExist path
   isFile <- doesFileExist path
   case (isDirectory, isFile, selectedTestName) of

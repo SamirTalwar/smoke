@@ -5,11 +5,15 @@ module Test.Smoke.Types.Base where
 import Data.Aeson
 import Data.Text (Text)
 
-type SuiteName = String
-
-type TestName = String
-
 type Contents = Text
+
+newtype SuiteName = SuiteName
+  { unSuiteName :: String
+  } deriving (Eq, Ord, Show)
+
+newtype TestName = TestName
+  { unTestName :: String
+  } deriving (Eq, Ord, Show)
 
 newtype Executable = Executable
   { unExecutable :: String

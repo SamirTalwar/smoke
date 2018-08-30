@@ -35,42 +35,37 @@ Smoke is distributed under [the MIT license][mit license].
 
 ## Writing Test Cases
 
-A test case consists of _input_ and _expected output_. It is constructed of a number of files with the same name and different extensions.
+A test case consists of _input_ and _expected output_. It's made with a YAML file.
 
-First off, you need to specify the _command_ itself.
-
-- The command is specified in a file named `command`, with parameters each on a new line. It is executed from the current working directory.
-- The command can be overriden for each individual test case by creating a file with the `.command` extension.
+First off, you need to specify the _command_ itself. The command is the program to be run (and any common arguments). It is executed from the current working directory. The command can be overriden for each individual test case too.
 
 Input can come in two forms: _standard input_ and _command-line arguments_.
 
-- Standard input is specified by naming the file with the extension `.in`.
-- Command-line arguments are specified in a file with the `.args` extension, one per line.
+- Command-line arguments are appended to the command to run it.
+- Standard input is piped into the program on execution.
 
-Outputs that can be observed by Smoke consist of _standard output_, _standard error_ and the _exit status_ of the program.
+Outputs that can be observed by Smoke consist of _standard output_, _standard error_ and the _exit status_ of the program. These are captured by running the program, then compared to the expected values specified. Any difference results in a test failure.
 
-- Expected standard output is specified with the `.out` extension. Alternatively, multiple possible expected outputs can be specified by using an extension that starts with `.out`—for example, `.out-one`, `.out2` and `.outc`. If there are multiple outputs, a match with any of them will be considered a success.
-- Expected standard error uses the `.err` extension, but otherwise works in exactly the same way as expected standard output.
-- The expected exit status is a file with the `.status` extension. It contains a single number between `0` and `255`.
+- Expected standard output is compared with the actual standard output. Alternatively, multiple possible expected outputs can be specified. If there are multiple outputs, a match with any of them will be considered a success.
+- Expected standard error works in exactly the same way as expected standard output.
+- The expected exit status is a single number between `0` and `255`.
 
 At least one of standard output and standard error must be specified, though it can be empty. If no exit status is specified, it will be assumed to be `0`.
 
 ### Example: Calculator
 
-Our simplest calculator test case consists of three files:
+Our simplest calculator test case looks like this. It's a file named *smoke.yaml* (the file basename is a convention; you can name it anything you want ending in *.yaml*).
 
-#### test/command:
+    command:
+      - ruby
+      - calculator.rb
 
-    ruby
-    calculator.rb
-
-#### test/addition.in:
-
-    2 + 2
-
-#### test/addition.out:
-
-    4
+    tests:
+      - name: addition
+        stdin: |
+          2 + 2
+        stdout: |
+          4
 
 That's it.
 
@@ -78,25 +73,24 @@ We might want to assert that certain things fail. For example, postfix notation 
 
 #### test/postfix-notation-fails.in:
 
-    5 3 *
-
-#### test/postfix-notation-fails.err:
-
-    "3" is not a valid operator.
-
-#### test/postfix-notation-fails.status:
-
-    2
+    tests:
+      # ...
+      - name: postfix-notation-fails
+        stdin: |
+          5 3 *
+        exit-status: 2
+        stderr: |
+          "3" is not a valid operator.
 
 ## Running Tests
 
-In order to run tests against an application, you simply invoke Smoke with the command required to invoke the application, and the directory containing the tests. Given an application that is invoked with `ruby bin/calculator.rb`, and the tests in the _test_ directory, we would run the tests as follows:
+In order to run tests against an application, you simply invoke Smoke with the directory containing the tests. Given the tests in the _test_ directory, we would run the tests as follows:
 
     smoke test
 
 Tests can also be passed on an individual basis:
 
-    smoke test/addition test/postfix-notation-fails
+    smoke test/smoke.yaml@addition test/smoke.yaml@postfix-notation-fails
 
 To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
 
@@ -104,7 +98,7 @@ To override the command, or to specify it on the command line in place of the `c
 
 Bear in mind that Smoke simply splits the argument to the `--command` option by whitespace, so quoting, escaping, etc. will not work. For anything complicated, use a file instead.
 
-Smoke will exit with a code of `0` if all tests succeed, or `1` if any test fails, or if the invocation of Smoke itself was not understood (for example, if no test locations are provided).
+Smoke will exit with a code of `0` if all tests succeed, or non-zero if any test fails, or if the invocation of Smoke itself was not understood (for example, if no test locations are provided).
 
 Output will be in color if outputting to a terminal. You can force color output on or off with the `--color` and `--no-color` switches.
 

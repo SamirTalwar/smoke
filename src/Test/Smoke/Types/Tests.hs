@@ -3,13 +3,14 @@
 module Test.Smoke.Types.Tests where
 
 import Data.Aeson hiding (Options)
+import Data.Vector (Vector)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Fixtures
 
 data Options = Options
   { optionsCommand :: Maybe Command
-  , optionsTestLocations :: [FilePath]
+  , optionsTestLocations :: Vector FilePath
   } deriving (Eq, Show)
 
 data Test = Test
@@ -28,8 +29,8 @@ instance FromJSON Test where
       Test <$> (TestName <$> v .: "name") <*> (v .:? "command") <*>
       (v .:? "args") <*>
       (v .:? "stdin") <*>
-      (v .:? "stdout" .!= Fixtures []) <*>
-      (v .:? "stderr" .!= Fixtures []) <*>
+      (v .:? "stdout" .!= noFixtures) <*>
+      (v .:? "stderr" .!= noFixtures) <*>
       (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
 
 data Suite = Suite
@@ -70,11 +71,11 @@ data TestResult
 
 data PartResult a
   = PartSuccess
-  | PartFailure [a]
+  | PartFailure (Vector a)
                 a
   deriving (Eq, Show)
 
 instance Functor PartResult where
   _ `fmap` PartSuccess = PartSuccess
   f `fmap` (PartFailure expected actual) =
-    PartFailure (map f expected) (f actual)
+    PartFailure (f <$> expected) (f actual)

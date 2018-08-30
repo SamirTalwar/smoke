@@ -6,28 +6,34 @@ module Test.Smoke.Bless
 
 import Control.Exception (catch, throwIO)
 import qualified Data.Text.IO as TextIO
+import qualified Data.Vector as Vector
 import Test.Smoke.Types
 
 blessResults :: TestResults -> IO TestResults
 blessResults = mapM blessResult
 
 blessResult :: TestResult -> IO TestResult
-blessResult (TestFailure name _ _ (PartFailure (_:_:_) _) _) =
-  return $ TestError name (CouldNotBlessWithMultipleValues "stdout")
-blessResult (TestFailure name _ _ _ (PartFailure (_:_:_) _)) =
-  return $ TestError name (CouldNotBlessWithMultipleValues "stderr")
-blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut stdErr) =
-  do case status of
-       PartFailure _ actual -> writeFixture (testStatus test) actual
-       _ -> return ()
-     case stdOut of
-       PartFailure _ actual -> writeFixtures (testStdOut test) actual
-       _ -> return ()
-     case stdErr of
-       PartFailure _ actual -> writeFixtures (testStdErr test) actual
-       _ -> return ()
-     return $ TestSuccess name
+blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut stdErr)
+  | isFailureWithMultipleExpectedValues stdOut =
+    return $ TestError name (CouldNotBlessWithMultipleValues "stdout")
+  | isFailureWithMultipleExpectedValues stdErr =
+    return $ TestError name (CouldNotBlessWithMultipleValues "stderr")
+  | otherwise =
+    do case status of
+         PartFailure _ actual -> writeFixture (testStatus test) actual
+         _ -> return ()
+       case stdOut of
+         PartFailure _ actual -> writeFixtures (testStdOut test) actual
+         _ -> return ()
+       case stdErr of
+         PartFailure _ actual -> writeFixtures (testStdErr test) actual
+         _ -> return ()
+       return $ TestSuccess name
      `catch` \e -> return (TestError name (BlessingFailed e))
+  where
+    isFailureWithMultipleExpectedValues (PartFailure expected _) =
+      Vector.length expected > 1
+    isFailureWithMultipleExpectedValues _ = False
 blessResult result = return result
 
 writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
@@ -42,6 +48,7 @@ writeFixtures ::
   => Fixtures a
   -> a
   -> IO ()
-writeFixtures (Fixtures [fixture]) value = writeFixture fixture value
-writeFixtures Fixtures {} _ =
-  throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))
+writeFixtures (Fixtures fixtures) value
+  | Vector.length fixtures == 1 = writeFixture (Vector.head fixtures) value
+  | otherwise =
+    throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))

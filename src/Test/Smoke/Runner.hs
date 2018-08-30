@@ -10,13 +10,15 @@ import qualified Data.List as List
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Types
 
-type ExpectedOutputs = (Status, [StdOut], [StdErr])
+type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 type ActualOutputs = (Status, StdOut, StdErr)
 
@@ -51,8 +53,7 @@ validateTest defaultCommand test = do
   when (isEmpty (testStdOut test) && isEmpty (testStdErr test)) $
     throwE NoOutput
   where
-    isEmpty (Fixtures []) = True
-    isEmpty Fixtures {} = False
+    isEmpty (Fixtures fixtures) = Vector.null fixtures
 
 readExecutionPlan ::
      SuiteName -> Maybe Command -> Test -> Execution TestExecutionPlan
@@ -118,7 +119,7 @@ processOutput showSuiteNames executionPlan@(TestExecutionPlan (SuiteName suiteNa
     statusResult =
       if expectedStatus == actualStatus
         then PartSuccess
-        else PartFailure [expectedStatus] actualStatus
+        else PartFailure (Vector.singleton expectedStatus) actualStatus
     stdOutResult =
       if actualStdOut `elem` expectedStdOuts
         then PartSuccess
@@ -132,12 +133,13 @@ readFixture :: FixtureContents a => Fixture a -> IO a
 readFixture (InlineFixture contents) = return contents
 readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
 
-readFixtures :: FixtureContents a => Fixtures a -> IO [a]
+readFixtures :: FixtureContents a => Fixtures a -> IO (Vector a)
 readFixtures (Fixtures fixtures) = mapM readFixture fixtures
 
-ifEmpty :: a -> [a] -> [a]
-ifEmpty value [] = [value]
-ifEmpty _ xs = xs
+ifEmpty :: a -> Vector a -> Vector a
+ifEmpty value xs
+  | Vector.null xs = Vector.singleton value
+  | otherwise = xs
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

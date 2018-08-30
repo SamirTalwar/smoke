@@ -9,6 +9,7 @@ import Control.Exception (throwIO)
 import Control.Monad (forM)
 import qualified Data.List as List
 import qualified Data.Text as Text
+import Data.Vector (Vector)
 import Data.Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
@@ -26,7 +27,7 @@ discoverTests options =
   Plan (optionsCommand options) <$>
   discoverTestsInLocations (optionsTestLocations options)
 
-discoverTestsInLocations :: [FilePath] -> IO Suites
+discoverTestsInLocations :: Vector FilePath -> IO Suites
 discoverTestsInLocations locations = do
   roots <- mapM parseRoot locations
   testsBySuite <-
@@ -70,7 +71,7 @@ prefixFixtureWith location (FileFixture path) = FileFixture (location </> path)
 
 prefixFixturesWith :: FilePath -> Fixtures a -> Fixtures a
 prefixFixturesWith location (Fixtures fixtures) =
-  Fixtures $ map (prefixFixtureWith location) fixtures
+  Fixtures $ prefixFixtureWith location <$> fixtures
 
 parseRoot :: FilePath -> IO Root
 parseRoot location = do

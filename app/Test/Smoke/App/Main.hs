@@ -9,6 +9,7 @@ import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import qualified Data.Text as Text
+import qualified Data.Vector as Vector
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
@@ -105,8 +106,8 @@ printFailingOutput :: String -> PartResult Contents -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  printDiff (head expected) actual
-  forM_ (tail expected) $ \e -> do
+  printDiff (Vector.head expected) actual
+  forM_ (Vector.tail expected) $ \e -> do
     putRed "      or: "
     printDiff e actual
 

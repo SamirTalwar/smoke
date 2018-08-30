@@ -6,6 +6,7 @@ module Test.Smoke.Types.Fixtures where
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import qualified Data.Text as Text
+import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Types.Base
 
@@ -15,8 +16,11 @@ data Fixture a
   deriving (Eq, Show)
 
 newtype Fixtures a =
-  Fixtures [Fixture a]
+  Fixtures (Vector (Fixture a))
   deriving (Eq, Show)
+
+noFixtures :: Fixtures a
+noFixtures = Fixtures Vector.empty
 
 class FixtureContents a where
   fixtureName :: a -> String
@@ -50,5 +54,5 @@ instance FixtureContents a => FromJSON (Fixture a) where
   parseJSON invalid = typeMismatch "Fixture" invalid
 
 instance FixtureContents a => FromJSON (Fixtures a) where
-  parseJSON (Array v) = Fixtures <$> mapM parseJSON (Vector.toList v)
+  parseJSON (Array v) = Fixtures <$> mapM parseJSON v
   parseJSON v = Fixtures . return <$> (parseJSON v :: Parser (Fixture a))

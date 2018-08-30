@@ -6,6 +6,8 @@ module Test.Smoke.App.Options
 
 import Data.List (intercalate)
 import Data.Semigroup ((<>))
+import qualified Data.Vector as Vector
+import Data.Vector (Vector)
 import Options.Applicative
 import Test.Smoke (Command(..), Options(..))
 import qualified Test.Smoke.App.Diff as Diff
@@ -77,5 +79,6 @@ diffEngineParser foundDiffEngine =
       Diff.getEngine
     validDiffEngine = intercalate ", " Diff.engineNames
 
-testLocationParser :: Parser [FilePath]
-testLocationParser = some (argument str (metavar "TEST-LOCATION..."))
+testLocationParser :: Parser (Vector FilePath)
+testLocationParser =
+  Vector.fromList <$> some (argument str (metavar "TEST-LOCATION..."))

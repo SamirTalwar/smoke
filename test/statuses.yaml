@@ -1,0 +1,7 @@
+tests:
+  - name: statuses
+    args:
+      - fixtures/exit
+    exit-status: 1
+    stdout:
+      file: io/statuses.out

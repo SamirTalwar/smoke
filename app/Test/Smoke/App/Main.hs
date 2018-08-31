@@ -48,7 +48,7 @@ printResult (TestFailure (TestName name) (TestExecutionPlan _ test _ _ stdIn) st
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
-  printFailingOutput "status" (int . unStatus <$> statusResult)
+  printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
 printResult (TestError (TestName name) NoCommand) = do

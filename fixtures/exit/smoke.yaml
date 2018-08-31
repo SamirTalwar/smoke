@@ -1,5 +1,6 @@
 command:
-  - fixtures/exit-with
+  - ruby
+  - fixtures/exit_with.rb
 
 tests:
   - name: good-success

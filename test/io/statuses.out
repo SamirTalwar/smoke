@@ -1,0 +1,16 @@
+good-success
+  succeeded
+good-failure
+  succeeded
+bad-success
+  args:   0
+  status: @@ -1 +1 @@
+          -1
+          +0
+bad-failure
+  args:   7
+  status: @@ -1 +1 @@
+          -0
+          +7
+
+4 tests, 2 failures

@@ -6,8 +6,10 @@ module Test.Smoke.App.Options
 
 import Data.List (intercalate)
 import Data.Semigroup ((<>))
+import qualified Data.Vector as Vector
+import Data.Vector (Vector)
 import Options.Applicative
-import Test.Smoke (Command, Options(..))
+import Test.Smoke (Command(..), Options(..))
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell
@@ -49,7 +51,7 @@ optionParser isTTY foundDiffEngine = do
 commandParser :: Parser (Maybe Command)
 commandParser =
   optional
-    (words <$>
+    (Command . words <$>
      strOption (long "command" <> help "Specify or override the command to run"))
 
 modeParser :: Parser Mode
@@ -77,5 +79,6 @@ diffEngineParser foundDiffEngine =
       Diff.getEngine
     validDiffEngine = intercalate ", " Diff.engineNames
 
-testLocationParser :: Parser [FilePath]
-testLocationParser = some (argument str (metavar "TEST-LOCATION..."))
+testLocationParser :: Parser (Vector FilePath)
+testLocationParser =
+  Vector.fromList <$> some (argument str (metavar "TEST-LOCATION..."))

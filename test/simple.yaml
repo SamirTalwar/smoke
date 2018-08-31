@@ -1,0 +1,28 @@
+tests:
+  - name: calculator
+    args:
+      - fixtures/calculator
+    exit-status: 1
+    stdout:
+      file: io/calculator.out
+
+  - name: encrypter
+    args:
+      - fixtures/encrypter
+    exit-status: 1
+    stdout:
+      file: io/encrypter.out
+
+  - name: long-output
+    args:
+      - fixtures/bottles
+    exit-status: 1
+    stdout:
+      file: io/long-output.out
+
+  - name: unicode
+    exit-status: 1
+    args:
+      - fixtures/unicode
+    stdout:
+      file: io/unicode.out

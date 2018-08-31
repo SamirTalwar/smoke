@@ -9,9 +9,11 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import qualified Data.Maybe as Maybe
 import Data.String (IsString(..))
+import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import System.Console.ANSI
+import System.IO (stderr)
 import Test.Smoke (Contents)
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
@@ -58,17 +60,24 @@ putRed = putColor Red
 putRedLn :: Contents -> Output ()
 putRedLn = putColorLn Red
 
-putColor :: Color -> Contents -> Output ()
-putColor color contents = do
-  options <- ask
-  if optionsColor options == Color && not (hasEsc contents)
-    then do
-      liftIO $ setSGR [SetColor Foreground Dull color]
-      liftIO $ TextIO.putStr contents
-      liftIO $ setSGR [Reset]
-    else liftIO $ TextIO.putStr contents
-
 putColorLn :: Color -> Contents -> Output ()
 putColorLn color contents = do
   putColor color contents
   unless (newline `Text.isSuffixOf` contents) putEmptyLn
+
+putColor :: Color -> Contents -> Output ()
+putColor = putColorWith TextIO.putStr
+
+putColorWith :: (Text -> IO ()) -> Color -> Contents -> Output ()
+putColorWith put color contents = do
+  options <- ask
+  liftIO $
+    if optionsColor options == Color && not (hasEsc contents)
+      then do
+        setSGR [SetColor Foreground Dull color]
+        put contents
+        setSGR [Reset]
+      else put contents
+
+putError :: Contents -> Output ()
+putError = putColorWith (TextIO.hPutStrLn stderr) Red

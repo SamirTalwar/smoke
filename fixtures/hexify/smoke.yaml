@@ -1,0 +1,34 @@
+command:
+  - ruby
+  - fixtures/hexify.rb
+
+tests:
+  - name: character
+    stdin: |
+      K
+    stdout: |
+      4B
+
+  - name: word
+    stdin: |
+      waffles
+    stdout: |
+      776166666C6573
+
+  - name: sentence
+    stdin: |
+      How much wood could a woodchuck chuck if a woodchuck could chuck wood?
+    stdout: |
+      486F77206D75636820776F6F6420636F756C64206120776F6F64636875636B20636875636B206966206120776F6F64636875636B20636F756C6420636875636B20776F6F643F
+
+  - name: paragraph
+    stdin: |
+      A sailor went to sea sea sea
+      To see what he could see see see
+      But all that he could see see see
+      Was the bottom of the deep blue sea sea sea
+    stdout: |
+      41207361696C6F722077656E7420746F207365612073656120736561
+      546F20736565207768617420686520636F756C64207365652073656520736565
+      42757420616C6C207468617420686520636F756C64207365652073656520736565
+      5761732074686520626F74746F6D206F6620746865206465657020626C7565207365612073656120736561

@@ -1,0 +1,15 @@
+command:
+  - cat
+
+tests:
+  - name: chinese
+    stdin:
+      file: io/chinese.in
+    stdout:
+      file: io/chinese.out
+
+  - name: zalgo
+    stdin:
+      file: io/zalgo.in
+    stdout:
+      file: io/zalgo.out

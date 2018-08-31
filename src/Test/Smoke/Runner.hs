@@ -2,94 +2,124 @@ module Test.Smoke.Runner
   ( runTests
   ) where
 
-import Control.Monad (forM, when)
+import Control.Applicative ((<|>))
+import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT, runExceptT, throwE)
-import Data.Maybe (fromJust, fromMaybe, isNothing)
+import Control.Monad.Trans.Except (runExceptT, throwE)
+import qualified Data.List as List
+import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import System.Directory (doesFileExist, findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Types
 
-type Execution = ExceptT TestErrorMessage IO
-
-type ExpectedOutputs = (Status, [StdOut], [StdErr])
+type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 type ActualOutputs = (Status, StdOut, StdErr)
 
-runTests :: Tests -> IO TestResults
-runTests tests = forM tests runTest
+type ShowSuiteNames = Bool
 
-runTest :: Test -> IO TestResult
-runTest test =
-  handleError (TestError test) <$>
+runTests :: Plan -> IO TestResults
+runTests (Plan planCommand suites) = do
+  results <-
+    forM suites $ \(suiteName, Suite command tests) ->
+      forM tests (runTest showSuiteNames suiteName (command <|> planCommand))
+  return $ concat results
+  where
+    uniqueSuiteNames = List.nub (map fst suites)
+    showSuiteNames = length uniqueSuiteNames > 1
+
+runTest :: ShowSuiteNames -> SuiteName -> Maybe Command -> Test -> IO TestResult
+runTest showSuiteNames suiteName defaultCommand test =
+  handleError (TestError (testName test)) <$>
   runExceptT
-    (do validateTest test
-        executionPlan <- readExecutionPlan test
+    (do validateTest defaultCommand test
+        executionPlan <- readExecutionPlan suiteName defaultCommand test
         expectedOutput <- liftIO $ readExpectedOutputs test
         actualOutput <- executeTest executionPlan
-        return $ processOutput executionPlan expectedOutput actualOutput)
+        return $
+          processOutput showSuiteNames executionPlan expectedOutput actualOutput)
 
-validateTest :: Test -> Execution ()
-validateTest test = do
-  when (isNothing (testCommand test)) $ throwE NoCommandFile
+validateTest :: Maybe Command -> Test -> Execution ()
+validateTest defaultCommand test = do
+  when (isNothing (testCommand test <|> defaultCommand)) $ throwE NoCommand
   when (isNothing (testArgs test) && isNothing (testStdIn test)) $
-    throwE NoInputFiles
-  when (null (testStdOut test) && null (testStdErr test)) $ throwE NoOutputFiles
+    throwE NoInput
+  when (isEmpty (testStdOut test) && isEmpty (testStdErr test)) $
+    throwE NoOutput
+  where
+    isEmpty (Fixtures fixtures) = Vector.null fixtures
 
-readExecutionPlan :: Test -> Execution TestExecutionPlan
-readExecutionPlan test = do
-  executableName <- onNothingThrow NoCommandFile (head <$> testCommand test)
+readExecutionPlan ::
+     SuiteName -> Maybe Command -> Test -> Execution TestExecutionPlan
+readExecutionPlan suiteName defaultCommand test = do
+  (executable@(Executable executableName), args) <-
+    splitCommand (testCommand test <|> defaultCommand) (testArgs test)
   executableExists <- liftIO (doesFileExist executableName)
-  executable <-
-    if executableExists
-      then return executableName
-      else onNothingThrow NonExistentCommand =<<
-           liftIO (findExecutable executableName)
-  let args = tail (fromJust (testCommand test)) ++ fromMaybe [] (testArgs test)
-  stdIn <- liftIO $ sequence ((StdIn <$>) . TextIO.readFile <$> testStdIn test)
-  return $ TestExecutionPlan test executable args stdIn
+  unless executableExists $
+    onNothingThrow_ (NonExistentCommand executable) =<<
+    liftIO (findExecutable executableName)
+  stdIn <- liftIO $ sequence $ readFixture <$> testStdIn test
+  return $ TestExecutionPlan suiteName test executable args stdIn
+
+splitCommand :: Maybe Command -> Maybe Args -> Execution (Executable, Args)
+splitCommand maybeCommand maybeArgs = do
+  (executableName:commandArgs) <-
+    onNothingThrow NoCommand (unCommand <$> maybeCommand)
+  let args = commandArgs ++ maybe [] unArgs maybeArgs
+  return (Executable executableName, Args args)
 
 readExpectedOutputs :: Test -> IO ExpectedOutputs
 readExpectedOutputs test = do
-  let expectedStatus = testStatus test
+  expectedStatus <- readFixture (testStatus test)
   expectedStdOuts <-
-    map StdOut . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdOut test)
+    ifEmpty (StdOut Text.empty) <$> readFixtures (testStdOut test)
   expectedStdErrs <-
-    map StdErr . ifEmpty Text.empty <$> mapM TextIO.readFile (testStdErr test)
+    ifEmpty (StdErr Text.empty) <$> readFixtures (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
-executeTest (TestExecutionPlan _ executable args stdIn) = do
+executeTest (TestExecutionPlan _ _ executable@(Executable executableName) (Args args) stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
-    handleExecutionError =<<
-    liftIO (tryIOError (readProcessWithExitCode executable args processStdIn))
+    handleExecutionError executable =<<
+    liftIO
+      (tryIOError (readProcessWithExitCode executableName args processStdIn))
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
   where
     processStdIn = unStdIn $ fromMaybe (StdIn Text.empty) stdIn
 
-handleExecutionError :: Either IOError a -> Execution a
-handleExecutionError (Left e) =
+handleExecutionError :: Executable -> Either IOError a -> Execution a
+handleExecutionError executable (Left e) =
   if isPermissionError e
-    then throwE NonExecutableCommand
-    else throwE $ CouldNotExecuteCommand (show e)
-handleExecutionError (Right value) = return value
+    then throwE $ NonExecutableCommand executable
+    else throwE $ CouldNotExecuteCommand executable (show e)
+handleExecutionError _ (Right value) = return value
 
 processOutput ::
-     TestExecutionPlan -> ExpectedOutputs -> ActualOutputs -> TestResult
-processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
+     ShowSuiteNames
+  -> TestExecutionPlan
+  -> ExpectedOutputs
+  -> ActualOutputs
+  -> TestResult
+processOutput showSuiteNames executionPlan@(TestExecutionPlan (SuiteName suiteName) test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
   if statusResult == PartSuccess &&
      stdOutResult == PartSuccess && stdErrResult == PartSuccess
-    then TestSuccess test
-    else TestFailure executionPlan statusResult stdOutResult stdErrResult
+    then TestSuccess name
+    else TestFailure name executionPlan statusResult stdOutResult stdErrResult
   where
+    name =
+      if showSuiteNames
+        then TestName $ suiteName <> "/" <> unTestName (testName test)
+        else testName test
     statusResult =
       if expectedStatus == actualStatus
         then PartSuccess
-        else PartFailure [expectedStatus] actualStatus
+        else PartFailure (Vector.singleton expectedStatus) actualStatus
     stdOutResult =
       if actualStdOut `elem` expectedStdOuts
         then PartSuccess
@@ -99,16 +129,17 @@ processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expe
         then PartSuccess
         else PartFailure expectedStdErrs actualStdErr
 
-handleError :: (a -> b) -> Either a b -> b
-handleError handler = either handler id
+readFixture :: FixtureContents a => Fixture a -> IO a
+readFixture (InlineFixture contents) = return contents
+readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
 
-onNothingThrow :: Monad m => e -> Maybe a -> ExceptT e m a
-onNothingThrow _ (Just value) = return value
-onNothingThrow exception Nothing = throwE exception
+readFixtures :: FixtureContents a => Fixtures a -> IO (Vector a)
+readFixtures (Fixtures fixtures) = mapM readFixture fixtures
 
-ifEmpty :: a -> [a] -> [a]
-ifEmpty value [] = [value]
-ifEmpty _ xs = xs
+ifEmpty :: a -> Vector a -> Vector a
+ifEmpty value xs
+  | Vector.null xs = Vector.singleton value
+  | otherwise = xs
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

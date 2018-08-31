@@ -1,0 +1,109 @@
+10
+  succeeded
+100
+  succeeded
+1000
+  succeeded
+broken
+  args:   --broken
+          1000
+  output: @@ -1,7 +1,7 @@
+           1000 bottles of beer on the wall, 1000 bottles of beer.
+           Take one down and pass it around, 999 bottles of beer on the wall.
+          -999 bottles of beer on the wall, 999 bottles of beer.
+          -Take one down and pass it around, 998 bottles of beer on the wall.
+          +499 bottles of beer on the wall, 499 bottles of beer.
+          +Take one down and pass it around, 498 bottles of beer on the wall.
+           998 bottles of beer on the wall, 998 bottles of beer.
+           Take one down and pass it around, 997 bottles of beer on the wall.
+           997 bottles of beer on the wall, 997 bottles of beer.
+          @@ -222,8 +222,8 @@ Take one down and pass it around, 890 bottles of beer on the wall.
+           Take one down and pass it around, 889 bottles of beer on the wall.
+           889 bottles of beer on the wall, 889 bottles of beer.
+           Take one down and pass it around, 888 bottles of beer on the wall.
+          -888 bottles of beer on the wall, 888 bottles of beer.
+          -Take one down and pass it around, 887 bottles of beer on the wall.
+          +444 bottles of beer on the wall, 444 bottles of beer.
+          +Take one down and pass it around, 443 bottles of beer on the wall.
+           887 bottles of beer on the wall, 887 bottles of beer.
+           Take one down and pass it around, 886 bottles of beer on the wall.
+           886 bottles of beer on the wall, 886 bottles of beer.
+          @@ -444,8 +444,8 @@ Take one down and pass it around, 779 bottles of beer on the wall.
+           Take one down and pass it around, 778 bottles of beer on the wall.
+           778 bottles of beer on the wall, 778 bottles of beer.
+           Take one down and pass it around, 777 bottles of beer on the wall.
+          -777 bottles of beer on the wall, 777 bottles of beer.
+          -Take one down and pass it around, 776 bottles of beer on the wall.
+          +388 bottles of beer on the wall, 388 bottles of beer.
+          +Take one down and pass it around, 387 bottles of beer on the wall.
+           776 bottles of beer on the wall, 776 bottles of beer.
+           Take one down and pass it around, 775 bottles of beer on the wall.
+           775 bottles of beer on the wall, 775 bottles of beer.
+          @@ -666,8 +666,8 @@ Take one down and pass it around, 668 bottles of beer on the wall.
+           Take one down and pass it around, 667 bottles of beer on the wall.
+           667 bottles of beer on the wall, 667 bottles of beer.
+           Take one down and pass it around, 666 bottles of beer on the wall.
+          -666 bottles of beer on the wall, 666 bottles of beer.
+          -Take one down and pass it around, 665 bottles of beer on the wall.
+          +333 bottles of beer on the wall, 333 bottles of beer.
+          +Take one down and pass it around, 332 bottles of beer on the wall.
+           665 bottles of beer on the wall, 665 bottles of beer.
+           Take one down and pass it around, 664 bottles of beer on the wall.
+           664 bottles of beer on the wall, 664 bottles of beer.
+          @@ -888,8 +888,8 @@ Take one down and pass it around, 557 bottles of beer on the wall.
+           Take one down and pass it around, 556 bottles of beer on the wall.
+           556 bottles of beer on the wall, 556 bottles of beer.
+           Take one down and pass it around, 555 bottles of beer on the wall.
+          -555 bottles of beer on the wall, 555 bottles of beer.
+          -Take one down and pass it around, 554 bottles of beer on the wall.
+          +277 bottles of beer on the wall, 277 bottles of beer.
+          +Take one down and pass it around, 276 bottles of beer on the wall.
+           554 bottles of beer on the wall, 554 bottles of beer.
+           Take one down and pass it around, 553 bottles of beer on the wall.
+           553 bottles of beer on the wall, 553 bottles of beer.
+          @@ -1110,8 +1110,8 @@ Take one down and pass it around, 446 bottles of beer on the wall.
+           Take one down and pass it around, 445 bottles of beer on the wall.
+           445 bottles of beer on the wall, 445 bottles of beer.
+           Take one down and pass it around, 444 bottles of beer on the wall.
+          -444 bottles of beer on the wall, 444 bottles of beer.
+          -Take one down and pass it around, 443 bottles of beer on the wall.
+          +222 bottles of beer on the wall, 222 bottles of beer.
+          +Take one down and pass it around, 221 bottles of beer on the wall.
+           443 bottles of beer on the wall, 443 bottles of beer.
+           Take one down and pass it around, 442 bottles of beer on the wall.
+           442 bottles of beer on the wall, 442 bottles of beer.
+          @@ -1332,8 +1332,8 @@ Take one down and pass it around, 335 bottles of beer on the wall.
+           Take one down and pass it around, 334 bottles of beer on the wall.
+           334 bottles of beer on the wall, 334 bottles of beer.
+           Take one down and pass it around, 333 bottles of beer on the wall.
+          -333 bottles of beer on the wall, 333 bottles of beer.
+          -Take one down and pass it around, 332 bottles of beer on the wall.
+          +166 bottles of beer on the wall, 166 bottles of beer.
+          +Take one down and pass it around, 165 bottles of beer on the wall.
+           332 bottles of beer on the wall, 332 bottles of beer.
+           Take one down and pass it around, 331 bottles of beer on the wall.
+           331 bottles of beer on the wall, 331 bottles of beer.
+          @@ -1554,8 +1554,8 @@ Take one down and pass it around, 224 bottles of beer on the wall.
+           Take one down and pass it around, 223 bottles of beer on the wall.
+           223 bottles of beer on the wall, 223 bottles of beer.
+           Take one down and pass it around, 222 bottles of beer on the wall.
+          -222 bottles of beer on the wall, 222 bottles of beer.
+          -Take one down and pass it around, 221 bottles of beer on the wall.
+          +111 bottles of beer on the wall, 111 bottles of beer.
+          +Take one down and pass it around, 110 bottles of beer on the wall.
+           221 bottles of beer on the wall, 221 bottles of beer.
+           Take one down and pass it around, 220 bottles of beer on the wall.
+           220 bottles of beer on the wall, 220 bottles of beer.
+          @@ -1776,8 +1776,8 @@ Take one down and pass it around, 113 bottles of beer on the wall.
+           Take one down and pass it around, 112 bottles of beer on the wall.
+           112 bottles of beer on the wall, 112 bottles of beer.
+           Take one down and pass it around, 111 bottles of beer on the wall.
+          -111 bottles of beer on the wall, 111 bottles of beer.
+          -Take one down and pass it around, 110 bottles of beer on the wall.
+          +55 bottles of beer on the wall, 55 bottles of beer.
+          +Take one down and pass it around, 54 bottles of beer on the wall.
+           110 bottles of beer on the wall, 110 bottles of beer.
+           Take one down and pass it around, 109 bottles of beer on the wall.
+           109 bottles of beer on the wall, 109 bottles of beer.
+
+4 tests, 1 failure

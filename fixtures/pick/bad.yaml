@@ -1,0 +1,23 @@
+command:
+  - ruby
+  - fixtures/pick.rb
+
+tests:
+  - name: wrong
+    stdin: |
+      uno
+      dos
+      tres
+      quatro
+      cinqo
+    stdout:
+      - |
+        one
+      - |
+        two
+      - |
+        three
+      - |
+        four
+      - |
+        five

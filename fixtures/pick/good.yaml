@@ -1,0 +1,42 @@
+command:
+  - ruby
+  - fixtures/pick.rb
+
+tests:
+  - name: args
+    args:
+      - one
+      - two
+      - three
+      - four
+      - five
+    stdout:
+      - |
+        one
+      - |
+        two
+      - |
+        three
+      - |
+        four
+      - |
+        five
+
+  - name: stdin
+    stdin: |
+      one
+      two
+      three
+      four
+      five
+    stdout:
+      - |
+        one
+      - |
+        two
+      - |
+        three
+      - |
+        four
+      - |
+        five

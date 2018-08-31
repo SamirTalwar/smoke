@@ -15,6 +15,7 @@ description: Please see README.md
 
 dependencies:
   - base >= 4.9.1 && < 5
+  - aeson
   - directory
   - filepath
   - Glob
@@ -22,6 +23,8 @@ dependencies:
   - process-extras
   - text
   - transformers
+  - vector
+  - yaml
 
 library:
   source-dirs:

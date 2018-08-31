@@ -1,0 +1,27 @@
+bad/wrong
+  input:  uno
+          dos
+          tres
+          quatro
+          cinqo
+  output: @@ -1 +1 @@
+          -one
+          +uno
+      or: @@ -1 +1 @@
+          -two
+          +uno
+      or: @@ -1 +1 @@
+          -three
+          +uno
+      or: @@ -1 +1 @@
+          -four
+          +uno
+      or: @@ -1 +1 @@
+          -five
+          +uno
+good/args
+  succeeded
+good/stdin
+  succeeded
+
+3 tests, 1 failure

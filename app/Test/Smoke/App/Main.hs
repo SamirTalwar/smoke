@@ -2,14 +2,14 @@
 
 module Main where
 
-import Control.Exception (displayException)
+import Control.Exception (catch, displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
-import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import qualified Data.Text as Text
+import qualified Data.Vector as Vector
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
@@ -21,73 +21,77 @@ import Text.Printf (printf)
 main :: IO ()
 main = do
   options <- parseOptions
-  tests <- discoverTests (optionsExecution options)
-  results <- runTests tests
-  case optionsMode options of
-    Check -> outputResults options results
-    Bless -> outputResults options =<< blessResults results
+  (do tests <- discoverTests (optionsExecution options)
+      results <- runTests tests
+      case optionsMode options of
+        Check -> outputResults options results
+        Bless -> outputResults options =<< blessResults results) `catch`
+    handleDiscoveryError options
 
 outputResults :: AppOptions -> TestResults -> IO ()
 outputResults options results = do
-  runReaderT
-    (do printResults results
-        printSummary results)
-    options
+  flip runReaderT options $ do
+    printResults results
+    printSummary results
   exitAccordingTo results
 
 printResults :: TestResults -> Output ()
 printResults = mapM_ printResult
 
 printResult :: TestResult -> Output ()
-printResult (TestSuccess test) = do
-  printTitle (testName test)
+printResult (TestSuccess (TestName name)) = do
+  printTitle name
   putGreenLn "  succeeded"
-printResult (TestFailure (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
-  printTitle (testName test)
-  printFailingInput "args" (Text.unlines . map fromString <$> testArgs test)
+printResult (TestFailure (TestName name) (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
+  printTitle name
+  printFailingInput
+    "args"
+    (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> stdIn)
-  printFailingOutput "status" (int . unStatus <$> statusResult)
+  printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestError test NoCommandFile) = do
-  printTitle (testName test)
-  printError "There is no command file."
-printResult (TestError test NoInputFiles) = do
-  printTitle (testName test)
-  printError "There are no args or STDIN files."
-printResult (TestError test NoOutputFiles) = do
-  printTitle (testName test)
-  printError "There are no STDOUT or STDERR files."
-printResult (TestError test NonExistentCommand) = do
-  printTitle (testName test)
+printResult (TestError (TestName name) NoCommand) = do
+  printTitle name
+  printError "There is no command."
+printResult (TestError (TestName name) NoInput) = do
+  printTitle name
+  printError "There are no args or STDIN values in the specification."
+printResult (TestError (TestName name) NoOutput) = do
+  printTitle name
+  printError "There are no STDOUT or STDERR values in the specification."
+printResult (TestError (TestName name) (NonExistentCommand (Executable executableName))) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
-    "\" does not exist."
-printResult (TestError test NonExecutableCommand) = do
-  printTitle (testName test)
+    "The application \"" <> Text.pack executableName <> "\" does not exist."
+printResult (TestError (TestName name) (NonExecutableCommand (Executable executableName))) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
-    "\" is not executable."
-printResult (TestError test (CouldNotExecuteCommand e)) = do
-  printTitle (testName test)
+    "The application \"" <> Text.pack executableName <> "\" is not executable."
+printResult (TestError (TestName name) (CouldNotExecuteCommand (Executable executableName) e)) = do
+  printTitle name
   printError $
-    "The application \"" <>
-    Text.unwords (map fromString $ fromJust $ testCommand test) <>
+    "The application \"" <> Text.pack executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult (TestError test (BlessingFailed e)) = do
-  printTitle (testName test)
+printResult (TestError (TestName name) (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
+  printTitle name
+  printError $
+    "Could not write the fixture \"" <> Text.pack fixtureName <> "\":\n" <>
+    fixtureValue
+printResult (TestError (TestName name) (BlessError (CouldNotBlessAMissingValue propertyName))) = do
+  printTitle name
+  printError $
+    "There are no expected \"" <> Text.pack propertyName <>
+    "\" values, so the result cannot be blessed.\n"
+printResult (TestError (TestName name) (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
+  printTitle name
+  printError $
+    "There are multiple expected \"" <> Text.pack propertyName <>
+    "\" values, so the result cannot be blessed.\n"
+printResult (TestError (TestName name) (BlessIOException e)) = do
+  printTitle name
   printError $ "Blessing failed.\n" <> fromString (displayException e)
-printResult (TestError test CouldNotBlessStdOutWithMultipleValues) = do
-  printTitle (testName test)
-  printError
-    "There are multiple expected STDOUT values, so the result cannot be blessed.\n"
-printResult (TestError test CouldNotBlessStdErrWithMultipleValues) = do
-  printTitle (testName test)
-  printError
-    "There are multiple expected STDERR values, so the result cannot be blessed.\n"
 
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn
@@ -102,10 +106,18 @@ printFailingOutput :: String -> PartResult Contents -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure expected actual) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  printDiff (head expected) actual
-  forM_ (tail expected) $ \e -> do
+  printDiff (Vector.head expected) actual
+  forM_ (Vector.tail expected) $ \e -> do
     putRed "      or: "
     printDiff e actual
+
+printDiff :: Contents -> Contents -> Output ()
+printDiff left right = do
+  AppOptions { optionsColor = color
+             , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
+             } <- ask
+  diff <- liftIO $ renderDiff color left right
+  putPlainLn $ indented outputIndentation diff
 
 printSummary :: TestResults -> Output ()
 printSummary results = do
@@ -122,6 +134,25 @@ printSummary results = do
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation
 
+handleDiscoveryError :: AppOptions -> TestDiscoveryErrorMessage -> IO ()
+handleDiscoveryError options e = do
+  flip runReaderT options $
+    putError $
+    case e of
+      NoSuchLocation location ->
+        "There is no such location \"" <> Text.pack location <> "\"."
+      NoSuchTest location (TestName selectedTestName) ->
+        "There is no such test \"" <> Text.pack selectedTestName <> "\" in \"" <>
+        Text.pack location <>
+        "\"."
+      CannotSelectTestInDirectory location (TestName selectedTestName) ->
+        "The test \"" <> Text.pack selectedTestName <>
+        "\" cannot be selected from the directory \"" <>
+        Text.pack location <>
+        "\".\n" <>
+        "Tests must be selected from a single specification file."
+  exitWith (ExitFailure 2)
+
 outputIndentation :: Int
 outputIndentation = 10
 
@@ -130,14 +161,6 @@ messageIndentation = 2
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
-
-printDiff :: Contents -> Contents -> Output ()
-printDiff left right = do
-  AppOptions { optionsColor = color
-             , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
-             } <- ask
-  diff <- liftIO $ renderDiff color left right
-  putPlainLn $ indented outputIndentation diff
 
 exitAccordingTo :: TestResults -> IO ()
 exitAccordingTo results =

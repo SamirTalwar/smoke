@@ -1,0 +1,29 @@
+command:
+  - ruby
+  - fixtures/bottles.rb
+
+tests:
+  - name: "10"
+    args:
+      - "10"
+    stdout:
+      file: io/10.out
+
+  - name: "100"
+    args:
+      - "100"
+    stdout:
+      file: io/100.out
+
+  - name: "1000"
+    args:
+      - "1000"
+    stdout:
+      file: io/1000.out
+
+  - name: broken
+    args:
+      - --broken
+      - "1000"
+    stdout:
+      file: io/1000-broken.out

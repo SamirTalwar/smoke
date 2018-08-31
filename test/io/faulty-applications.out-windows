@@ -1,0 +1,7 @@
+no-such-application
+  The application "fixtures/no_such_application" does not exist.
+non-executable-application
+  The application "fixtures/non_executable_application" could not be executed.
+  fixtures/non_executable_application: createProcess: does not exist (No such file or directory)
+
+2 tests, 2 failures

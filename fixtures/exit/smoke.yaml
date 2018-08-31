@@ -1,0 +1,28 @@
+command:
+  - ruby
+  - fixtures/exit_with.rb
+
+tests:
+  - name: good-success
+    args:
+      - "0"
+    exit-status: 0
+    stdout: ""
+
+  - name: good-failure
+    args:
+      - "42"
+    exit-status: 42
+    stdout: ""
+
+  - name: bad-success
+    args:
+      - "0"
+    exit-status: 1
+    stdout: ""
+
+  - name: bad-failure
+    args:
+      - "7"
+    exit-status: 0
+    stdout: ""

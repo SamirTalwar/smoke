@@ -1,0 +1,12 @@
+tests:
+  - name: no-such-application
+    command:
+      - fixtures/no_such_application
+    stdin: ""
+    stdout: ""
+
+  - name: non-executable-application
+    command:
+      - fixtures/non_executable_application
+    stdin: ""
+    stdout: ""

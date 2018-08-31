@@ -1,0 +1,8 @@
+tests:
+  - name: faulty-applications
+    args:
+      - fixtures/faulty-applications
+    exit-status: 1
+    stdout:
+      - file: io/faulty-applications.out-unix
+      - file: io/faulty-applications.out-windows

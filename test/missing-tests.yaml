@@ -1,0 +1,29 @@
+tests:
+  - name: missing-directory
+    args:
+      - fixtures/missing
+    exit-status: 2
+    stderr: |
+      There is no such location "fixtures/missing".
+
+  - name: missing-file
+    args:
+      - fixtures/calculator/complex.yaml
+    exit-status: 2
+    stderr: |
+      There is no such location "fixtures/calculator/complex.yaml".
+
+  - name: missing-test
+    args:
+      - fixtures/calculator/smoke.yaml @ thing
+    exit-status: 2
+    stderr: |
+      There is no such test "thing" in "fixtures/calculator/smoke.yaml".
+
+  - name: cannot-select-a-test-from-a-directory
+    args:
+      - fixtures/calculator @ thing
+    exit-status: 2
+    stderr: |
+      The test "thing" cannot be selected from the directory "fixtures/calculator".
+      Tests must be selected from a single specification file.

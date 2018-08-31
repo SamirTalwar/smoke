@@ -1,0 +1,11 @@
+tests:
+  - name: pick
+    args:
+      - fixtures/pick
+    exit-status: 1
+    stdout:
+      - file: io/pick.out1
+      - file: io/pick.out2
+      - file: io/pick.out3
+      - file: io/pick.out4
+      - file: io/pick.out5

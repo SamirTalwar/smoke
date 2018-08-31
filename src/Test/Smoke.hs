@@ -1,18 +1,25 @@
 module Test.Smoke
   ( Contents
-  , Command
-  , Args
+  , SuiteName(..)
+  , TestName(..)
+  , Executable(..)
+  , Command(..)
+  , Args(..)
   , Status(..)
   , StdIn(..)
   , StdOut(..)
   , StdErr(..)
   , Options(..)
+  , Plan(..)
+  , Suite(..)
+  , Suites
   , Test(..)
-  , Tests
   , TestExecutionPlan(..)
   , TestResult(..)
   , TestResults
   , PartResult(..)
+  , TestBlessErrorMessage(..)
+  , TestDiscoveryErrorMessage(..)
   , TestErrorMessage(..)
   , blessResults
   , discoverTests

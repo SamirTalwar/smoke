@@ -1,0 +1,35 @@
+tests:
+  - name: individual-files
+    args:
+      - fixtures/pick/good.yaml
+    stdout: |
+      args
+        succeeded
+      stdin
+        succeeded
+
+      2 tests, 0 failures
+
+  - name: individual-tests-within-a-file
+    args:
+      - fixtures/pick/good.yaml@args
+      - fixtures/pick/good.yaml @ stdin
+    stdout: |
+      args
+        succeeded
+      stdin
+        succeeded
+
+      2 tests, 0 failures
+
+  - name: individual-tests-within-multiple-files
+    args:
+      - fixtures/bottles/smoke.yaml @ 10
+      - fixtures/pick/good.yaml @ stdin
+    stdout: |
+      good/stdin
+        succeeded
+      smoke/10
+        succeeded
+
+      2 tests, 0 failures

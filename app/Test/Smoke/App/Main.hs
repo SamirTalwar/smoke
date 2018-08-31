@@ -74,24 +74,24 @@ printResult (TestError (TestName name) (CouldNotExecuteCommand (Executable execu
     "The application \"" <> Text.pack executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult (TestError (TestName name) (CouldNotWriteFixture fixtureName fixtureValue)) = do
+printResult (TestError (TestName name) (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
   printTitle name
   printError $
     "Could not write the fixture \"" <> Text.pack fixtureName <> "\":\n" <>
     fixtureValue
-printResult (TestError (TestName name) (BlessingFailed e)) = do
-  printTitle name
-  printError $ "Blessing failed.\n" <> fromString (displayException e)
-printResult (TestError (TestName name) (CouldNotBlessAMissingValue propertyName)) = do
+printResult (TestError (TestName name) (BlessError (CouldNotBlessAMissingValue propertyName))) = do
   printTitle name
   printError $
     "There are no expected \"" <> Text.pack propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult (TestError (TestName name) (CouldNotBlessWithMultipleValues propertyName)) = do
+printResult (TestError (TestName name) (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
   printTitle name
   printError $
     "There are multiple expected \"" <> Text.pack propertyName <>
     "\" values, so the result cannot be blessed.\n"
+printResult (TestError (TestName name) (BlessIOException e)) = do
+  printTitle name
+  printError $ "Blessing failed.\n" <> fromString (displayException e)
 
 printTitle :: String -> Output ()
 printTitle = liftIO . putStrLn

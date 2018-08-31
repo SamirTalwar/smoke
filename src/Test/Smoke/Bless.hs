@@ -15,9 +15,11 @@ blessResults = mapM blessResult
 blessResult :: TestResult -> IO TestResult
 blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut stdErr)
   | isFailureWithMultipleExpectedValues stdOut =
-    return $ TestError name (CouldNotBlessWithMultipleValues "stdout")
+    return $
+    TestError name (BlessError (CouldNotBlessWithMultipleValues "stdout"))
   | isFailureWithMultipleExpectedValues stdErr =
-    return $ TestError name (CouldNotBlessWithMultipleValues "stderr")
+    return $
+    TestError name (BlessError (CouldNotBlessWithMultipleValues "stderr"))
   | otherwise =
     do case status of
          PartFailure _ actual -> writeFixture (testStatus test) actual
@@ -29,7 +31,9 @@ blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut 
          PartFailure _ actual -> writeFixtures (testStdErr test) actual
          _ -> return ()
        return $ TestSuccess name
-     `catch` \e -> return (TestError name (BlessingFailed e))
+     `catch` (\(e :: TestBlessErrorMessage) ->
+                return (TestError name (BlessError e))) `catch`
+    (return . TestError name . BlessIOException)
   where
     isFailureWithMultipleExpectedValues (PartFailure expected _) =
       Vector.length expected > 1

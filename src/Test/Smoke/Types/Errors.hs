@@ -21,11 +21,17 @@ data TestErrorMessage
   | NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable
                            String
-  | CouldNotWriteFixture String
+  | BlessError TestBlessErrorMessage
+  | BlessIOException IOException
+  deriving (Eq, Show)
+
+instance Exception TestErrorMessage
+
+data TestBlessErrorMessage
+  = CouldNotWriteFixture String
                          Contents
-  | BlessingFailed IOException
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)
 
-instance Exception TestErrorMessage
+instance Exception TestBlessErrorMessage

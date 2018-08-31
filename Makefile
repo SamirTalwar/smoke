@@ -15,9 +15,11 @@ endif
 
 CONF = stack.yaml
 SRC = $(shell find app src -name '*.hs')
-OUT_DEBUG := out/build/debug
+OUT := out
+OUT_BUILD = $(OUT)/build
+OUT_DEBUG := $(OUT_BUILD)/debug
 BIN_DEBUG := $(OUT_DEBUG)/smoke
-OUT_RELEASE := out/build/release
+OUT_RELEASE := $(OUT_BUILD)/release
 BIN_RELEASE := $(OUT_RELEASE)/smoke
 TOOLS_BIN_DIR := .stack-work/tools
 
@@ -31,21 +33,22 @@ endif
 build: $(BIN_DEBUG)
 
 .PHONY: dist
-dist: out/smoke-$(OS)
+dist: $(OUT)/smoke-$(OS)
 
-out/smoke-$(OS): $(BIN_RELEASE)
-	stack clean
-	stack build
-	stack install --local-bin-path=$(OUT_RELEASE)
-	cp $(BIN_RELEASE) out/smoke-$(OS)
+$(OUT)/smoke-$(OS): $(BIN_RELEASE)
+	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
-$(BIN_RELEASE):
-	stack clean
+$(BIN_RELEASE): clean
 	stack build
 	stack install --local-bin-path=$(OUT_RELEASE)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
+
+.PHONY: clean
+clean:
+	stack clean
+	rm -rf $(OUT_BUILD)
 
 .PHONY: test
 test: build

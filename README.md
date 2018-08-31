@@ -138,7 +138,7 @@ On Windows, Makefiles don't work very well, so run the commands directly:
     stack install --local-bin-path=out\build
     .\out\build\smoke-exe --command=.\out\build\smoke-exe test
     stack exec -- hlint .
-    stack exec -- hindent Setup.hs $(find app src -name '*.hs')
+    stack exec -- hindent <file>
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

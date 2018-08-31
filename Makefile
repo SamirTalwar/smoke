@@ -13,7 +13,7 @@ else
   endif
 endif
 
-CONF = Setup.hs smoke.cabal stack.yaml
+CONF = stack.yaml
 SRC = $(shell find app src -name '*.hs')
 OUT_DEBUG := out/build/debug
 BIN_DEBUG := $(OUT_DEBUG)/smoke
@@ -58,7 +58,7 @@ bless: build
 .PHONY: lint
 lint: tools
 	$(TOOLS_BIN_DIR)/hlint .
-	echo Setup.hs $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent --validate
+	echo $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent --validate
 	@ (set -ex; \
 		NIX_FILE="$$(mktemp)"; \
 		$(TOOLS_BIN_DIR)/cabal2nix --shell . > "$$NIX_FILE"; \
@@ -71,7 +71,7 @@ check: test lint
 
 .PHONY: reformat
 reformat: $(TOOLS_BIN_DIR)/hindent
-	echo Setup.hs $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent
+	echo $(SRC) | xargs -n1 $(TOOLS_BIN_DIR)/hindent
 
 default.nix: smoke.cabal $(TOOLS_BIN_DIR)/cabal2nix
 	$(TOOLS_BIN_DIR)/cabal2nix --shell . > default.nix

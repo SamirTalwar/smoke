@@ -5,7 +5,7 @@ module Test.Smoke.Runner
 import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (runExceptT, throwE)
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import qualified Data.List as List
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
@@ -86,19 +86,18 @@ readExpectedOutputs test = do
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
 executeTest (TestExecutionPlan _ _ executable@(Executable executableName) (Args args) stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
-    handleExecutionError executable =<<
-    liftIO
-      (tryIOError (readProcessWithExitCode executableName args processStdIn))
+    withExceptT (handleExecutionError executable) $
+    ExceptT $
+    tryIOError $ readProcessWithExitCode executableName args processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
   where
     processStdIn = unStdIn $ fromMaybe (StdIn Text.empty) stdIn
 
-handleExecutionError :: Executable -> Either IOError a -> Execution a
-handleExecutionError executable (Left e) =
+handleExecutionError :: Executable -> IOError -> TestErrorMessage
+handleExecutionError executable e =
   if isPermissionError e
-    then throwE $ NonExecutableCommand executable
-    else throwE $ CouldNotExecuteCommand executable (show e)
-handleExecutionError _ (Right value) = return value
+    then NonExecutableCommand executable
+    else CouldNotExecuteCommand executable (show e)
 
 processOutput ::
      ShowSuiteNames

@@ -14,6 +14,7 @@ import Data.Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath
 import System.FilePath.Glob as Glob
+import Test.Smoke.Errors
 import Test.Smoke.Types
 
 data Root
@@ -38,10 +39,11 @@ discoverTestsInLocations locations = do
       File path -> return <$> decodeSpecificationFile path
       Single path selectedTestName -> do
         (suiteName, Suite command tests) <- decodeSpecificationFile path
-        case List.find ((== selectedTestName) . testName) tests of
-          Nothing -> throwIO (NoSuchTest path selectedTestName)
-          Just selectedTest ->
-            return [(suiteName, Suite command [selectedTest])]
+        runExceptTIO $ do
+          selectedTest <-
+            onNothingThrow (NoSuchTest path selectedTestName) $
+            List.find ((== selectedTestName) . testName) tests
+          return [(suiteName, Suite command [selectedTest])]
   return $ List.sortOn fst $ concat testsBySuite
 
 decodeSpecificationFile :: FilePath -> IO (SuiteName, Suite)

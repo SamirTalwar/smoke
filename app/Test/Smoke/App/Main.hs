@@ -6,6 +6,7 @@ import Control.Exception (catch, displayException)
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
+import qualified Data.List as List
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import qualified Data.Text as Text
@@ -18,6 +19,8 @@ import Test.Smoke.App.Options
 import Test.Smoke.App.Print
 import Text.Printf (printf)
 
+type ShowSuiteNames = Bool
+
 main :: IO ()
 main = do
   options <- parseOptions
@@ -28,22 +31,31 @@ main = do
         Bless -> outputResults options =<< blessResults results) `catch`
     handleDiscoveryError options
 
-outputResults :: AppOptions -> TestResults -> IO ()
+outputResults :: AppOptions -> Results -> IO ()
 outputResults options results = do
   flip runReaderT options $ do
     printResults results
     printSummary results
   exitAccordingTo results
 
-printResults :: TestResults -> Output ()
-printResults = mapM_ printResult
+printResults :: Results -> Output ()
+printResults results =
+  forM_ results $ \(SuiteResult thisSuiteName testResults) ->
+    let suiteNameForPrinting =
+          if showSuiteNames
+            then Just thisSuiteName
+            else Nothing
+     in forM_ testResults (printResult suiteNameForPrinting)
+  where
+    uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
+    showSuiteNames = length uniqueSuiteNames > 1
 
-printResult :: TestResult -> Output ()
-printResult (TestSuccess (TestName name)) = do
-  printTitle name
+printResult :: Maybe SuiteName -> TestResult -> Output ()
+printResult thisSuiteName (TestSuccess thisTestName) = do
+  printTitle thisSuiteName thisTestName
   putGreenLn "  succeeded"
-printResult (TestFailure (TestName name) (TestExecutionPlan _ test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
-  printTitle name
+printResult thisSuiteName (TestFailure thisTestName (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
+  printTitle thisSuiteName thisTestName
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
@@ -51,50 +63,52 @@ printResult (TestFailure (TestName name) (TestExecutionPlan _ test _ _ stdIn) st
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestError (TestName name) NoCommand) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName NoCommand) = do
+  printTitle thisSuiteName thisTestName
   printError "There is no command."
-printResult (TestError (TestName name) NoInput) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName NoInput) = do
+  printTitle thisSuiteName thisTestName
   printError "There are no args or STDIN values in the specification."
-printResult (TestError (TestName name) NoOutput) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName NoOutput) = do
+  printTitle thisSuiteName thisTestName
   printError "There are no STDOUT or STDERR values in the specification."
-printResult (TestError (TestName name) (NonExistentCommand (Executable executableName))) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (NonExistentCommand (Executable executableName))) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "The application \"" <> fromString executableName <> "\" does not exist."
-printResult (TestError (TestName name) (NonExecutableCommand (Executable executableName))) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (NonExecutableCommand (Executable executableName))) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "The application \"" <> fromString executableName <> "\" is not executable."
-printResult (TestError (TestName name) (CouldNotExecuteCommand (Executable executableName) e)) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (CouldNotExecuteCommand (Executable executableName) e)) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "The application \"" <> fromString executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult (TestError (TestName name) (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "Could not write the fixture \"" <> fromString fixtureName <> "\":\n" <>
     fixtureValue
-printResult (TestError (TestName name) (BlessError (CouldNotBlessAMissingValue propertyName))) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotBlessAMissingValue propertyName))) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "There are no expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult (TestError (TestName name) (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
+  printTitle thisSuiteName thisTestName
   printError $
     "There are multiple expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult (TestError (TestName name) (BlessIOException e)) = do
-  printTitle name
+printResult thisSuiteName (TestError thisTestName (BlessIOException e)) = do
+  printTitle thisSuiteName thisTestName
   printError $ "Blessing failed.\n" <> fromString (displayException e)
 
-printTitle :: String -> Output ()
-printTitle = liftIO . putStrLn
+printTitle :: Maybe SuiteName -> TestName -> Output ()
+printTitle (Just (SuiteName thisSuiteName)) (TestName thisTestName) =
+  liftIO $ putStrLn $ thisSuiteName <> "/" <> thisTestName
+printTitle Nothing (TestName thisTestName) = liftIO $ putStrLn thisTestName
 
 printFailingInput :: Foldable f => String -> f Contents -> Output ()
 printFailingInput name value =
@@ -119,17 +133,18 @@ printDiff left right = do
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
 
-printSummary :: TestResults -> Output ()
+printSummary :: Results -> Output ()
 printSummary results = do
   putEmptyLn
-  let testCount = length results
+  let testCount = length allTestResults
   let failureCount = length failures
   case failureCount of
     0 -> putGreenLn (int testCount <> " tests, 0 failures")
     1 -> putRedLn (int testCount <> " tests, 1 failure")
     n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
   where
-    failures = filter isFailure results
+    allTestResults = concatMap suiteResultTestResults results
+    failures = filter isFailure allTestResults
 
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation
@@ -162,13 +177,15 @@ messageIndentation = 2
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
-exitAccordingTo :: TestResults -> IO ()
+exitAccordingTo :: Results -> IO ()
 exitAccordingTo results =
   if failureCount == 0
     then exitSuccess
     else exitWith (ExitFailure 1)
   where
-    failureCount = length (filter isFailure results)
+    allTestResults =
+      concatMap (\(SuiteResult _ testResults) -> testResults) results
+    failureCount = length (filter isFailure allTestResults)
 
 isFailure :: TestResult -> Bool
 isFailure TestSuccess {} = False

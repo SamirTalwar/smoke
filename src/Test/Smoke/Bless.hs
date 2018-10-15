@@ -5,12 +5,16 @@ module Test.Smoke.Bless
   ) where
 
 import Control.Exception (catch, throwIO)
+import Control.Monad (forM)
 import qualified Data.Text.IO as TextIO
 import qualified Data.Vector as Vector
 import Test.Smoke.Types
 
-blessResults :: TestResults -> IO TestResults
-blessResults = mapM blessResult
+blessResults :: Results -> IO Results
+blessResults results =
+  forM results $ \(SuiteResult suiteName testResults) -> do
+    blessedResults <- forM testResults blessResult
+    return $ SuiteResult suiteName blessedResults
 
 blessResult :: TestResult -> IO TestResult
 blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut stdErr)

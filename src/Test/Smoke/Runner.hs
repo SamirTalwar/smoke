@@ -6,7 +6,6 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
-import qualified Data.List as List
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
@@ -25,28 +24,21 @@ type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 type ActualOutputs = (Status, StdOut, StdErr)
 
-type ShowSuiteNames = Bool
+runTests :: Plan -> IO Results
+runTests (Plan planCommand suites) =
+  forM suites $ \(suiteName, Suite command tests) -> do
+    testResults <- forM tests (runTest (command <|> planCommand))
+    return $ SuiteResult suiteName testResults
 
-runTests :: Plan -> IO TestResults
-runTests (Plan planCommand suites) = do
-  results <-
-    forM suites $ \(suiteName, Suite command tests) ->
-      forM tests (runTest showSuiteNames suiteName (command <|> planCommand))
-  return $ concat results
-  where
-    uniqueSuiteNames = List.nub (map fst suites)
-    showSuiteNames = length uniqueSuiteNames > 1
-
-runTest :: ShowSuiteNames -> SuiteName -> Maybe Command -> Test -> IO TestResult
-runTest showSuiteNames suiteName defaultCommand test =
+runTest :: Maybe Command -> Test -> IO TestResult
+runTest defaultCommand test =
   handleError (TestError (testName test)) <$>
   runExceptT
     (do validateTest defaultCommand test
-        executionPlan <- readExecutionPlan suiteName defaultCommand test
+        executionPlan <- readExecutionPlan defaultCommand test
         expectedOutput <- liftIO $ readExpectedOutputs test
         actualOutput <- executeTest executionPlan
-        return $
-          processOutput showSuiteNames executionPlan expectedOutput actualOutput)
+        return $ processOutput executionPlan expectedOutput actualOutput)
 
 validateTest :: Maybe Command -> Test -> Execution ()
 validateTest defaultCommand test = do
@@ -58,9 +50,8 @@ validateTest defaultCommand test = do
   where
     isEmpty (Fixtures fixtures) = Vector.null fixtures
 
-readExecutionPlan ::
-     SuiteName -> Maybe Command -> Test -> Execution TestExecutionPlan
-readExecutionPlan suiteName defaultCommand test = do
+readExecutionPlan :: Maybe Command -> Test -> Execution TestExecutionPlan
+readExecutionPlan defaultCommand test = do
   (executable@(Executable executableName), args) <-
     splitCommand (testCommand test <|> defaultCommand) (testArgs test)
   executableExists <- liftIO (doesFileExist executableName)
@@ -68,7 +59,7 @@ readExecutionPlan suiteName defaultCommand test = do
     onNothingThrow_ (NonExistentCommand executable) =<<
     liftIO (findExecutable executableName)
   stdIn <- liftIO $ sequence $ readFixture <$> testStdIn test
-  return $ TestExecutionPlan suiteName test executable args stdIn
+  return $ TestExecutionPlan test executable args stdIn
 
 splitCommand :: Maybe Command -> Maybe Args -> Execution (Executable, Args)
 splitCommand maybeCommand maybeArgs = do
@@ -87,7 +78,7 @@ readExpectedOutputs test = do
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 executeTest :: TestExecutionPlan -> Execution ActualOutputs
-executeTest (TestExecutionPlan _ _ executable@(Executable executableName) (Args args) stdIn) = do
+executeTest (TestExecutionPlan _ executable@(Executable executableName) (Args args) stdIn) = do
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
@@ -103,21 +94,14 @@ handleExecutionError executable e =
     else CouldNotExecuteCommand executable (show e)
 
 processOutput ::
-     ShowSuiteNames
-  -> TestExecutionPlan
-  -> ExpectedOutputs
-  -> ActualOutputs
-  -> TestResult
-processOutput showSuiteNames executionPlan@(TestExecutionPlan (SuiteName suiteName) test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
+     TestExecutionPlan -> ExpectedOutputs -> ActualOutputs -> TestResult
+processOutput executionPlan@(TestExecutionPlan test _ _ _) (expectedStatus, expectedStdOuts, expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
   if statusResult == PartSuccess &&
      stdOutResult == PartSuccess && stdErrResult == PartSuccess
     then TestSuccess name
     else TestFailure name executionPlan statusResult stdOutResult stdErrResult
   where
-    name =
-      if showSuiteNames
-        then TestName $ suiteName <> "/" <> unTestName (testName test)
-        else testName test
+    name = testName test
     statusResult =
       if expectedStatus == actualStatus
         then PartSuccess

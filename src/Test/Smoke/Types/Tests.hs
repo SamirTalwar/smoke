@@ -12,6 +12,21 @@ data Options = Options
   , optionsTestLocations :: Vector FilePath
   } deriving (Eq, Show)
 
+data Plan =
+  Plan (Maybe Command)
+       Suites
+
+type Suites = [(SuiteName, Suite)]
+
+data Suite = Suite
+  { suiteCommand :: Maybe Command
+  , suiteTests :: [Test]
+  } deriving (Eq, Show)
+
+instance FromJSON Suite where
+  parseJSON =
+    withObject "Suite" $ \v -> Suite <$> (v .:? "command") <*> (v .: "tests")
+
 data Test = Test
   { testName :: TestName
   , testCommand :: Maybe Command
@@ -32,24 +47,8 @@ instance FromJSON Test where
       (v .:? "stderr" .!= noFixtures) <*>
       (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
 
-data Suite = Suite
-  { suiteCommand :: Maybe Command
-  , suiteTests :: [Test]
-  } deriving (Eq, Show)
-
-instance FromJSON Suite where
-  parseJSON =
-    withObject "Suite" $ \v -> Suite <$> (v .:? "command") <*> (v .: "tests")
-
-type Suites = [(SuiteName, Suite)]
-
-data Plan =
-  Plan (Maybe Command)
-       Suites
-
 data TestExecutionPlan = TestExecutionPlan
-  { planSuiteName :: SuiteName
-  , planTest :: Test
+  { planTest :: Test
   , planExecutable :: Executable
   , planArgs :: Args
   , planStdIn :: Maybe StdIn

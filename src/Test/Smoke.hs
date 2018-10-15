@@ -15,8 +15,9 @@ module Test.Smoke
   , Suites
   , Test(..)
   , TestExecutionPlan(..)
+  , Results
+  , SuiteResult(..)
   , TestResult(..)
-  , TestResults
   , PartResult(..)
   , TestBlessErrorMessage(..)
   , TestDiscoveryErrorMessage(..)

@@ -5,7 +5,12 @@ import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Tests
 
-type TestResults = [TestResult]
+type Results = [SuiteResult]
+
+data SuiteResult = SuiteResult
+  { suiteResultSuiteName :: SuiteName
+  , suiteResultTestResults :: [TestResult]
+  }
 
 data TestResult
   = TestSuccess TestName

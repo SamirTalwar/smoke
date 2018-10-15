@@ -19,6 +19,9 @@ data TestPlanErrorMessage
   = NoCommand
   | NoInput
   | NoOutput
+  | NonExistentFixture FilePath
+  | CouldNotReadFixture FilePath
+                        String
   | NonExistentCommand Executable
   deriving (Eq, Show)
 

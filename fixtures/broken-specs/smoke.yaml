@@ -12,3 +12,29 @@ tests:
       - echo
     args:
       - input
+
+  - name: missing-input-file
+    command:
+      - echo
+    args:
+      - something
+    stdin:
+      file: io/missing.in
+    stdout: |
+      output
+
+  - name: missing-output-file
+    command:
+      - echo
+    args:
+      - something
+    stdout:
+      file: io/missing.out
+
+  - name: missing-error-file
+    command:
+      - echo
+    args:
+      - something
+    stderr:
+      file: io/missing.err

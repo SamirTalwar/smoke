@@ -92,6 +92,12 @@ printResult (TestResult _ (TestError (PlanError NoOutput))) =
 printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executableName))))) =
   printError $
   "The application \"" <> fromString executableName <> "\" does not exist."
+printResult (TestResult _ (TestError (PlanError (NonExistentFixture filePath)))) =
+  printError $ "The fixture \"" <> fromString filePath <> "\" does not exist."
+printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture filePath e)))) =
+  printError $
+  "The fixture \"" <> fromString filePath <> "\" could not be read.\n" <>
+  fromString e
 printResult (TestResult _ (TestError (NonExecutableCommand (Executable executableName)))) =
   printError $
   "The application \"" <> fromString executableName <> "\" is not executable."

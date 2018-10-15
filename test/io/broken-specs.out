@@ -4,5 +4,11 @@ no-inputs
   There are no args or STDIN values in the specification.
 no-outputs
   There are no STDOUT or STDERR values in the specification.
+missing-input-file
+  The fixture "fixtures/broken-specs/io/missing.in" does not exist.
+missing-output-file
+  The fixture "fixtures/broken-specs/io/missing.out" does not exist.
+missing-error-file
+  The fixture "fixtures/broken-specs/io/missing.err" does not exist.
 
-3 tests, 3 failures
+6 tests, 6 failures

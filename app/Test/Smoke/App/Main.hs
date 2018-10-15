@@ -63,31 +63,31 @@ printResult (TestError (TestName name) NoOutput) = do
 printResult (TestError (TestName name) (NonExistentCommand (Executable executableName))) = do
   printTitle name
   printError $
-    "The application \"" <> Text.pack executableName <> "\" does not exist."
+    "The application \"" <> fromString executableName <> "\" does not exist."
 printResult (TestError (TestName name) (NonExecutableCommand (Executable executableName))) = do
   printTitle name
   printError $
-    "The application \"" <> Text.pack executableName <> "\" is not executable."
+    "The application \"" <> fromString executableName <> "\" is not executable."
 printResult (TestError (TestName name) (CouldNotExecuteCommand (Executable executableName) e)) = do
   printTitle name
   printError $
-    "The application \"" <> Text.pack executableName <>
+    "The application \"" <> fromString executableName <>
     "\" could not be executed.\n" <>
     fromString e
 printResult (TestError (TestName name) (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
   printTitle name
   printError $
-    "Could not write the fixture \"" <> Text.pack fixtureName <> "\":\n" <>
+    "Could not write the fixture \"" <> fromString fixtureName <> "\":\n" <>
     fixtureValue
 printResult (TestError (TestName name) (BlessError (CouldNotBlessAMissingValue propertyName))) = do
   printTitle name
   printError $
-    "There are no expected \"" <> Text.pack propertyName <>
+    "There are no expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
 printResult (TestError (TestName name) (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
   printTitle name
   printError $
-    "There are multiple expected \"" <> Text.pack propertyName <>
+    "There are multiple expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
 printResult (TestError (TestName name) (BlessIOException e)) = do
   printTitle name
@@ -140,15 +140,15 @@ handleDiscoveryError options e = do
     putError $
     case e of
       NoSuchLocation location ->
-        "There is no such location \"" <> Text.pack location <> "\"."
+        "There is no such location \"" <> fromString location <> "\"."
       NoSuchTest location (TestName selectedTestName) ->
-        "There is no such test \"" <> Text.pack selectedTestName <> "\" in \"" <>
-        Text.pack location <>
+        "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
+        fromString location <>
         "\"."
       CannotSelectTestInDirectory location (TestName selectedTestName) ->
-        "The test \"" <> Text.pack selectedTestName <>
+        "The test \"" <> fromString selectedTestName <>
         "\" cannot be selected from the directory \"" <>
-        Text.pack location <>
+        fromString location <>
         "\".\n" <>
         "Tests must be selected from a single specification file."
   exitWith (ExitFailure 2)

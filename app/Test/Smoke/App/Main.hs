@@ -47,17 +47,16 @@ printResults results =
           if showSuiteNames
             then Just thisSuiteName
             else Nothing
-     in forM_ testResults (printResult suiteNameForPrinting)
+     in forM_ testResults $ \testResult@(TestResult test _) -> do
+          printTitle suiteNameForPrinting (testName test)
+          printResult testResult
   where
     uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
     showSuiteNames = length uniqueSuiteNames > 1
 
-printResult :: Maybe SuiteName -> TestResult -> Output ()
-printResult thisSuiteName (TestResult test TestSuccess) = do
-  printTitle thisSuiteName (testName test)
-  putGreenLn "  succeeded"
-printResult thisSuiteName (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
-  printTitle thisSuiteName (testName test)
+printResult :: TestResult -> Output ()
+printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
+printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
@@ -67,50 +66,40 @@ printResult thisSuiteName (TestResult test (TestFailure testPlan statusResult st
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult thisSuiteName (TestResult test (TestError (PlanError NoCommand))) = do
-  printTitle thisSuiteName (testName test)
+printResult (TestResult _ (TestError (PlanError NoCommand))) =
   printError "There is no command."
-printResult thisSuiteName (TestResult test (TestError (PlanError NoInput))) = do
-  printTitle thisSuiteName (testName test)
+printResult (TestResult _ (TestError (PlanError NoInput))) =
   printError "There are no args or STDIN values in the specification."
-printResult thisSuiteName (TestResult test (TestError (PlanError NoOutput))) = do
-  printTitle thisSuiteName (testName test)
+printResult (TestResult _ (TestError (PlanError NoOutput))) =
   printError "There are no STDOUT or STDERR values in the specification."
-printResult thisSuiteName (TestResult test (TestError (PlanError (NonExistentCommand (Executable executableName))))) = do
-  printTitle thisSuiteName (testName test)
+printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executableName))))) =
   printError $
-    "The application \"" <> fromString executableName <> "\" does not exist."
-printResult thisSuiteName (TestResult test (TestError (NonExecutableCommand (Executable executableName)))) = do
-  printTitle thisSuiteName (testName test)
+  "The application \"" <> fromString executableName <> "\" does not exist."
+printResult (TestResult _ (TestError (NonExecutableCommand (Executable executableName)))) =
   printError $
-    "The application \"" <> fromString executableName <> "\" is not executable."
-printResult thisSuiteName (TestResult test (TestError (CouldNotExecuteCommand (Executable executableName) e))) = do
-  printTitle thisSuiteName (testName test)
+  "The application \"" <> fromString executableName <> "\" is not executable."
+printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executableName) e))) =
   printError $
-    "The application \"" <> fromString executableName <>
-    "\" could not be executed.\n" <>
-    fromString e
-printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) = do
-  printTitle thisSuiteName (testName test)
+  "The application \"" <> fromString executableName <>
+  "\" could not be executed.\n" <>
+  fromString e
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
-    "The fixture \"" <> fromString propertyName <>
-    " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
-    indentedAll messageIndentation propertyValue
-printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) = do
-  printTitle thisSuiteName (testName test)
+  "The fixture \"" <> fromString propertyName <>
+  " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+  indentedAll messageIndentation propertyValue
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
   printError $
-    "There are no expected \"" <> fromString propertyName <>
-    "\" values, so the result cannot be blessed.\n"
-printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessWithMultipleValues propertyName)))) = do
-  printTitle thisSuiteName (testName test)
+  "There are no expected \"" <> fromString propertyName <>
+  "\" values, so the result cannot be blessed.\n"
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues propertyName)))) =
   printError $
-    "There are multiple expected \"" <> fromString propertyName <>
-    "\" values, so the result cannot be blessed.\n"
-printResult thisSuiteName (TestResult test (TestError (BlessIOException e))) = do
-  printTitle thisSuiteName (testName test)
+  "There are multiple expected \"" <> fromString propertyName <>
+  "\" values, so the result cannot be blessed.\n"
+printResult (TestResult _ (TestError (BlessIOException e))) =
   printError $
-    "Blessing failed:\n" <>
-    indentedAll messageIndentation (fromString (displayException e))
+  "Blessing failed:\n" <>
+  indentedAll messageIndentation (fromString (displayException e))
 
 printTitle :: Maybe SuiteName -> TestName -> Output ()
 printTitle (Just (SuiteName thisSuiteName)) (TestName thisTestName) =

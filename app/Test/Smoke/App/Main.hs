@@ -89,10 +89,12 @@ printResult thisSuiteName (TestResult test (TestError (CouldNotExecuteCommand (E
     "The application \"" <> fromString executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotWriteFixture name value)))) = do
+printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) = do
   printTitle thisSuiteName (testName test)
   printError $
-    "Could not write the fixture \"" <> fromString name <> "\":\n" <> value
+    "The fixture \"" <> fromString propertyName <>
+    " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+    indentedAll messageIndentation propertyValue
 printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) = do
   printTitle thisSuiteName (testName test)
   printError $
@@ -105,7 +107,9 @@ printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBless
     "\" values, so the result cannot be blessed.\n"
 printResult thisSuiteName (TestResult test (TestError (BlessIOException e))) = do
   printTitle thisSuiteName (testName test)
-  printError $ "Blessing failed.\n" <> fromString (displayException e)
+  printError $
+    "Blessing failed:\n" <>
+    indentedAll messageIndentation (fromString (displayException e))
 
 printTitle :: Maybe SuiteName -> TestName -> Output ()
 printTitle (Just (SuiteName thisSuiteName)) (TestName thisTestName) =

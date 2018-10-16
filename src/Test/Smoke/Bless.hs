@@ -47,9 +47,9 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
 blessResult result = return result
 
 writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
-writeFixture (InlineFixture contents) _ =
+writeFixture (InlineFixture contents) value =
   throwIO $
-  CouldNotWriteFixture (fixtureName contents) (serializeFixture contents)
+  CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
 writeFixture (FileFixture path) value =
   TextIO.writeFile path (serializeFixture value)
 
@@ -60,5 +60,7 @@ writeFixtures ::
   -> IO ()
 writeFixtures (Fixtures fixtures) value
   | Vector.length fixtures == 1 = writeFixture (Vector.head fixtures) value
+  | Vector.length fixtures == 0 =
+    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: a))
   | otherwise =
     throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))

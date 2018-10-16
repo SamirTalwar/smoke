@@ -32,8 +32,8 @@ data TestErrorMessage
 instance Exception TestErrorMessage
 
 data TestBlessErrorMessage
-  = CouldNotWriteFixture String
-                         Contents
+  = CouldNotBlessInlineFixture String
+                               Contents
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)

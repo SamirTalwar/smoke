@@ -13,6 +13,15 @@ tests:
   - name: individual-tests-within-a-file
     args:
       - fixtures/pick/good.yaml@args
+    stdout: |
+      args
+        succeeded
+
+      1 test, 0 failures
+
+  - name: multiple-individual-tests-within-a-file
+    args:
+      - fixtures/pick/good.yaml@args
       - fixtures/pick/good.yaml @ stdin
     stdout: |
       args

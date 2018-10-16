@@ -134,10 +134,19 @@ printSummary summary = do
   putEmptyLn
   let testCount = summaryTotal summary
   let failureCount = summaryFailures summary
-  case failureCount of
-    0 -> putGreenLn (int testCount <> " tests, 0 failures")
-    1 -> putRedLn (int testCount <> " tests, 1 failure")
-    n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
+  let testWord = pluralize testCount "test" "tests"
+  let failureWord = pluralize failureCount "failure" "failures"
+  let printSummaryLine =
+        if failureCount == 0
+          then putGreenLn
+          else putRedLn
+  printSummaryLine $
+    int testCount <> " " <> testWord <> ", " <> int failureCount <> " " <>
+    failureWord
+  where
+    pluralize :: Int -> Contents -> Contents -> Contents
+    pluralize 1 singular _ = singular
+    pluralize _ _ plural = plural
 
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation

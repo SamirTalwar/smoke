@@ -34,10 +34,11 @@ main = do
 
 outputResults :: AppOptions -> Results -> IO ()
 outputResults options results = do
+  let summary = summarizeResults results
   flip runReaderT options $ do
     printResults results
-    printSummary results
-  exitAccordingTo results
+    printSummary summary
+  exitAccordingTo summary
 
 printResults :: Results -> Output ()
 printResults results =
@@ -139,18 +140,15 @@ printDiff left right = do
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
 
-printSummary :: Results -> Output ()
-printSummary results = do
+printSummary :: Summary -> Output ()
+printSummary summary = do
   putEmptyLn
-  let testCount = length allTestResults
-  let failureCount = length failures
+  let testCount = summaryTotal summary
+  let failureCount = summaryFailures summary
   case failureCount of
     0 -> putGreenLn (int testCount <> " tests, 0 failures")
     1 -> putRedLn (int testCount <> " tests, 1 failure")
     n -> putRedLn (int testCount <> " tests, " <> int n <> " failures")
-  where
-    allTestResults = concatMap suiteResultTestResults results
-    failures = filter isFailure allTestResults
 
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation
@@ -183,17 +181,8 @@ messageIndentation = 2
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")
 
-exitAccordingTo :: Results -> IO ()
-exitAccordingTo results =
-  if failureCount == 0
+exitAccordingTo :: Summary -> IO ()
+exitAccordingTo summary =
+  if summaryFailures summary == 0
     then exitSuccess
     else exitWith (ExitFailure 1)
-  where
-    allTestResults =
-      concatMap (\(SuiteResult _ testResults) -> testResults) results
-    failureCount = length (filter isFailure allTestResults)
-
-isFailure :: TestResult -> Bool
-isFailure (TestResult _ TestSuccess) = False
-isFailure (TestResult _ TestFailure {}) = True
-isFailure (TestResult _ TestError {}) = True

@@ -6,7 +6,8 @@ import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Tests
 
 newtype Plan =
-  Plan [(SuiteName, [Either TestPlanError TestPlan])]
+  Plan [( SuiteName
+        , Either TestDiscoveryErrorMessage [Either TestPlanError TestPlan])]
 
 data TestPlan = TestPlan
   { planTest :: Test

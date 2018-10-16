@@ -4,15 +4,23 @@ module Test.Smoke.Summary
 
 import Test.Smoke.Types
 
+data SummaryResult
+  = Success
+  | Failure
+  deriving (Eq, Show)
+
 summarizeResults :: Results -> Summary
 summarizeResults results = Summary successes failures
   where
-    allTestResults = concatMap suiteResultTestResults results
-    total = length allTestResults
-    failures = length $ filter isFailure allTestResults
+    allResults =
+      concatMap
+        (either (const [Failure]) (map summarizeResult) . suiteResultTestResults)
+        results
+    total = length allResults
+    failures = length $ filter (== Failure) allResults
     successes = total - failures
 
-isFailure :: TestResult -> Bool
-isFailure (TestResult _ TestSuccess) = False
-isFailure (TestResult _ TestFailure {}) = True
-isFailure (TestResult _ TestError {}) = True
+summarizeResult :: TestResult -> SummaryResult
+summarizeResult (TestResult _ TestSuccess) = Success
+summarizeResult (TestResult _ TestFailure {}) = Failure
+summarizeResult (TestResult _ TestError {}) = Failure

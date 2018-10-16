@@ -1,0 +1,7 @@
+tests:
+  - name: malformed-specs
+    args:
+      - fixtures/malformed-specs
+    exit-status: 1
+    stdout:
+      file: io/malformed-specs.out

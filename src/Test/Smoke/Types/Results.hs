@@ -10,7 +10,7 @@ type Results = [SuiteResult]
 
 data SuiteResult = SuiteResult
   { suiteResultSuiteName :: SuiteName
-  , suiteResultTestResults :: [TestResult]
+  , suiteResultTestResults :: Either TestDiscoveryErrorMessage [TestResult]
   }
 
 data TestResult =

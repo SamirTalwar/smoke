@@ -19,13 +19,17 @@ type ActualOutputs = (Status, StdOut, StdErr)
 
 runTests :: Plan -> IO Results
 runTests (Plan suites) =
-  forM suites $ \(suiteName, testPlans) -> do
-    testResults <-
-      forM testPlans $ \case
-        Left (TestPlanError test errorMessage) ->
-          return $ TestResult test $ TestError $ PlanError errorMessage
-        Right testPlan -> runTest testPlan
-    return $ SuiteResult suiteName testResults
+  forM suites $ \(suiteName, suitePlans) ->
+    SuiteResult suiteName <$>
+    case suitePlans of
+      Left errorMessage -> return $ Left errorMessage
+      Right testPlans -> do
+        testResults <-
+          forM testPlans $ \case
+            Left (TestPlanError test errorMessage) ->
+              return $ TestResult test $ TestError $ PlanError errorMessage
+            Right testPlan -> runTest testPlan
+        return $ Right testResults
 
 runTest :: TestPlan -> IO TestResult
 runTest testPlan =

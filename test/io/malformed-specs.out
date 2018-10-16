@@ -1,0 +1,15 @@
+empty
+  The test specification "fixtures/malformed-specs/empty.yaml" is invalid:
+    Aeson exception:
+    Error in $: expected Suite, encountered Null
+invalid-yaml
+  The test specification "fixtures/malformed-specs/invalid-yaml.yaml" is invalid:
+    YAML parse exception at line 3, column 0,
+    while parsing a flow node:
+    did not find expected node content
+test-as-dict
+  The test specification "fixtures/malformed-specs/test-as-dict.yaml" is invalid:
+    Aeson exception:
+    Error in $.tests: expected [a], encountered Object
+
+3 tests, 3 failures

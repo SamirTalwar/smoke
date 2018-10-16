@@ -7,6 +7,7 @@ module Test.Smoke.Discovery
 
 import Control.Exception (throwIO)
 import Control.Monad (forM)
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
 import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -16,6 +17,8 @@ import System.FilePath
 import System.FilePath.Glob as Glob
 import Test.Smoke.Errors
 import Test.Smoke.Types
+
+type Discovery = ExceptT TestDiscoveryErrorMessage IO
 
 data Root
   = Directory FilePath
@@ -35,25 +38,37 @@ discoverTestsInLocations locations = do
     forM roots $ \case
       Directory path -> do
         specificationFiles <- globDir1 (Glob.compile "*.yaml") path
-        mapM decodeSpecificationFile specificationFiles
-      File path -> return <$> decodeSpecificationFile path
+        mapM discoverTestsInSpecificationFile specificationFiles
+      File path -> return <$> discoverTestsInSpecificationFile path
       Single path selectedTestName -> do
-        (suiteName, Suite command tests) <- decodeSpecificationFile path
-        runExceptTIO $ do
-          selectedTest <-
-            onNothingThrow (NoSuchTest path selectedTestName) $
-            List.find ((== selectedTestName) . testName) tests
-          return [(suiteName, Suite command [selectedTest])]
+        let (directory, suiteName) = splitSuitePath path
+        suite <-
+          runExceptT $ do
+            Suite command tests <- decodeSpecificationFile directory path
+            selectedTest <-
+              onNothingThrow (NoSuchTest path selectedTestName) $
+              List.find ((== selectedTestName) . testName) tests
+            return $ Suite command [selectedTest]
+        return [(suiteName, suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
-decodeSpecificationFile :: FilePath -> IO (SuiteName, Suite)
-decodeSpecificationFile file = do
-  let (directory, fileName) = splitFileName file
-  let suiteName = SuiteName $ dropExtension fileName
-  suite <- decodeFileThrow file
-  return
-    ( suiteName
-    , prefixSuiteFixturesWith (dropTrailingPathSeparator directory) suite)
+splitSuitePath :: FilePath -> (FilePath, SuiteName)
+splitSuitePath path = (directory, SuiteName $ dropExtension fileName)
+  where
+    (directory, fileName) = splitFileName path
+
+discoverTestsInSpecificationFile ::
+     FilePath -> IO (SuiteName, Either TestDiscoveryErrorMessage Suite)
+discoverTestsInSpecificationFile path = do
+  let (directory, suiteName) = splitSuitePath path
+  suite <- runExceptT $ decodeSpecificationFile directory path
+  return (suiteName, suite)
+
+decodeSpecificationFile :: FilePath -> FilePath -> Discovery Suite
+decodeSpecificationFile directory path =
+  withExceptT (InvalidSpecification path . prettyPrintParseException) $
+  prefixSuiteFixturesWith (dropTrailingPathSeparator directory) <$>
+  ExceptT (decodeFileEither path)
 
 prefixSuiteFixturesWith :: FilePath -> Suite -> Suite
 prefixSuiteFixturesWith location (Suite command tests) =

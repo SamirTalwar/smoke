@@ -25,7 +25,8 @@ main :: IO ()
 main = do
   options <- parseOptions
   (do tests <- discoverTests (optionsExecution options)
-      results <- runTests tests
+      plan <- planTests tests
+      results <- runTests plan
       case optionsMode options of
         Check -> outputResults options results
         Bless -> outputResults options =<< blessResults results) `catch`
@@ -51,58 +52,59 @@ printResults results =
     showSuiteNames = length uniqueSuiteNames > 1
 
 printResult :: Maybe SuiteName -> TestResult -> Output ()
-printResult thisSuiteName (TestSuccess thisTestName) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test TestSuccess) = do
+  printTitle thisSuiteName (testName test)
   putGreenLn "  succeeded"
-printResult thisSuiteName (TestFailure thisTestName (TestExecutionPlan test _ _ stdIn) statusResult stdOutResult stdErrResult) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
+  printTitle thisSuiteName (testName test)
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
-  printFailingInput "input" (unStdIn <$> stdIn)
+  printFailingInput
+    "input"
+    (unStdIn <$> (const (planStdIn testPlan) <$> testStdIn test))
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult thisSuiteName (TestError thisTestName NoCommand) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (PlanError NoCommand))) = do
+  printTitle thisSuiteName (testName test)
   printError "There is no command."
-printResult thisSuiteName (TestError thisTestName NoInput) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (PlanError NoInput))) = do
+  printTitle thisSuiteName (testName test)
   printError "There are no args or STDIN values in the specification."
-printResult thisSuiteName (TestError thisTestName NoOutput) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (PlanError NoOutput))) = do
+  printTitle thisSuiteName (testName test)
   printError "There are no STDOUT or STDERR values in the specification."
-printResult thisSuiteName (TestError thisTestName (NonExistentCommand (Executable executableName))) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (PlanError (NonExistentCommand (Executable executableName))))) = do
+  printTitle thisSuiteName (testName test)
   printError $
     "The application \"" <> fromString executableName <> "\" does not exist."
-printResult thisSuiteName (TestError thisTestName (NonExecutableCommand (Executable executableName))) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (NonExecutableCommand (Executable executableName)))) = do
+  printTitle thisSuiteName (testName test)
   printError $
     "The application \"" <> fromString executableName <> "\" is not executable."
-printResult thisSuiteName (TestError thisTestName (CouldNotExecuteCommand (Executable executableName) e)) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (CouldNotExecuteCommand (Executable executableName) e))) = do
+  printTitle thisSuiteName (testName test)
   printError $
     "The application \"" <> fromString executableName <>
     "\" could not be executed.\n" <>
     fromString e
-printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotWriteFixture fixtureName fixtureValue))) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotWriteFixture name value)))) = do
+  printTitle thisSuiteName (testName test)
   printError $
-    "Could not write the fixture \"" <> fromString fixtureName <> "\":\n" <>
-    fixtureValue
-printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotBlessAMissingValue propertyName))) = do
-  printTitle thisSuiteName thisTestName
+    "Could not write the fixture \"" <> fromString name <> "\":\n" <> value
+printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) = do
+  printTitle thisSuiteName (testName test)
   printError $
     "There are no expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult thisSuiteName (TestError thisTestName (BlessError (CouldNotBlessWithMultipleValues propertyName))) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (BlessError (CouldNotBlessWithMultipleValues propertyName)))) = do
+  printTitle thisSuiteName (testName test)
   printError $
     "There are multiple expected \"" <> fromString propertyName <>
     "\" values, so the result cannot be blessed.\n"
-printResult thisSuiteName (TestError thisTestName (BlessIOException e)) = do
-  printTitle thisSuiteName thisTestName
+printResult thisSuiteName (TestResult test (TestError (BlessIOException e))) = do
+  printTitle thisSuiteName (testName test)
   printError $ "Blessing failed.\n" <> fromString (displayException e)
 
 printTitle :: Maybe SuiteName -> TestName -> Output ()
@@ -188,6 +190,6 @@ exitAccordingTo results =
     failureCount = length (filter isFailure allTestResults)
 
 isFailure :: TestResult -> Bool
-isFailure TestSuccess {} = False
-isFailure TestFailure {} = True
-isFailure TestError {} = True
+isFailure (TestResult _ TestSuccess) = False
+isFailure (TestResult _ TestFailure {}) = True
+isFailure (TestResult _ TestError {}) = True

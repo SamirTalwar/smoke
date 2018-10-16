@@ -23,9 +23,9 @@ data Root
   | Single FilePath
            TestName
 
-discoverTests :: Options -> IO Plan
+discoverTests :: Options -> IO TestSpecification
 discoverTests options =
-  Plan (optionsCommand options) <$>
+  TestSpecification (optionsCommand options) <$>
   discoverTestsInLocations (optionsTestLocations options)
 
 discoverTestsInLocations :: Vector FilePath -> IO Suites

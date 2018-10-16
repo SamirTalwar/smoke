@@ -3,6 +3,7 @@ module Test.Smoke.Types.Results where
 import Data.Vector (Vector)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
+import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
 
 type Results = [SuiteResult]
@@ -12,15 +13,17 @@ data SuiteResult = SuiteResult
   , suiteResultTestResults :: [TestResult]
   }
 
-data TestResult
-  = TestSuccess TestName
-  | TestFailure TestName
-                TestExecutionPlan
+data TestResult =
+  TestResult Test
+             TestOutcome
+
+data TestOutcome
+  = TestSuccess
+  | TestFailure TestPlan
                 (PartResult Status)
                 (PartResult StdOut)
                 (PartResult StdErr)
-  | TestError TestName
-              TestErrorMessage
+  | TestError TestErrorMessage
   deriving (Eq, Show)
 
 data PartResult a

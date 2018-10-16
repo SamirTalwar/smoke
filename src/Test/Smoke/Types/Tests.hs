@@ -12,9 +12,9 @@ data Options = Options
   , optionsTestLocations :: Vector FilePath
   } deriving (Eq, Show)
 
-data Plan =
-  Plan (Maybe Command)
-       Suites
+data TestSpecification =
+  TestSpecification (Maybe Command)
+                    Suites
 
 type Suites = [(SuiteName, Suite)]
 
@@ -46,10 +46,3 @@ instance FromJSON Test where
       (v .:? "stdout" .!= noFixtures) <*>
       (v .:? "stderr" .!= noFixtures) <*>
       (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
-
-data TestExecutionPlan = TestExecutionPlan
-  { planTest :: Test
-  , planExecutable :: Executable
-  , planArgs :: Args
-  , planStdIn :: Maybe StdIn
-  } deriving (Eq, Show)

@@ -17,13 +17,15 @@ blessResults results =
     return $ SuiteResult suiteName blessedResults
 
 blessResult :: TestResult -> IO TestResult
-blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut stdErr)
+blessResult (TestResult test (TestFailure _ status stdOut stdErr))
   | isFailureWithMultipleExpectedValues stdOut =
     return $
-    TestError name (BlessError (CouldNotBlessWithMultipleValues "stdout"))
+    TestResult test $
+    TestError (BlessError (CouldNotBlessWithMultipleValues "stdout"))
   | isFailureWithMultipleExpectedValues stdErr =
     return $
-    TestError name (BlessError (CouldNotBlessWithMultipleValues "stderr"))
+    TestResult test $
+    TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
   | otherwise =
     do case status of
          PartFailure _ actual -> writeFixture (testStatus test) actual
@@ -34,10 +36,10 @@ blessResult (TestFailure name TestExecutionPlan {planTest = test} status stdOut 
        case stdErr of
          PartFailure _ actual -> writeFixtures (testStdErr test) actual
          _ -> return ()
-       return $ TestSuccess name
+       return $ TestResult test TestSuccess
      `catch` (\(e :: TestBlessErrorMessage) ->
-                return (TestError name (BlessError e))) `catch`
-    (return . TestError name . BlessIOException)
+                return (TestResult test $ TestError $ BlessError e)) `catch`
+    (return . TestResult test . TestError . BlessIOException)
   where
     isFailureWithMultipleExpectedValues (PartFailure expected _) =
       Vector.length expected > 1

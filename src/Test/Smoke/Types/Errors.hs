@@ -13,14 +13,18 @@ data TestDiscoveryErrorMessage
 
 instance Exception TestDiscoveryErrorMessage
 
-data TestErrorMessage
+data TestPlanErrorMessage
   = NoCommand
   | NoInput
   | NoOutput
   | NonExistentCommand Executable
-  | NonExecutableCommand Executable
+  deriving (Eq, Show)
+
+data TestErrorMessage
+  = NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable
                            String
+  | PlanError TestPlanErrorMessage
   | BlessError TestBlessErrorMessage
   | BlessIOException IOException
   deriving (Eq, Show)

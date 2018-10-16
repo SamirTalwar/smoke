@@ -59,6 +59,18 @@ printResults results =
     uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
     showSuiteNames = length uniqueSuiteNames > 1
 
+printTitle :: ShowSuiteNames -> SuiteName -> Maybe TestName -> Output ()
+printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
+  where
+    suiteNameForPrinting =
+      if showSuiteNames || isNothing thisTestName
+        then Just thisSuiteName
+        else Nothing
+    name =
+      List.intercalate "/" $
+      catMaybes
+        [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]
+
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
 printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
@@ -105,18 +117,6 @@ printResult (TestResult _ (TestError (BlessIOException e))) =
   printError $
   "Blessing failed:\n" <>
   indentedAll messageIndentation (fromString (displayException e))
-
-printTitle :: ShowSuiteNames -> SuiteName -> Maybe TestName -> Output ()
-printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
-  where
-    suiteNameForPrinting =
-      if showSuiteNames || isNothing thisTestName
-        then Just thisSuiteName
-        else Nothing
-    name =
-      List.intercalate "/" $
-      catMaybes
-        [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]
 
 printFailingInput :: Foldable f => String -> f Contents -> Output ()
 printFailingInput name value =

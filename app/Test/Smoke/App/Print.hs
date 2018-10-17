@@ -9,11 +9,10 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import qualified Data.Maybe as Maybe
 import Data.String (IsString(..))
-import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import System.Console.ANSI
-import System.IO (stderr)
+import System.IO (Handle, stderr, stdout)
 import Test.Smoke (Contents)
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
@@ -47,9 +46,7 @@ putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
 putPlainLn :: Contents -> Output ()
-putPlainLn contents = do
-  liftIO $ TextIO.putStr contents
-  unless (newline `Text.isSuffixOf` contents) putEmptyLn
+putPlainLn = hPutStrWithLn stdout
 
 putGreenLn :: Contents -> Output ()
 putGreenLn = putColorLn Green
@@ -61,26 +58,26 @@ putRedLn :: Contents -> Output ()
 putRedLn = putColorLn Red
 
 putColorLn :: Color -> Contents -> Output ()
-putColorLn color contents = do
-  putColor color contents
-  unless (newline `Text.isSuffixOf` contents) putEmptyLn
+putColorLn color = withColor color (hPutStrWithLn stdout)
 
 putColor :: Color -> Contents -> Output ()
-putColor = putColorWith TextIO.putStr
-
-putColorWith :: (Text -> IO ()) -> Color -> Contents -> Output ()
-putColorWith put color contents = do
-  options <- ask
-  liftIO $
-    if optionsColor options == Color && not (hasEsc contents)
-      then do
-        setSGR [SetColor Foreground Dull color]
-        put contents
-        setSGR [Reset]
-      else put contents
+putColor color = withColor color (liftIO . TextIO.putStr)
 
 putError :: Contents -> Output ()
-putError contents = do
-  putColorWith (TextIO.hPutStr stderr) Red contents
+putError = withColor Red $ hPutStrWithLn stderr
+
+hPutStrWithLn :: Handle -> Contents -> Output ()
+hPutStrWithLn handle contents = do
+  liftIO $ TextIO.hPutStr handle contents
   unless (newline `Text.isSuffixOf` contents) $
-    liftIO $ TextIO.hPutStrLn stderr ""
+    liftIO $ TextIO.hPutStrLn handle ""
+
+withColor :: Color -> (Contents -> Output ()) -> Contents -> Output ()
+withColor color act contents = do
+  options <- ask
+  if optionsColor options == Color && not (hasEsc contents)
+    then do
+      liftIO $ setSGR [SetColor Foreground Dull color]
+      act contents
+      liftIO $ setSGR [Reset]
+    else act contents

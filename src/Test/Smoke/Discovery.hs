@@ -7,7 +7,7 @@ module Test.Smoke.Discovery
 
 import Control.Exception (throwIO)
 import Control.Monad (forM)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
+import Control.Monad.Trans.Except (ExceptT(..), withExceptT)
 import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -43,13 +43,13 @@ discoverTestsInLocations locations = do
       Single path selectedTestName -> do
         let (directory, suiteName) = splitSuitePath path
         suite <-
-          runExceptT $ do
+          runExceptTIO $ do
             Suite command tests <- decodeSpecificationFile directory path
             selectedTest <-
               onNothingThrow (NoSuchTest path selectedTestName) $
               List.find ((== selectedTestName) . testName) tests
             return $ Suite command [selectedTest]
-        return [(suiteName, suite)]
+        return [(suiteName, Right suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
 splitSuitePath :: FilePath -> (FilePath, SuiteName)
@@ -61,8 +61,8 @@ discoverTestsInSpecificationFile ::
      FilePath -> IO (SuiteName, Either TestDiscoveryErrorMessage Suite)
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
-  suite <- runExceptT $ decodeSpecificationFile directory path
-  return (suiteName, suite)
+  suite <- runExceptTIO $ decodeSpecificationFile directory path
+  return (suiteName, Right suite)
 
 decodeSpecificationFile :: FilePath -> FilePath -> Discovery Suite
 decodeSpecificationFile directory path =

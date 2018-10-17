@@ -80,4 +80,7 @@ putColorWith put color contents = do
       else put contents
 
 putError :: Contents -> Output ()
-putError = putColorWith (TextIO.hPutStrLn stderr) Red
+putError contents = do
+  putColorWith (TextIO.hPutStr stderr) Red contents
+  unless (newline `Text.isSuffixOf` contents) $
+    liftIO $ TextIO.hPutStrLn stderr ""

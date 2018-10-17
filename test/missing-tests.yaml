@@ -16,12 +16,9 @@ tests:
   - name: missing-test
     args:
       - fixtures/calculator/smoke.yaml @ thing
-    exit-status: 1
-    stdout: |
-      smoke
-        There is no such test "thing" in "fixtures/calculator/smoke.yaml".
-
-      1 test, 1 failure
+    exit-status: 2
+    stderr: |
+      There is no such test "thing" in "fixtures/calculator/smoke.yaml".
 
   - name: cannot-select-a-test-from-a-directory
     args:

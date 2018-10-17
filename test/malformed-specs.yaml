@@ -1,7 +1,28 @@
 tests:
-  - name: malformed-specs
+  - name: empty
     args:
-      - fixtures/malformed-specs
-    exit-status: 1
-    stdout:
-      file: io/malformed-specs.out
+      - fixtures/malformed-specs/empty.yaml
+    exit-status: 2
+    stderr: |
+      The test specification "fixtures/malformed-specs/empty.yaml" is invalid:
+        Aeson exception:
+        Error in $: expected Suite, encountered Null
+
+  - name: invalid-yaml
+    args:
+      - fixtures/malformed-specs/invalid-yaml.yaml
+    exit-status: 2
+    stderr: |
+      The test specification "fixtures/malformed-specs/invalid-yaml.yaml" is invalid:
+        YAML parse exception at line 3, column 0,
+        while parsing a flow node:
+        did not find expected node content
+
+  - name: test-as-dict
+    args:
+      - fixtures/malformed-specs/test-as-dict.yaml
+    exit-status: 2
+    stderr: |
+      The test specification "fixtures/malformed-specs/test-as-dict.yaml" is invalid:
+        Aeson exception:
+        Error in $.tests: expected [a], encountered Object

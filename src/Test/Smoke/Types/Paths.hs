@@ -1,6 +1,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Test.Smoke.Types.Paths where
+module Test.Smoke.Types.Paths
+  ( FileName(..)
+  , FileType(..)
+  , Path(..)
+  , makePath
+  , makePathFromText
+  ) where
 
 import Data.Aeson
 import Data.Text (Text)
@@ -13,8 +19,11 @@ data Path
   deriving (Eq)
 
 instance Show Path where
-  show (AbsolutePath path) = dropTrailingPathSeparator path
-  show (RelativePath path) = dropTrailingPathSeparator path
+  show (AbsolutePath path) = normalizePath path
+  show (RelativePath path) = normalizePath path
+
+normalizePath :: String -> String
+normalizePath = normalise . dropTrailingPathSeparator
 
 instance Show FileName where
   show (FileName fileName) = fileName

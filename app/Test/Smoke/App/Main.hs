@@ -92,11 +92,11 @@ printResult (TestResult _ (TestError (PlanError NoOutput))) =
 printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executableName))))) =
   printError $
   "The application \"" <> fromString executableName <> "\" does not exist."
-printResult (TestResult _ (TestError (PlanError (NonExistentFixture filePath)))) =
-  printError $ "The fixture \"" <> fromString filePath <> "\" does not exist."
-printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture filePath e)))) =
+printResult (TestResult _ (TestError (PlanError (NonExistentFixture path)))) =
+  printError $ "The fixture \"" <> showContents path <> "\" does not exist."
+printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture path e)))) =
   printError $
-  "The fixture \"" <> fromString filePath <> "\" could not be read.\n" <>
+  "The fixture \"" <> showContents path <> "\" could not be read.\n" <>
   fromString e
 printResult (TestResult _ (TestError (NonExecutableCommand (Executable executableName)))) =
   printError $
@@ -175,20 +175,20 @@ handleDiscoveryError printErrorMessage options e =
   flip runReaderT options $
   printErrorMessage $
   case e of
-    NoSuchLocation location ->
-      "There is no such location \"" <> fromString location <> "\"."
-    NoSuchTest location (TestName selectedTestName) ->
+    NoSuchLocation path ->
+      "There is no such location \"" <> showContents path <> "\"."
+    NoSuchTest path (TestName selectedTestName) ->
       "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
-      fromString location <>
+      showContents path <>
       "\"."
-    CannotSelectTestInDirectory location (TestName selectedTestName) ->
+    CannotSelectTestInDirectory path (TestName selectedTestName) ->
       "The test \"" <> fromString selectedTestName <>
       "\" cannot be selected from the directory \"" <>
-      fromString location <>
+      showContents path <>
       "\".\n" <>
       "Tests must be selected from a single specification file."
     InvalidSpecification path message ->
-      "The test specification \"" <> fromString path <> "\" is invalid:\n" <>
+      "The test specification \"" <> showContents path <> "\" is invalid:\n" <>
       indentedAll messageIndentation (fromString message)
 
 outputIndentation :: Int

@@ -1,5 +1,4 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.Discovery
   ( discoverTests
@@ -12,35 +11,33 @@ import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import Data.Yaml
-import System.Directory (doesDirectoryExist, doesFileExist)
-import System.FilePath
-import System.FilePath.Glob as Glob
 import Test.Smoke.Errors
+import Test.Smoke.Files
 import Test.Smoke.Types
 
 type Discovery = ExceptT TestDiscoveryErrorMessage IO
 
 data Root
-  = Directory FilePath
-  | File FilePath
-  | Single FilePath
-           TestName
+  = DirectoryRoot Path
+  | FileRoot Path
+  | SingleRoot Path
+               TestName
 
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =
   TestSpecification (optionsCommand options) <$>
   discoverTestsInLocations (optionsTestLocations options)
 
-discoverTestsInLocations :: Vector FilePath -> IO Suites
+discoverTestsInLocations :: Vector String -> IO Suites
 discoverTestsInLocations locations = do
   roots <- mapM parseRoot locations
   testsBySuite <-
     forM roots $ \case
-      Directory path -> do
-        specificationFiles <- globDir1 (Glob.compile "*.yaml") path
+      DirectoryRoot path -> do
+        specificationFiles <- findFilesInPath yamlFiles path
         mapM discoverTestsInSpecificationFile specificationFiles
-      File path -> return <$> discoverTestsInSpecificationFile path
-      Single path selectedTestName -> do
+      FileRoot path -> return <$> discoverTestsInSpecificationFile path
+      SingleRoot path selectedTestName -> do
         let (directory, suiteName) = splitSuitePath path
         suite <-
           runExceptTIO $ do
@@ -52,29 +49,28 @@ discoverTestsInLocations locations = do
         return [(suiteName, Right suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
-splitSuitePath :: FilePath -> (FilePath, SuiteName)
-splitSuitePath path = (directory, SuiteName $ dropExtension fileName)
-  where
-    (directory, fileName) = splitFileName path
-
 discoverTestsInSpecificationFile ::
-     FilePath -> IO (SuiteName, Either TestDiscoveryErrorMessage Suite)
+     Path -> IO (SuiteName, Either TestDiscoveryErrorMessage Suite)
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   suite <- runExceptTIO $ decodeSpecificationFile directory path
   return (suiteName, Right suite)
 
-decodeSpecificationFile :: FilePath -> FilePath -> Discovery Suite
+splitSuitePath :: Path -> (Path, SuiteName)
+splitSuitePath path = (directory, SuiteName $ show $ dropExtension fileName)
+  where
+    (directory, fileName) = splitFileName path
+
+decodeSpecificationFile :: Path -> Path -> Discovery Suite
 decodeSpecificationFile directory path =
   withExceptT (InvalidSpecification path . prettyPrintParseException) $
-  prefixSuiteFixturesWith (dropTrailingPathSeparator directory) <$>
-  ExceptT (decodeFileEither path)
+  prefixSuiteFixturesWith directory <$> ExceptT (decodeFileEither (show path))
 
-prefixSuiteFixturesWith :: FilePath -> Suite -> Suite
+prefixSuiteFixturesWith :: Path -> Suite -> Suite
 prefixSuiteFixturesWith location (Suite command tests) =
   Suite command (map (prefixTestFixturesWith location) tests)
 
-prefixTestFixturesWith :: FilePath -> Test -> Test
+prefixTestFixturesWith :: Path -> Test -> Test
 prefixTestFixturesWith location test =
   test
     { testStdIn = prefixFixtureWith location <$> testStdIn test
@@ -82,33 +78,30 @@ prefixTestFixturesWith location test =
     , testStdErr = prefixFixturesWith location $ testStdErr test
     }
 
-prefixFixtureWith :: FilePath -> Fixture a -> Fixture a
+prefixFixtureWith :: Path -> Fixture a -> Fixture a
 prefixFixtureWith _ fixture@InlineFixture {} = fixture
 prefixFixtureWith location (FileFixture path) = FileFixture (location </> path)
 
-prefixFixturesWith :: FilePath -> Fixtures a -> Fixtures a
+prefixFixturesWith :: Path -> Fixtures a -> Fixtures a
 prefixFixturesWith location (Fixtures fixtures) =
   Fixtures $ prefixFixtureWith location <$> fixtures
 
-parseRoot :: FilePath -> IO Root
+parseRoot :: String -> IO Root
 parseRoot location = do
   let (path, selectedTestName) =
         let (p, s) = List.break (== '@') location
-         in ( strip p
+         in ( makePath (strip p)
             , if null s
                 then Nothing
                 else Just (TestName (strip (tail s))))
-  isDirectory <- doesDirectoryExist path
-  isFile <- doesFileExist path
-  case (isDirectory, isFile, selectedTestName) of
-    (True, True, _) ->
-      fail $ "The path \"" ++ path ++ "\" is both a directory and a file."
-    (False, False, _) -> throwIO $ NoSuchLocation path
-    (True, _, Just selected) ->
+  fileType <- getFileType path
+  case (fileType, selectedTestName) of
+    (NonExistentFile, _) -> throwIO $ NoSuchLocation path
+    (Directory, Just selected) ->
       throwIO $ CannotSelectTestInDirectory path selected
-    (True, False, Nothing) -> return $ Directory path
-    (False, True, Nothing) -> return $ File path
-    (False, True, Just selected) -> return $ Single path selected
+    (Directory, Nothing) -> return $ DirectoryRoot path
+    (File, Nothing) -> return $ FileRoot path
+    (File, Just selected) -> return $ SingleRoot path selected
 
 strip :: String -> String
 strip = Text.unpack . Text.strip . Text.pack

@@ -18,6 +18,9 @@ import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
 type Output a = ReaderT AppOptions IO a
 
+showContents :: Show a => a -> Contents
+showContents = Text.pack . show
+
 int :: Int -> Contents
 int = fromString . show
 

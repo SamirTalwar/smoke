@@ -2,14 +2,15 @@ module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
 import Test.Smoke.Types.Base
+import Test.Smoke.Types.Paths
 
 data TestDiscoveryErrorMessage
-  = NoSuchLocation FilePath
-  | NoSuchTest FilePath
+  = NoSuchLocation Path
+  | NoSuchTest Path
                TestName
-  | CannotSelectTestInDirectory FilePath
+  | CannotSelectTestInDirectory Path
                                 TestName
-  | InvalidSpecification FilePath
+  | InvalidSpecification Path
                          String
   deriving (Eq, Show)
 
@@ -19,8 +20,8 @@ data TestPlanErrorMessage
   = NoCommand
   | NoInput
   | NoOutput
-  | NonExistentFixture FilePath
-  | CouldNotReadFixture FilePath
+  | NonExistentFixture Path
+  | CouldNotReadFixture Path
                         String
   | NonExistentCommand Executable
   deriving (Eq, Show)

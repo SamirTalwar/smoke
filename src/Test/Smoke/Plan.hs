@@ -8,12 +8,12 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
+import Test.Smoke.Files
 import Test.Smoke.Types
 
 type Planning = ExceptT TestPlanErrorMessage IO
@@ -89,7 +89,7 @@ readFixture (FileFixture path) =
   deserializeFixture <$>
   withExceptT
     (handleMissingFileError path)
-    (ExceptT $ tryIOError $ TextIO.readFile path)
+    (ExceptT $ tryIOError $ readFromPath path)
 
 readFixtures :: FixtureContents a => a -> Fixtures a -> Planning (Vector a)
 readFixtures defaultValue (Fixtures fixtures) =
@@ -100,8 +100,8 @@ readFixtures defaultValue (Fixtures fixtures) =
       | Vector.null xs = Vector.singleton value
       | otherwise = xs
 
-handleMissingFileError :: FilePath -> IOError -> TestPlanErrorMessage
-handleMissingFileError filePath e =
+handleMissingFileError :: Path -> IOError -> TestPlanErrorMessage
+handleMissingFileError path e =
   if isDoesNotExistError e
-    then NonExistentFixture filePath
-    else CouldNotReadFixture filePath (show e)
+    then NonExistentFixture path
+    else CouldNotReadFixture path (show e)

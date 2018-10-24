@@ -12,9 +12,12 @@ import Test.Smoke.Types
 
 blessResults :: Results -> IO Results
 blessResults results =
-  forM results $ \(SuiteResult suiteName testResults) -> do
-    blessedResults <- forM testResults blessResult
-    return $ SuiteResult suiteName blessedResults
+  forM results $ \result@(SuiteResult suiteName suiteResult) ->
+    case suiteResult of
+      Left _ -> return result
+      Right testResults -> do
+        blessedResults <- forM testResults blessResult
+        return $ SuiteResult suiteName (Right blessedResults)
 
 blessResult :: TestResult -> IO TestResult
 blessResult (TestResult test (TestFailure _ status stdOut stdErr))

@@ -9,6 +9,8 @@ data TestDiscoveryErrorMessage
                TestName
   | CannotSelectTestInDirectory FilePath
                                 TestName
+  | InvalidSpecification FilePath
+                         String
   deriving (Eq, Show)
 
 instance Exception TestDiscoveryErrorMessage

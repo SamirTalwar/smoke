@@ -7,6 +7,7 @@ import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.List as List
+import Data.Maybe (catMaybes, isNothing)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import qualified Data.Text as Text
@@ -29,8 +30,9 @@ main = do
       results <- runTests plan
       case optionsMode options of
         Check -> outputResults options results
-        Bless -> outputResults options =<< blessResults results) `catch`
-    handleDiscoveryError options
+        Bless -> outputResults options =<< blessResults results) `catch` \e -> do
+    handleDiscoveryError putError options e
+    exitWith (ExitFailure 2)
 
 outputResults :: AppOptions -> Results -> IO ()
 outputResults options results = do
@@ -42,17 +44,32 @@ outputResults options results = do
 
 printResults :: Results -> Output ()
 printResults results =
-  forM_ results $ \(SuiteResult thisSuiteName testResults) ->
-    let suiteNameForPrinting =
-          if showSuiteNames
-            then Just thisSuiteName
-            else Nothing
-     in forM_ testResults $ \testResult@(TestResult test _) -> do
-          printTitle suiteNameForPrinting (testName test)
+  forM_ results $ \(SuiteResult thisSuiteName thisSuiteResult) ->
+    case thisSuiteResult of
+      Left discoveryErrorMessage -> do
+        printTitle showSuiteNames thisSuiteName Nothing
+        appOptions <- ask
+        liftIO $
+          handleDiscoveryError printError appOptions discoveryErrorMessage
+      Right testResults ->
+        forM_ testResults $ \testResult@(TestResult test _) -> do
+          printTitle showSuiteNames thisSuiteName (Just $ testName test)
           printResult testResult
   where
     uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
     showSuiteNames = length uniqueSuiteNames > 1
+
+printTitle :: ShowSuiteNames -> SuiteName -> Maybe TestName -> Output ()
+printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
+  where
+    suiteNameForPrinting =
+      if showSuiteNames || isNothing thisTestName
+        then Just thisSuiteName
+        else Nothing
+    name =
+      List.intercalate "/" $
+      catMaybes
+        [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]
 
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
@@ -101,11 +118,6 @@ printResult (TestResult _ (TestError (BlessIOException e))) =
   "Blessing failed:\n" <>
   indentedAll messageIndentation (fromString (displayException e))
 
-printTitle :: Maybe SuiteName -> TestName -> Output ()
-printTitle (Just (SuiteName thisSuiteName)) (TestName thisTestName) =
-  liftIO $ putStrLn $ thisSuiteName <> "/" <> thisTestName
-printTitle Nothing (TestName thisTestName) = liftIO $ putStrLn thisTestName
-
 printFailingInput :: Foldable f => String -> f Contents -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
@@ -151,24 +163,27 @@ printSummary summary = do
 printError :: Contents -> Output ()
 printError = putRedLn . indentedAll messageIndentation
 
-handleDiscoveryError :: AppOptions -> TestDiscoveryErrorMessage -> IO ()
-handleDiscoveryError options e = do
+handleDiscoveryError ::
+     (Contents -> Output ()) -> AppOptions -> TestDiscoveryErrorMessage -> IO ()
+handleDiscoveryError printErrorMessage options e =
   flip runReaderT options $
-    putError $
-    case e of
-      NoSuchLocation location ->
-        "There is no such location \"" <> fromString location <> "\"."
-      NoSuchTest location (TestName selectedTestName) ->
-        "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
-        fromString location <>
-        "\"."
-      CannotSelectTestInDirectory location (TestName selectedTestName) ->
-        "The test \"" <> fromString selectedTestName <>
-        "\" cannot be selected from the directory \"" <>
-        fromString location <>
-        "\".\n" <>
-        "Tests must be selected from a single specification file."
-  exitWith (ExitFailure 2)
+  printErrorMessage $
+  case e of
+    NoSuchLocation location ->
+      "There is no such location \"" <> fromString location <> "\"."
+    NoSuchTest location (TestName selectedTestName) ->
+      "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
+      fromString location <>
+      "\"."
+    CannotSelectTestInDirectory location (TestName selectedTestName) ->
+      "The test \"" <> fromString selectedTestName <>
+      "\" cannot be selected from the directory \"" <>
+      fromString location <>
+      "\".\n" <>
+      "Tests must be selected from a single specification file."
+    InvalidSpecification path message ->
+      "The test specification \"" <> fromString path <> "\" is invalid:\n" <>
+      indentedAll messageIndentation (fromString message)
 
 outputIndentation :: Int
 outputIndentation = 10

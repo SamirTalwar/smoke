@@ -22,15 +22,18 @@ type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
   suitePlans <-
-    forM suites $ \(suiteName, Suite thisSuiteCommand tests) -> do
-      let defaultCommand = thisSuiteCommand <|> specificationCommand
-      testPlans <-
-        forM tests $ \test ->
-          runExceptT $
-          withExceptT (TestPlanError test) $ do
-            validateTest defaultCommand test
-            readTest defaultCommand test
-      return (suiteName, testPlans)
+    forM suites $ \(suiteName, suite) ->
+      case suite of
+        Left errorMessage -> return (suiteName, Left errorMessage)
+        Right (Suite thisSuiteCommand tests) -> do
+          let defaultCommand = thisSuiteCommand <|> specificationCommand
+          testPlans <-
+            forM tests $ \test ->
+              runExceptT $
+              withExceptT (TestPlanError test) $ do
+                validateTest defaultCommand test
+                readTest defaultCommand test
+          return (suiteName, Right testPlans)
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()

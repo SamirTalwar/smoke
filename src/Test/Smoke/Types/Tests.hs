@@ -5,6 +5,7 @@ module Test.Smoke.Types.Tests where
 import Data.Aeson hiding (Options)
 import Data.Vector (Vector)
 import Test.Smoke.Types.Base
+import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Fixtures
 
 data Options = Options
@@ -16,7 +17,7 @@ data TestSpecification =
   TestSpecification (Maybe Command)
                     Suites
 
-type Suites = [(SuiteName, Suite)]
+type Suites = [(SuiteName, Either TestDiscoveryErrorMessage Suite)]
 
 data Suite = Suite
   { suiteCommand :: Maybe Command

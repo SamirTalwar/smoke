@@ -1,12 +1,12 @@
 addition
-[32m  succeeded[0m
-subtraction
-[32m  succeeded[0m
-multiplication
-[32m  succeeded[0m
-division
-[32m  succeeded[0m
-three-numbers
+[32m  succeeded
+[0msubtraction
+[32m  succeeded
+[0mmultiplication
+[32m  succeeded
+[0mdivision
+[32m  succeeded
+[0mthree-numbers
 [31m  input:  [0m5 + 7 + 12
 [31m  output: [0m[36m@@ -1 +1 @@[m
           [31m-24[m
@@ -22,6 +22,7 @@ complex
           [31m-15 - 2i[m
           [32m+[m[32m2[m
 infix-words-error
-[32m  succeeded[0m
-
-[31m8 tests, 3 failures[0m
+[32m  succeeded
+[0m
+[31m8 tests, 3 failures
+[0m

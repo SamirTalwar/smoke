@@ -12,9 +12,8 @@ import qualified Data.Vector as Vector
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Paths
 
-data Fixture a
-  = InlineFixture a
-  | FileFixture Path
+newtype Fixture a =
+  Fixture (Contents a)
   deriving (Eq, Show)
 
 newtype Fixtures a =
@@ -23,6 +22,11 @@ newtype Fixtures a =
 
 noFixtures :: Fixtures a
 noFixtures = Fixtures Vector.empty
+
+data Contents a
+  = Inline a
+  | FileLocation Path
+  deriving (Eq, Show)
 
 class FixtureType a where
   fixtureName :: a -> String
@@ -51,9 +55,9 @@ instance FixtureType StdErr where
 
 instance FixtureType a => FromJSON (Fixture a) where
   parseJSON (String contents) =
-    return $ InlineFixture (deserializeFixture contents)
-  parseJSON (Object v) = FileFixture <$> v .: "file"
-  parseJSON invalid = typeMismatch "Fixture" invalid
+    return $ Fixture $ Inline $ deserializeFixture contents
+  parseJSON (Object v) = Fixture . FileLocation <$> v .: "file"
+  parseJSON invalid = typeMismatch "fixture" invalid
 
 instance FixtureType a => FromJSON (Fixtures a) where
   parseJSON (Array v) = Fixtures <$> mapM parseJSON v

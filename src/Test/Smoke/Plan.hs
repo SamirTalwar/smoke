@@ -84,8 +84,8 @@ readExpectedOutputs test = do
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 readFixture :: FixtureType a => Fixture a -> Planning a
-readFixture (InlineFixture contents) = return contents
-readFixture (FileFixture path) =
+readFixture (Fixture (Inline contents)) = return contents
+readFixture (Fixture (FileLocation path)) =
   deserializeFixture <$>
   withExceptT
     (handleMissingFileError path)

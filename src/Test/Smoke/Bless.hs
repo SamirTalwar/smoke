@@ -50,10 +50,10 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
 blessResult result = return result
 
 writeFixture :: FixtureType a => Fixture a -> a -> IO ()
-writeFixture (InlineFixture contents) value =
+writeFixture (Fixture (Inline contents)) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
-writeFixture (FileFixture path) value =
+writeFixture (Fixture (FileLocation path)) value =
   writeToPath path (serializeFixture value)
 
 writeFixtures ::

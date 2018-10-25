@@ -6,8 +6,8 @@ module Test.Smoke.Bless
 
 import Control.Exception (catch, throwIO)
 import Control.Monad (forM)
-import qualified Data.Text.IO as TextIO
 import qualified Data.Vector as Vector
+import Test.Smoke.Files
 import Test.Smoke.Types
 
 blessResults :: Results -> IO Results
@@ -54,7 +54,7 @@ writeFixture (InlineFixture contents) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
 writeFixture (FileFixture path) value =
-  TextIO.writeFile path (serializeFixture value)
+  writeToPath path (serializeFixture value)
 
 writeFixtures ::
      forall a. FixtureContents a

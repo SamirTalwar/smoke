@@ -4,4 +4,5 @@ tests:
       - fixtures/broken-specs
     exit-status: 1
     stdout:
-      file: io/broken-specs.out
+      - file: io/broken-specs.out-unix
+      - file: io/broken-specs.out-windows

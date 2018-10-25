@@ -8,11 +8,12 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Directory (doesFileExist, findExecutable)
+import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
+import Test.Smoke.Files
 import Test.Smoke.Types
 
 type Planning = ExceptT TestPlanErrorMessage IO
@@ -55,9 +56,8 @@ readTest defaultCommand test = do
     onNothingThrow_ (NonExistentCommand executable) =<<
     liftIO (findExecutable executableName)
   stdIn <-
-    liftIO $
     fromMaybe (StdIn Text.empty) <$> sequence (readFixture <$> testStdIn test)
-  (status, stdOut, stdErr) <- liftIO $ readExpectedOutputs test
+  (status, stdOut, stdErr) <- readExpectedOutputs test
   return $
     TestPlan
       { planTest = test
@@ -76,18 +76,22 @@ splitCommand maybeCommand maybeArgs = do
   let args = commandArgs ++ maybe [] unArgs maybeArgs
   return (Executable executableName, Args args)
 
-readExpectedOutputs :: Test -> IO ExpectedOutputs
+readExpectedOutputs :: Test -> Planning ExpectedOutputs
 readExpectedOutputs test = do
   expectedStatus <- readFixture (testStatus test)
   expectedStdOuts <- readFixtures (StdOut Text.empty) (testStdOut test)
   expectedStdErrs <- readFixtures (StdErr Text.empty) (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
-readFixture :: FixtureContents a => Fixture a -> IO a
+readFixture :: FixtureContents a => Fixture a -> Planning a
 readFixture (InlineFixture contents) = return contents
-readFixture (FileFixture path) = deserializeFixture <$> TextIO.readFile path
+readFixture (FileFixture path) =
+  deserializeFixture <$>
+  withExceptT
+    (handleMissingFileError path)
+    (ExceptT $ tryIOError $ readFromPath path)
 
-readFixtures :: FixtureContents a => a -> Fixtures a -> IO (Vector a)
+readFixtures :: FixtureContents a => a -> Fixtures a -> Planning (Vector a)
 readFixtures defaultValue (Fixtures fixtures) =
   ifEmpty defaultValue <$> mapM readFixture fixtures
   where
@@ -95,3 +99,9 @@ readFixtures defaultValue (Fixtures fixtures) =
     ifEmpty value xs
       | Vector.null xs = Vector.singleton value
       | otherwise = xs
+
+handleMissingFileError :: Path -> IOError -> TestPlanErrorMessage
+handleMissingFileError path e =
+  if isDoesNotExistError e
+    then NonExistentFixture path
+    else CouldNotReadFixture path (show e)

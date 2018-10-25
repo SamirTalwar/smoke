@@ -10,7 +10,7 @@ import Test.Smoke.Types.Fixtures
 
 data Options = Options
   { optionsCommand :: Maybe Command
-  , optionsTestLocations :: Vector FilePath
+  , optionsTestLocations :: Vector String
   } deriving (Eq, Show)
 
 data TestSpecification =

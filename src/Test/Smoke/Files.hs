@@ -9,6 +9,7 @@ module Test.Smoke.Files
   , yamlFiles
   ) where
 
+import Data.Text (Text)
 import qualified Data.Text.IO as TextIO
 import qualified System.Directory as Directory
 import qualified System.FilePath as FilePath
@@ -58,10 +59,10 @@ splitFileName (RelativePath path) =
    in (RelativePath directory, FileName fileName)
 
 -- I/O
-readFromPath :: Path -> IO Contents
+readFromPath :: Path -> IO Text
 readFromPath = TextIO.readFile . unPath
 
-writeToPath :: Path -> Contents -> IO ()
+writeToPath :: Path -> Text -> IO ()
 writeToPath path = TextIO.writeFile $ unPath path
 
 -- Utilities

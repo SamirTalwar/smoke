@@ -1,6 +1,7 @@
 module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
+import Data.Text (Text)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Paths
 
@@ -39,7 +40,7 @@ instance Exception TestErrorMessage
 
 data TestBlessErrorMessage
   = CouldNotBlessInlineFixture String
-                               Contents
+                               Text
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)

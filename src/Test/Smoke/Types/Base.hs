@@ -5,8 +5,6 @@ module Test.Smoke.Types.Base where
 import Data.Aeson
 import Data.Text (Text)
 
-type Contents = Text
-
 newtype SuiteName = SuiteName
   { unSuiteName :: String
   } deriving (Eq, Ord, Show)
@@ -32,13 +30,13 @@ newtype Status = Status
   } deriving (Eq, Show)
 
 newtype StdIn = StdIn
-  { unStdIn :: Contents
+  { unStdIn :: Text
   } deriving (Eq, Show)
 
 newtype StdOut = StdOut
-  { unStdOut :: Contents
+  { unStdOut :: Text
   } deriving (Eq, Show)
 
 newtype StdErr = StdErr
-  { unStdErr :: Contents
+  { unStdErr :: Text
   } deriving (Eq, Show)

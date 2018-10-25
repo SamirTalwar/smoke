@@ -5,6 +5,7 @@ module Test.Smoke.Types.Fixtures where
 
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
+import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -25,8 +26,8 @@ noFixtures = Fixtures Vector.empty
 
 class FixtureType a where
   fixtureName :: a -> String
-  serializeFixture :: a -> Contents
-  deserializeFixture :: Contents -> a
+  serializeFixture :: a -> Text
+  deserializeFixture :: Text -> a
 
 instance FixtureType Status where
   fixtureName = const "exit-status"

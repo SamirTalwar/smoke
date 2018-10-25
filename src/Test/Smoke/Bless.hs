@@ -49,7 +49,7 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
     isFailureWithMultipleExpectedValues _ = False
 blessResult result = return result
 
-writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
+writeFixture :: FixtureType a => Fixture a -> a -> IO ()
 writeFixture (InlineFixture contents) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
@@ -57,7 +57,7 @@ writeFixture (FileFixture path) value =
   writeToPath path (serializeFixture value)
 
 writeFixtures ::
-     forall a. FixtureContents a
+     forall a. FixtureType a
   => Fixtures a
   -> a
   -> IO ()

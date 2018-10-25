@@ -83,7 +83,7 @@ readExpectedOutputs test = do
   expectedStdErrs <- readFixtures (StdErr Text.empty) (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
-readFixture :: FixtureContents a => Fixture a -> Planning a
+readFixture :: FixtureType a => Fixture a -> Planning a
 readFixture (InlineFixture contents) = return contents
 readFixture (FileFixture path) =
   deserializeFixture <$>
@@ -91,7 +91,7 @@ readFixture (FileFixture path) =
     (handleMissingFileError path)
     (ExceptT $ tryIOError $ readFromPath path)
 
-readFixtures :: FixtureContents a => a -> Fixtures a -> Planning (Vector a)
+readFixtures :: FixtureType a => a -> Fixtures a -> Planning (Vector a)
 readFixtures defaultValue (Fixtures fixtures) =
   ifEmpty defaultValue <$> mapM readFixture fixtures
   where

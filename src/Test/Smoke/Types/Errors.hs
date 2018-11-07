@@ -25,7 +25,22 @@ data TestPlanErrorMessage
   | CouldNotReadFixture Path
                         String
   | NonExistentCommand Executable
+  | FilterError TestFilterErrorMessage
   deriving (Eq, Show)
+
+instance Exception TestPlanErrorMessage
+
+data TestFilterErrorMessage
+  = NonExecutableFilter Executable
+  | CouldNotExecuteFilter Executable
+                          String
+  | ExecutionFailed Executable
+                    Status
+                    StdOut
+                    StdErr
+  deriving (Eq, Show)
+
+instance Exception TestFilterErrorMessage
 
 data TestErrorMessage
   = NonExecutableCommand Executable
@@ -41,6 +56,8 @@ instance Exception TestErrorMessage
 data TestBlessErrorMessage
   = CouldNotBlessInlineFixture String
                                Text
+  | CouldNotBlessFixtureWithFilter String
+                                   Text
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)

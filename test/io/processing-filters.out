@@ -1,0 +1,11 @@
+STDIN pre-processing, inline
+  succeeded
+STDIN pre-processing, with a script
+  succeeded
+test failure after STDIN pre-processing
+  input:  A B C
+  output: @@ -1 +1 @@
+          -a b c
+          +A B C
+
+3 tests, 1 failure

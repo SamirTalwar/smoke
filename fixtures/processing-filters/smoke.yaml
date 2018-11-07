@@ -1,0 +1,33 @@
+tests:
+  - name: STDIN pre-processing, inline
+    command:
+      - cat
+    stdin:
+      contents: |
+        a b c
+      filter: |
+        tr '[:lower:]' '[:upper:]'
+    stdout: |
+      A B C
+
+  - name: STDIN pre-processing, with a script
+    command:
+      - cat
+    stdin:
+      contents: |
+        a b c
+      filter:
+        file: fixtures/processing-filters/shout.sh
+    stdout: |
+      A B C
+
+  - name: test failure after STDIN pre-processing
+    command:
+      - cat
+    stdin:
+      contents: |
+        a b c
+      filter:
+        file: fixtures/processing-filters/shout.sh
+    stdout: |
+      a b c

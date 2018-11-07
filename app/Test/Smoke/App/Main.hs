@@ -90,26 +90,49 @@ printResult (TestResult _ (TestError (PlanError NoInput))) =
   printError "There are no args or STDIN values in the specification."
 printResult (TestResult _ (TestError (PlanError NoOutput))) =
   printError "There are no STDOUT or STDERR values in the specification."
-printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executableName))))) =
+printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executablePath))))) =
   printError $
-  "The application \"" <> fromString executableName <> "\" does not exist."
+  "The application \"" <> showText executablePath <> "\" does not exist."
 printResult (TestResult _ (TestError (PlanError (NonExistentFixture path)))) =
   printError $ "The fixture \"" <> showText path <> "\" does not exist."
 printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture path e)))) =
   printError $
   "The fixture \"" <> showText path <> "\" could not be read.\n" <> fromString e
-printResult (TestResult _ (TestError (NonExecutableCommand (Executable executableName)))) =
+printResult (TestResult _ (TestError (PlanError (FilterError (NonExecutableFilter (Executable executablePath)))))) =
   printError $
-  "The application \"" <> fromString executableName <> "\" is not executable."
-printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executableName) e))) =
+  "The application \"" <> showText executablePath <> "\" is not executable."
+printResult (TestResult _ (TestError (PlanError (FilterError (CouldNotExecuteFilter (Executable executablePath) e))))) =
   printError $
-  "The application \"" <> fromString executableName <>
+  "The application \"" <> showText executablePath <>
+  "\" could not be executed.\n" <>
+  fromString e
+printResult (TestResult _ (TestError (PlanError (FilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)))))) =
+  printError $
+  "The application \"" <> showText executablePath <>
+  "\" failed with an exit status of " <>
+  showText status <>
+  "." <>
+  "\nSTDOUT:\n" <>
+  indentedAll messageIndentation stdOut <>
+  "\nSTDERR:\n" <>
+  indentedAll messageIndentation stdErr
+printResult (TestResult _ (TestError (NonExecutableCommand (Executable executablePath)))) =
+  printError $
+  "The application \"" <> showText executablePath <> "\" is not executable."
+printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executablePath) e))) =
+  printError $
+  "The application \"" <> showText executablePath <>
   "\" could not be executed.\n" <>
   fromString e
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
   "The fixture \"" <> fromString propertyName <>
   " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+  indentedAll messageIndentation propertyValue
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessFixtureWithFilter propertyName propertyValue)))) =
+  printError $
+  "The fixture \"" <> fromString propertyName <>
+  " has a filter, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
   printError $

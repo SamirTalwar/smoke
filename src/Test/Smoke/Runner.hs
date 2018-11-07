@@ -39,20 +39,13 @@ runTest testPlan =
         return $ processOutput testPlan actualOutput)
 
 executeTest :: TestPlan -> Execution ActualOutputs
-executeTest (TestPlan _ executable@(Executable executableName) (Args args) stdIn _ _ _) = do
+executeTest (TestPlan _ executable (Args args) (StdIn processStdIn) _ _ _) = do
+  let executableName = show $ unExecutable executable
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
     tryIOError $ readProcessWithExitCode executableName args processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
-  where
-    processStdIn = unStdIn stdIn
-
-handleExecutionError :: Executable -> IOError -> TestErrorMessage
-handleExecutionError executable e =
-  if isPermissionError e
-    then NonExecutableCommand executable
-    else CouldNotExecuteCommand executable (show e)
 
 processOutput :: TestPlan -> ActualOutputs -> TestResult
 processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
@@ -74,6 +67,12 @@ processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expec
       if actualStdErr `elem` expectedStdErrs
         then PartSuccess
         else PartFailure expectedStdErrs actualStdErr
+
+handleExecutionError :: Executable -> IOError -> TestErrorMessage
+handleExecutionError executable e =
+  if isPermissionError e
+    then NonExecutableCommand executable
+    else CouldNotExecuteCommand executable (show e)
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

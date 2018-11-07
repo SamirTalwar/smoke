@@ -10,10 +10,11 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Types.Base
-import Test.Smoke.Types.Paths
+import Test.Smoke.Types.Filters
 
-newtype Fixture a =
+data Fixture a =
   Fixture (Contents a)
+          (Maybe FixtureFilter)
   deriving (Eq, Show)
 
 newtype Fixtures a =
@@ -23,15 +24,15 @@ newtype Fixtures a =
 noFixtures :: Fixtures a
 noFixtures = Fixtures Vector.empty
 
-data Contents a
-  = Inline a
-  | FileLocation Path
-  deriving (Eq, Show)
-
 class FixtureType a where
-  fixtureName :: a -> String
+  fixtureName :: Contents a -> String
   serializeFixture :: a -> Text
   deserializeFixture :: Text -> a
+
+instance FixtureType Text where
+  fixtureName = const "text"
+  serializeFixture = id
+  deserializeFixture = id
 
 instance FixtureType Status where
   fixtureName = const "exit-status"
@@ -54,11 +55,15 @@ instance FixtureType StdErr where
   deserializeFixture = StdErr
 
 instance FixtureType a => FromJSON (Fixture a) where
-  parseJSON (String contents) =
-    return $ Fixture $ Inline $ deserializeFixture contents
-  parseJSON (Object v) = Fixture . FileLocation <$> v .: "file"
+  parseJSON value@(String _) =
+    Fixture <$> parseFixtureTypeContents value <*> pure Nothing
+  parseJSON value@(Object v) =
+    Fixture <$> parseFixtureTypeContents value <*> v .:? "filter"
   parseJSON invalid = typeMismatch "fixture" invalid
 
 instance FixtureType a => FromJSON (Fixtures a) where
   parseJSON (Array v) = Fixtures <$> mapM parseJSON v
   parseJSON v = Fixtures . return <$> (parseJSON v :: Parser (Fixture a))
+
+parseFixtureTypeContents :: FixtureType a => Value -> Parser (Contents a)
+parseFixtureTypeContents = parseContents deserializeFixture

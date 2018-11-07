@@ -50,10 +50,13 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
 blessResult result = return result
 
 writeFixture :: FixtureType a => Fixture a -> a -> IO ()
-writeFixture (Fixture (Inline contents)) value =
+writeFixture (Fixture contents (Just _)) value =
+  throwIO $
+  CouldNotBlessFixtureWithFilter (fixtureName contents) (serializeFixture value)
+writeFixture (Fixture contents@(Inline _) Nothing) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
-writeFixture (Fixture (FileLocation path)) value =
+writeFixture (Fixture (FileLocation path) Nothing) value =
   writeToPath path (serializeFixture value)
 
 writeFixtures ::
@@ -64,6 +67,7 @@ writeFixtures ::
 writeFixtures (Fixtures fixtures) value
   | Vector.length fixtures == 1 = writeFixture (Vector.head fixtures) value
   | Vector.length fixtures == 0 =
-    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: a))
+    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: Contents a))
   | otherwise =
-    throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))
+    throwIO $
+    CouldNotBlessWithMultipleValues (fixtureName (undefined :: Contents a))

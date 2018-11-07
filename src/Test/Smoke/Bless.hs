@@ -60,7 +60,7 @@ writeFixture :: FixtureType a => Fixture a -> a -> IO ()
 writeFixture (Fixture contents (Just _)) value =
   throwIO $
   CouldNotBlessFixtureWithFilter (fixtureName contents) (serializeFixture value)
-writeFixture (Fixture contents@(Inline _) Nothing) value =
+writeFixture (Fixture contents@(Inline _) _) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
 writeFixture (Fixture (FileLocation path) Nothing) value =

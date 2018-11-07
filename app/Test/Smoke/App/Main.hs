@@ -113,12 +113,12 @@ printResult (TestResult _ (TestError (FilterError filterError))) =
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
   "The fixture \"" <> fromString propertyName <>
-  " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+  "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessFixtureWithFilter propertyName propertyValue)))) =
   printError $
   "The fixture \"" <> fromString propertyName <>
-  " has a filter, so the result cannot be blessed.\nAttempted to write:\n" <>
+  "\" has a filter, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
   printError $

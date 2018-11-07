@@ -22,12 +22,8 @@ instance FromJSON FixtureFilter where
            CommandFixtureFilter
              (Executable (makePath (Vector.head command)))
              (Args (Vector.toList (Vector.tail command)))
-  parseJSON value = do
-    contents <- parseContents id value
-    return $
-      case contents of
-        Inline script -> InlineFixtureFilter script
-        FileLocation path -> CommandFixtureFilter (Executable path) (Args [])
+  parseJSON (String script) = return $ InlineFixtureFilter script
+  parseJSON invalid = typeMismatch "filter" invalid
 
 data Filtered a
   = Unfiltered a

@@ -17,7 +17,8 @@ tests:
       contents: |
         a b c
       filter:
-        file: fixtures/processing-filters/shout.sh
+        - ruby
+        - fixtures/processing-filters/shout.rb
     stdout: |
       A B C
 
@@ -28,7 +29,8 @@ tests:
       contents: |
         a b c
       filter:
-        file: fixtures/processing-filters/shout.sh
+        - ruby
+        - fixtures/processing-filters/shout.rb
     stdout: |
       a b c
 
@@ -56,7 +58,8 @@ tests:
       contents: |
         A B C
       filter:
-        file: fixtures/processing-filters/shout.sh
+        - ruby
+        - fixtures/processing-filters/shout.rb
 
   - name: STDOUT post-processing, with a command
     command:
@@ -84,7 +87,8 @@ tests:
       contents: |
         a b c
       filter:
-        file: fixtures/processing-filters/shout.sh
+        - ruby
+        - fixtures/processing-filters/shout.rb
 
   - name: STDERR post-processing, inline
     command:

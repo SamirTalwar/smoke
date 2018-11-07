@@ -56,45 +56,53 @@ At least one of standard output and standard error must be specified, though it 
 
 Our simplest calculator test case looks like this. It's a file named *smoke.yaml* (the file basename is a convention; you can name it anything you want ending in *.yaml*).
 
-    command:
-      - ruby
-      - calculator.rb
+```yaml
+command:
+  - ruby
+  - calculator.rb
 
-    tests:
-      - name: addition
-        stdin: |
-          2 + 2
-        stdout: |
-          4
+tests:
+  - name: addition
+    stdin: |
+      2 + 2
+    stdout: |
+      4
+```
 
 That's it.
 
 We might want to assert that certain things fail. For example, postfix notation should fail because the second token is expected to be an operator. In this example, our calculator is expected to produce a semi-reasonable error message and exit with a status of `2` to signify a parsing error.
 
-#### test/postfix-notation-fails.in:
-
-    tests:
-      # ...
-      - name: postfix-notation-fails
-        stdin: |
-          5 3 *
-        exit-status: 2
-        stderr: |
-          "3" is not a valid operator.
+```yaml
+tests:
+  # ...
+  - name: postfix-notation-fails
+    stdin: |
+      5 3 *
+    exit-status: 2
+    stderr: |
+      "3" is not a valid operator.
+```
 
 ## Running Tests
 
 In order to run tests against an application, you simply invoke Smoke with the directory containing the tests. Given the tests in the _test_ directory, we would run the tests as follows:
 
-    smoke test
+```sh
+smoke test
+```
 
 Tests can also be passed on an individual basis:
 
-    smoke test/smoke.yaml@addition test/smoke.yaml@postfix-notation-fails
+```sh
+smoke test/smoke.yaml@addition test/smoke.yaml@postfix-notation-fails
+```
 
 To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
 
-    smoke --command='ruby calculator.rb' test
+```
+smoke --command='ruby calculator.rb' test
+```
 
 Bear in mind that Smoke simply splits the argument to the `--command` option by whitespace, so quoting, escaping, etc. will not work. For anything complicated, use a file instead.
 
@@ -122,23 +130,29 @@ Developers of Smoke pledge to follow the [Contributor Covenant][].
 
 You will need to set up Stack as above, and install a few dependencies:
 
-    make tools
+```sh
+make tools
+```
 
 We dog-food. Smoke is tested using itself.
 
 Before committing, these four commands should be run, and any failures should be fixed:
 
-    make build     # Builds the application using Stack.
-    make test      # Tests the application using itself, with the tests in the "test" directory.
-    make lint      # Lints the code using HLint.
-    make reformat  # Reformats the code using hindent.
+```sh
+make build     # Builds the application using Stack.
+make test      # Tests the application using itself, with the tests in the "test" directory.
+make lint      # Lints the code using HLint.
+make reformat  # Reformats the code using hindent.
+```
 
 On Windows, Makefiles don't work very well, so run the commands directly:
 
-    stack install --local-bin-path=out\build
-    .\out\build\smoke-exe --command=.\out\build\smoke-exe test
-    stack exec -- hlint .
-    stack exec -- hindent <file>
+```bat
+stack install --local-bin-path=out\build
+.\out\build\smoke-exe --command=.\out\build\smoke-exe test
+stack exec -- hlint .
+stack exec -- hindent <file>
+```
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

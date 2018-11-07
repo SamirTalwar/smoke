@@ -6,7 +6,6 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
-import Data.Default
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -97,15 +96,8 @@ readFixture (Fixture (FileLocation path) maybeFilter) =
     (handleMissingFileError path)
     (ExceptT $ tryIOError $ readFromPath path)
 
-readFixtures ::
-     (Default a, FixtureType a) => Fixtures a -> Planning (Vector (Filtered a))
-readFixtures (Fixtures fixtures) =
-  ifEmpty (Unfiltered def) <$> mapM readFixture fixtures
-  where
-    ifEmpty :: a -> Vector a -> Vector a
-    ifEmpty value xs
-      | Vector.null xs = Vector.singleton value
-      | otherwise = xs
+readFixtures :: FixtureType a => Fixtures a -> Planning (Vector (Filtered a))
+readFixtures (Fixtures fixtures) = mapM readFixture fixtures
 
 includeFilter :: Maybe FixtureFilter -> a -> Filtered a
 includeFilter maybeFilter contents =

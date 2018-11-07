@@ -6,6 +6,7 @@ module Test.Smoke.Runner
 
 import Control.Monad (forM)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
+import Data.Default
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Exit (ExitCode(..))
@@ -59,8 +60,10 @@ processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expec
     withExceptT FilterError $
     applyFiltersFromFixtures (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
-  let stdOutResult = result $ Vector.zip expectedStdOuts filteredStdOut
-  let stdErrResult = result $ Vector.zip expectedStdErrs filteredStdErr
+  let stdOutResult =
+        result $ defaultIfEmpty $ Vector.zip expectedStdOuts filteredStdOut
+  let stdErrResult =
+        result $ defaultIfEmpty $ Vector.zip expectedStdErrs filteredStdErr
   return $
     TestResult test $
     if statusResult == PartSuccess &&
@@ -83,3 +86,8 @@ handleExecutionError executable e =
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0
 convertExitCode (ExitFailure value) = Status value
+
+defaultIfEmpty :: Default a => Vector a -> Vector a
+defaultIfEmpty xs
+  | Vector.null xs = Vector.singleton def
+  | otherwise = xs

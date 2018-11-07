@@ -17,12 +17,12 @@ type Filtering = ExceptT TestFilterErrorMessage IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (FixtureFilter (Inline script))) =
+applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) =
   runScript
     (Executable (makePath "sh"))
     (Args ["-c", Text.unpack script])
     unfilteredValue
-applyFilters (Filtered unfilteredValue (FixtureFilter (FileLocation scriptPath))) =
+applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptPath)) =
   runScript (Executable scriptPath) (Args []) unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a

@@ -84,6 +84,88 @@ tests:
       "3" is not a valid operator.
 ```
 
+Sometimes the response might be one of a few different values, in which case, I can specify an array of possible outcomes:
+
+```yaml
+tests:
+  # ...
+  - name: square root
+    stdin: |
+      sqrt(4)
+    stdout:
+      - |
+        2
+      - |
+        -2
+```
+
+You can use files to specify the STDIN, STDOUT or STDERR values:
+
+```yaml
+tests:
+  - name: subtraction
+    stdin:
+      file: tests/subtraction.in
+    stdout:
+      file: tests/subtraction.out
+```
+
+And, of course, you can combine all these techniques together.
+
+### Example: HTTP requests
+
+Sometimes, things aren't quite so deterministic. When some of the output (or input) is meaningless, or if there's just too much, you can specify filters to transform the data.
+
+[httpbin.org][] provides a simple set of HTTP endpoints that repeat what you tell them to. When I `GET https://httpbin.org/get?foo=bar`, the response body looks like this:
+
+```json
+{
+    "args": {
+        "foo": "bar"
+    },
+    "headers": {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate",
+        "Connection": "close",
+        "Host": "httpbin.org",
+        "User-Agent": "HTTPie/1.0.0"
+    },
+    "origin": "1.2.3.4",
+    "url": "https://httpbin.org/get?foo=bar"
+}
+```
+
+Unfortunately, because of the `"origin"`, this isn't very testable, as that might as well be random data. Given that I only really care about the `"args"` property, I can use `jq` to just extract that part:
+
+```yaml
+command:
+  - http
+
+tests:
+  - name: get
+    args:
+      - GET
+      - https://httpbin.org/get?foo=bar
+    stdout:
+      contents: |
+        {
+          "foo": "bar"
+        }
+      filter:
+        - "jq"
+        - ".args"
+```
+
+Now my test passes every time.
+
+You can also specify the filter as an inline script by using a string rather than an array. It will be run with `sh -c`. We prefer the array structure, as it's more portable.
+
+[httpbin.org]: https://httpbin.org/
+
+### Further examples
+
+If you're looking for more examples, take a look in the `fixtures` directory.
+
 ## Running Tests
 
 In order to run tests against an application, you simply invoke Smoke with the directory containing the tests. Given the tests in the _test_ directory, we would run the tests as follows:
@@ -95,10 +177,10 @@ smoke test
 Tests can also be passed on an individual basis:
 
 ```sh
-smoke test/smoke.yaml@addition test/smoke.yaml@postfix-notation-fails
+smoke test/smoke.yaml@addition test/smoke.yaml@subtraction
 ```
 
-To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
+To override the command, or to specify it on the command line instead of the `command` property, you can use the `--command` option:
 
 ```
 smoke --command='ruby calculator.rb' test

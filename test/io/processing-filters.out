@@ -7,5 +7,18 @@ test failure after STDIN pre-processing
   output: @@ -1 +1 @@
           -a b c
           +A B C
+STDOUT post-processing, inline
+  succeeded
+STDOUT post-processing, with a script
+  succeeded
+test failure after STDOUT post-processing
+  args:   a
+          b
+          c
+  output: @@ -1 +1 @@
+          -a b c
+          +A B C
+STDERR post-processing, inline
+  succeeded
 
-3 tests, 1 failure
+7 tests, 2 failures

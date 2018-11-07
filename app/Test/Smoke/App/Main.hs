@@ -98,24 +98,8 @@ printResult (TestResult _ (TestError (PlanError (NonExistentFixture path)))) =
 printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture path e)))) =
   printError $
   "The fixture \"" <> showText path <> "\" could not be read.\n" <> fromString e
-printResult (TestResult _ (TestError (PlanError (FilterError (NonExecutableFilter (Executable executablePath)))))) =
-  printError $
-  "The application \"" <> showText executablePath <> "\" is not executable."
-printResult (TestResult _ (TestError (PlanError (FilterError (CouldNotExecuteFilter (Executable executablePath) e))))) =
-  printError $
-  "The application \"" <> showText executablePath <>
-  "\" could not be executed.\n" <>
-  fromString e
-printResult (TestResult _ (TestError (PlanError (FilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)))))) =
-  printError $
-  "The application \"" <> showText executablePath <>
-  "\" failed with an exit status of " <>
-  showText status <>
-  "." <>
-  "\nSTDOUT:\n" <>
-  indentedAll messageIndentation stdOut <>
-  "\nSTDERR:\n" <>
-  indentedAll messageIndentation stdErr
+printResult (TestResult _ (TestError (PlanError (PlanFilterError filterError)))) =
+  printFilterError filterError
 printResult (TestResult _ (TestError (NonExecutableCommand (Executable executablePath)))) =
   printError $
   "The application \"" <> showText executablePath <> "\" is not executable."
@@ -124,6 +108,8 @@ printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executa
   "The application \"" <> showText executablePath <>
   "\" could not be executed.\n" <>
   fromString e
+printResult (TestResult _ (TestError (FilterError filterError))) =
+  printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
   "The fixture \"" <> fromString propertyName <>
@@ -147,6 +133,26 @@ printResult (TestResult _ (TestError (BlessIOException e))) =
   "Blessing failed:\n" <>
   indentedAll messageIndentation (fromString (displayException e))
 
+printFilterError :: TestFilterErrorMessage -> Output ()
+printFilterError (NonExecutableFilter (Executable executablePath)) =
+  printError $
+  "The application \"" <> showText executablePath <> "\" is not executable."
+printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
+  printError $
+  "The application \"" <> showText executablePath <>
+  "\" could not be executed.\n" <>
+  fromString e
+printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
+  printError $
+  "The application \"" <> showText executablePath <>
+  "\" failed with an exit status of " <>
+  showText status <>
+  "." <>
+  "\nSTDOUT:\n" <>
+  indentedAll messageIndentation stdOut <>
+  "\nSTDERR:\n" <>
+  indentedAll messageIndentation stdErr
+
 printFailingInput :: Foldable f => String -> f Text -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
@@ -155,12 +161,12 @@ printFailingInput name value =
 
 printFailingOutput :: String -> PartResult Text -> Output ()
 printFailingOutput _ PartSuccess = return ()
-printFailingOutput name (PartFailure expected actual) = do
+printFailingOutput name (PartFailure comparisons) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  printDiff (Vector.head expected) actual
-  forM_ (Vector.tail expected) $ \e -> do
+  uncurry printDiff (Vector.head comparisons)
+  forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
     putRed "      or: "
-    printDiff e actual
+    printDiff expected actual
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

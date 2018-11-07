@@ -25,7 +25,7 @@ data TestPlanErrorMessage
   | CouldNotReadFixture Path
                         String
   | NonExistentCommand Executable
-  | FilterError TestFilterErrorMessage
+  | PlanFilterError TestFilterErrorMessage
   deriving (Eq, Show)
 
 instance Exception TestPlanErrorMessage
@@ -46,6 +46,7 @@ data TestErrorMessage
   = NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable
                            String
+  | FilterError TestFilterErrorMessage
   | PlanError TestPlanErrorMessage
   | BlessError TestBlessErrorMessage
   | BlessIOException IOException

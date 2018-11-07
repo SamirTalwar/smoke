@@ -28,11 +28,10 @@ data TestOutcome
 
 data PartResult a
   = PartSuccess
-  | PartFailure (Vector a)
-                a
+  | PartFailure (Vector (a, a))
   deriving (Eq, Show)
 
 instance Functor PartResult where
   _ `fmap` PartSuccess = PartSuccess
-  f `fmap` (PartFailure expected actual) =
-    PartFailure (f <$> expected) (f actual)
+  f `fmap` (PartFailure failures) =
+    PartFailure ((\(expected, actual) -> (f expected, f actual)) <$> failures)

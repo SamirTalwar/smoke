@@ -60,7 +60,7 @@ readTest defaultCommand test = do
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture <$> testStdIn test)
-  filteredStdIn <- withExceptT FilterError $ applyFilters unfilteredStdIn
+  filteredStdIn <- withExceptT PlanFilterError $ applyFilters unfilteredStdIn
   (status, stdOut, stdErr) <- readExpectedOutputs test
   return $
     TestPlan

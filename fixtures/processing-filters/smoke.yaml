@@ -31,3 +31,54 @@ tests:
         file: fixtures/processing-filters/shout.sh
     stdout: |
       a b c
+
+  - name: STDOUT post-processing, inline
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents: |
+        A B C
+      filter: |
+        tr '[:lower:]' '[:upper:]'
+
+  - name: STDOUT post-processing, with a script
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents: |
+        A B C
+      filter:
+        file: fixtures/processing-filters/shout.sh
+
+  - name: test failure after STDOUT post-processing
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents: |
+        a b c
+      filter:
+        file: fixtures/processing-filters/shout.sh
+
+  - name: STDERR post-processing, inline
+    command:
+      - sh
+    args:
+      - -c
+      - "echo a b c >&2"
+    stderr:
+      contents: |
+        A B C
+      filter: |
+        tr '[:lower:]' '[:upper:]'

@@ -6,11 +6,14 @@ module Test.Smoke.Runner
 
 import Control.Monad (forM)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
+import qualified Data.Text as Text
+import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Errors
+import Test.Smoke.Filters
 import Test.Smoke.Types
 
 type Execution = ExceptT TestErrorMessage IO
@@ -34,9 +37,7 @@ runTests (Plan suites) =
 runTest :: TestPlan -> IO TestResult
 runTest testPlan =
   handleError (TestResult (planTest testPlan) . TestError) <$>
-  runExceptT
-    (do actualOutput <- executeTest testPlan
-        return $ processOutput testPlan actualOutput)
+  runExceptT (processOutput testPlan =<< executeTest testPlan)
 
 executeTest :: TestPlan -> Execution ActualOutputs
 executeTest (TestPlan _ executable (Args args) (StdIn processStdIn) _ _ _) = do
@@ -47,26 +48,32 @@ executeTest (TestPlan _ executable (Args args) (StdIn processStdIn) _ _ _) = do
     tryIOError $ readProcessWithExitCode executableName args processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
 
-processOutput :: TestPlan -> ActualOutputs -> TestResult
-processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) =
-  TestResult test $
-  if statusResult == PartSuccess &&
-     stdOutResult == PartSuccess && stdErrResult == PartSuccess
-    then TestSuccess
-    else TestFailure testPlan statusResult stdOutResult stdErrResult
+processOutput :: TestPlan -> ActualOutputs -> Execution TestResult
+processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) = do
+  filteredStatus <-
+    withExceptT FilterError $
+    applyFiltersFromFixture (testStatus test) actualStatus
+  filteredStdOut <-
+    withExceptT FilterError $
+    applyFiltersFromFixtures (StdOut Text.empty) (testStdOut test) actualStdOut
+  filteredStdErr <-
+    withExceptT FilterError $
+    applyFiltersFromFixtures (StdErr Text.empty) (testStdErr test) actualStdErr
+  let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
+  let stdOutResult = result $ Vector.zip expectedStdOuts filteredStdOut
+  let stdErrResult = result $ Vector.zip expectedStdErrs filteredStdErr
+  return $
+    TestResult test $
+    if statusResult == PartSuccess &&
+       stdOutResult == PartSuccess && stdErrResult == PartSuccess
+      then TestSuccess
+      else TestFailure testPlan statusResult stdOutResult stdErrResult
   where
-    statusResult =
-      if expectedStatus == actualStatus
+    result :: Eq a => Vector (a, a) -> PartResult a
+    result comparison =
+      if Vector.any (uncurry (==)) comparison
         then PartSuccess
-        else PartFailure (Vector.singleton expectedStatus) actualStatus
-    stdOutResult =
-      if actualStdOut `elem` expectedStdOuts
-        then PartSuccess
-        else PartFailure expectedStdOuts actualStdOut
-    stdErrResult =
-      if actualStdErr `elem` expectedStdErrs
-        then PartSuccess
-        else PartFailure expectedStdErrs actualStdErr
+        else PartFailure comparison
 
 handleExecutionError :: Executable -> IOError -> TestErrorMessage
 handleExecutionError executable e =

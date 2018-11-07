@@ -57,8 +57,6 @@ instance Exception TestErrorMessage
 data TestBlessErrorMessage
   = CouldNotBlessInlineFixture String
                                Text
-  | CouldNotBlessFixtureWithFilter String
-                                   Text
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)

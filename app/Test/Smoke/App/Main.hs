@@ -115,11 +115,6 @@ printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture pro
   "The fixture \"" <> fromString propertyName <>
   "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessFixtureWithFilter propertyName propertyValue)))) =
-  printError $
-  "The fixture \"" <> fromString propertyName <>
-  "\" has a filter, so the result cannot be blessed.\nAttempted to write:\n" <>
-  indentedAll messageIndentation propertyValue
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
   printError $
   "There are no expected \"" <> fromString propertyName <>

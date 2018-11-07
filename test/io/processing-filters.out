@@ -11,6 +11,8 @@ STDOUT post-processing, inline
   succeeded
 STDOUT post-processing, with a script
   succeeded
+STDOUT post-processing, with a command
+  succeeded
 test failure after STDOUT post-processing
   args:   a
           b
@@ -21,4 +23,4 @@ test failure after STDOUT post-processing
 STDERR post-processing, inline
   succeeded
 
-7 tests, 2 failures
+8 tests, 2 failures

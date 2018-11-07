@@ -58,6 +58,21 @@ tests:
       filter:
         file: fixtures/processing-filters/shout.sh
 
+  - name: STDOUT post-processing, with a command
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents: |
+        A B C
+      filter:
+        - tr
+        - "[:lower:]"
+        - "[:upper:]"
+
   - name: test failure after STDOUT post-processing
     command:
       - echo

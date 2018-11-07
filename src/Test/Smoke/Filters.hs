@@ -22,8 +22,8 @@ applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) =
     (Executable (makePath "sh"))
     (Args ["-c", Text.unpack script])
     unfilteredValue
-applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptPath)) =
-  runScript (Executable scriptPath) (Args []) unfilteredValue
+applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptExecutable scriptArgs)) =
+  runScript scriptExecutable scriptArgs unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a
 applyFiltersFromFixture (Fixture _ Nothing) value = return value

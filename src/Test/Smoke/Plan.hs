@@ -6,6 +6,7 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
+import Data.Default
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -83,10 +84,8 @@ splitCommand maybeCommand maybeArgs = do
 readExpectedOutputs :: Test -> Planning ExpectedOutputs
 readExpectedOutputs test = do
   expectedStatus <- unfiltered <$> readFixture (testStatus test)
-  expectedStdOuts <-
-    Vector.map unfiltered <$> readFixtures (StdOut Text.empty) (testStdOut test)
-  expectedStdErrs <-
-    Vector.map unfiltered <$> readFixtures (StdErr Text.empty) (testStdErr test)
+  expectedStdOuts <- Vector.map unfiltered <$> readFixtures (testStdOut test)
+  expectedStdErrs <- Vector.map unfiltered <$> readFixtures (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 readFixture :: FixtureType a => Fixture a -> Planning (Filtered a)
@@ -99,9 +98,9 @@ readFixture (Fixture (FileLocation path) maybeFilter) =
     (ExceptT $ tryIOError $ readFromPath path)
 
 readFixtures ::
-     FixtureType a => a -> Fixtures a -> Planning (Vector (Filtered a))
-readFixtures defaultValue (Fixtures fixtures) =
-  ifEmpty (Unfiltered defaultValue) <$> mapM readFixture fixtures
+     (Default a, FixtureType a) => Fixtures a -> Planning (Vector (Filtered a))
+readFixtures (Fixtures fixtures) =
+  ifEmpty (Unfiltered def) <$> mapM readFixture fixtures
   where
     ifEmpty :: a -> Vector a -> Vector a
     ifEmpty value xs

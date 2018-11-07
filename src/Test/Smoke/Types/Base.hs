@@ -5,7 +5,9 @@ module Test.Smoke.Types.Base where
 
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
+import Data.Default
 import Data.Text (Text)
+import qualified Data.Text as Text
 import Test.Smoke.Types.Paths
 
 data Contents a
@@ -50,14 +52,26 @@ newtype Status = Status
   { unStatus :: Int
   } deriving (Eq, Show)
 
+instance Default Status where
+  def = Status 0
+
 newtype StdIn = StdIn
   { unStdIn :: Text
   } deriving (Eq, Show)
+
+instance Default StdIn where
+  def = StdIn Text.empty
 
 newtype StdOut = StdOut
   { unStdOut :: Text
   } deriving (Eq, Show)
 
+instance Default StdOut where
+  def = StdOut Text.empty
+
 newtype StdErr = StdErr
   { unStdErr :: Text
   } deriving (Eq, Show)
+
+instance Default StdErr where
+  def = StdErr Text.empty

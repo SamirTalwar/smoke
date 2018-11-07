@@ -5,6 +5,7 @@ module Test.Smoke.Filters
   ) where
 
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
+import Data.Default
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
@@ -31,10 +32,9 @@ applyFiltersFromFixture (Fixture _ (Just fixtureFilter)) value =
   applyFilters (Filtered value fixtureFilter)
 
 applyFiltersFromFixtures ::
-     FixtureType a => a -> Fixtures a -> a -> Filtering (Vector a)
-applyFiltersFromFixtures defaultValue (Fixtures fixtures) value =
-  ifEmpty defaultValue <$>
-  Vector.mapM (`applyFiltersFromFixture` value) fixtures
+     (Default a, FixtureType a) => Fixtures a -> a -> Filtering (Vector a)
+applyFiltersFromFixtures (Fixtures fixtures) value =
+  ifEmpty def <$> Vector.mapM (`applyFiltersFromFixture` value) fixtures
 
 runScript :: FixtureType a => Executable -> Args -> a -> Filtering a
 runScript executable (Args args) value = do

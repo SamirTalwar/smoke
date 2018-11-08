@@ -1,6 +1,7 @@
 module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
+import Data.Text (Text)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Paths
 
@@ -24,12 +25,28 @@ data TestPlanErrorMessage
   | CouldNotReadFixture Path
                         String
   | NonExistentCommand Executable
+  | PlanFilterError TestFilterErrorMessage
   deriving (Eq, Show)
+
+instance Exception TestPlanErrorMessage
+
+data TestFilterErrorMessage
+  = NonExecutableFilter Executable
+  | CouldNotExecuteFilter Executable
+                          String
+  | ExecutionFailed Executable
+                    Status
+                    StdOut
+                    StdErr
+  deriving (Eq, Show)
+
+instance Exception TestFilterErrorMessage
 
 data TestErrorMessage
   = NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable
                            String
+  | FilterError TestFilterErrorMessage
   | PlanError TestPlanErrorMessage
   | BlessError TestBlessErrorMessage
   | BlessIOException IOException
@@ -39,7 +56,7 @@ instance Exception TestErrorMessage
 
 data TestBlessErrorMessage
   = CouldNotBlessInlineFixture String
-                               Contents
+                               Text
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   deriving (Eq, Show)

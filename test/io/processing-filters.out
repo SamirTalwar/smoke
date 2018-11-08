@@ -1,0 +1,26 @@
+STDIN pre-processing, inline
+  succeeded
+STDIN pre-processing, with a script
+  succeeded
+test failure after STDIN pre-processing
+  input:  A B C
+  output: @@ -1 +1 @@
+          -a b c
+          +A B C
+STDOUT post-processing, inline
+  succeeded
+STDOUT post-processing, with a script
+  succeeded
+STDOUT post-processing, with a command
+  succeeded
+test failure after STDOUT post-processing
+  args:   a
+          b
+          c
+  output: @@ -1 +1 @@
+          -a b c
+          +A B C
+STDERR post-processing, inline
+  succeeded
+
+8 tests, 2 failures

@@ -21,6 +21,10 @@ blessResults results =
 
 blessResult :: TestResult -> IO TestResult
 blessResult (TestResult test (TestFailure _ status stdOut stdErr))
+  | isFailureWithMultipleExpectedValues status =
+    return $
+    TestResult test $
+    TestError (BlessError (CouldNotBlessWithMultipleValues "status"))
   | isFailureWithMultipleExpectedValues stdOut =
     return $
     TestResult test $
@@ -31,39 +35,43 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
     TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
   | otherwise =
     do case status of
-         PartFailure _ actual -> writeFixture (testStatus test) actual
+         PartFailure comparisons ->
+           writeFixture (testStatus test) (snd (Vector.head comparisons))
          _ -> return ()
        case stdOut of
-         PartFailure _ actual -> writeFixtures (testStdOut test) actual
+         PartFailure comparisons ->
+           writeFixtures (testStdOut test) (snd (Vector.head comparisons))
          _ -> return ()
        case stdErr of
-         PartFailure _ actual -> writeFixtures (testStdErr test) actual
+         PartFailure comparisons ->
+           writeFixtures (testStdErr test) (snd (Vector.head comparisons))
          _ -> return ()
        return $ TestResult test TestSuccess
      `catch` (\(e :: TestBlessErrorMessage) ->
                 return (TestResult test $ TestError $ BlessError e)) `catch`
     (return . TestResult test . TestError . BlessIOException)
   where
-    isFailureWithMultipleExpectedValues (PartFailure expected _) =
-      Vector.length expected > 1
+    isFailureWithMultipleExpectedValues (PartFailure comparisons) =
+      Vector.length comparisons > 1
     isFailureWithMultipleExpectedValues _ = False
 blessResult result = return result
 
-writeFixture :: FixtureContents a => Fixture a -> a -> IO ()
-writeFixture (InlineFixture contents) value =
+writeFixture :: FixtureType a => Fixture a -> a -> IO ()
+writeFixture (Fixture contents@(Inline _) _) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
-writeFixture (FileFixture path) value =
+writeFixture (Fixture (FileLocation path) _) value =
   writeToPath path (serializeFixture value)
 
 writeFixtures ::
-     forall a. FixtureContents a
+     forall a. FixtureType a
   => Fixtures a
   -> a
   -> IO ()
 writeFixtures (Fixtures fixtures) value
   | Vector.length fixtures == 1 = writeFixture (Vector.head fixtures) value
   | Vector.length fixtures == 0 =
-    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: a))
+    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: Contents a))
   | otherwise =
-    throwIO $ CouldNotBlessWithMultipleValues (fixtureName (undefined :: a))
+    throwIO $
+    CouldNotBlessWithMultipleValues (fixtureName (undefined :: Contents a))

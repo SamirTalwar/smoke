@@ -2,10 +2,10 @@ module Test.Smoke.App.Diff.Types
   ( DiffEngine(..)
   , PrintDiff
   , RenderDiff
-  , Contents
+  , Text
   ) where
 
-import Test.Smoke (Contents)
+import Data.Text (Text)
 import Test.Smoke.App.OptionColorOutput
 
 data DiffEngine = DiffEngine
@@ -16,4 +16,4 @@ data DiffEngine = DiffEngine
 
 type PrintDiff = ColorOutput -> RenderDiff
 
-type RenderDiff = Contents -> Contents -> IO Contents
+type RenderDiff = Text -> Text -> IO Text

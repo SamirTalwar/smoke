@@ -1,0 +1,7 @@
+tests:
+  - name: processing-filters
+    args:
+      - fixtures/processing-filters
+    exit-status: 1
+    stdout:
+      - file: io/processing-filters.out

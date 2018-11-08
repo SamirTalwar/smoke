@@ -79,8 +79,9 @@ prefixTestFixturesWith location test =
     }
 
 prefixFixtureWith :: Path -> Fixture a -> Fixture a
-prefixFixtureWith _ fixture@InlineFixture {} = fixture
-prefixFixtureWith location (FileFixture path) = FileFixture (location </> path)
+prefixFixtureWith _ fixture@(Fixture (Inline _) _) = fixture
+prefixFixtureWith location (Fixture (FileLocation path) fixtureFilter) =
+  Fixture (FileLocation (location </> path)) fixtureFilter
 
 prefixFixturesWith :: Path -> Fixtures a -> Fixtures a
 prefixFixturesWith location (Fixtures fixtures) =

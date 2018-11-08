@@ -8,6 +8,7 @@ import Test.Smoke.Types.Tests
 newtype Plan =
   Plan [( SuiteName
         , Either TestDiscoveryErrorMessage [Either TestPlanError TestPlan])]
+  deriving (Eq, Show)
 
 data TestPlan = TestPlan
   { planTest :: Test

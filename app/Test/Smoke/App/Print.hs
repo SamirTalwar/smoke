@@ -9,73 +9,73 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import qualified Data.Maybe as Maybe
 import Data.String (IsString(..))
+import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
-import Test.Smoke (Contents)
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
 type Output a = ReaderT AppOptions IO a
 
-showContents :: Show a => a -> Contents
-showContents = Text.pack . show
+showText :: Show a => a -> Text
+showText = Text.pack . show
 
-int :: Int -> Contents
+int :: Int -> Text
 int = fromString . show
 
-hasEsc :: Contents -> Bool
+hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')
 
-spaces :: Int -> Contents
+spaces :: Int -> Text
 spaces n = Text.replicate n space
 
-space :: Contents
+space :: Text
 space = " "
 
-newline :: Contents
+newline :: Text
 newline = "\n"
 
-indented :: Int -> Contents -> Contents
+indented :: Int -> Text -> Text
 indented n = Text.unlines . indented' . Text.lines
   where
     indented' [] = []
     indented' (first:rest) = first : map (mappend (spaces n)) rest
 
-indentedAll :: Int -> Contents -> Contents
+indentedAll :: Int -> Text -> Text
 indentedAll n = Text.unlines . map (mappend (spaces n)) . Text.lines
 
 putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
-putPlainLn :: Contents -> Output ()
+putPlainLn :: Text -> Output ()
 putPlainLn = hPutStrWithLn stdout
 
-putGreenLn :: Contents -> Output ()
+putGreenLn :: Text -> Output ()
 putGreenLn = putColorLn Green
 
-putRed :: Contents -> Output ()
+putRed :: Text -> Output ()
 putRed = putColor Red
 
-putRedLn :: Contents -> Output ()
+putRedLn :: Text -> Output ()
 putRedLn = putColorLn Red
 
-putColorLn :: Color -> Contents -> Output ()
+putColorLn :: Color -> Text -> Output ()
 putColorLn color = withColor color (hPutStrWithLn stdout)
 
-putColor :: Color -> Contents -> Output ()
+putColor :: Color -> Text -> Output ()
 putColor color = withColor color (liftIO . TextIO.putStr)
 
-putError :: Contents -> Output ()
+putError :: Text -> Output ()
 putError = withColor Red $ hPutStrWithLn stderr
 
-hPutStrWithLn :: Handle -> Contents -> Output ()
+hPutStrWithLn :: Handle -> Text -> Output ()
 hPutStrWithLn handle contents = do
   liftIO $ TextIO.hPutStr handle contents
   unless (newline `Text.isSuffixOf` contents) $
     liftIO $ TextIO.hPutStrLn handle ""
 
-withColor :: Color -> (Contents -> Output ()) -> Contents -> Output ()
+withColor :: Color -> (Text -> Output ()) -> Text -> Output ()
 withColor color act contents = do
   options <- ask
   if optionsColor options == Color && not (hasEsc contents)

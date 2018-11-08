@@ -10,6 +10,7 @@ import qualified Data.List as List
 import Data.Maybe (catMaybes, isNothing)
 import Data.Monoid ((<>))
 import Data.String (fromString)
+import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import System.Exit
@@ -89,27 +90,30 @@ printResult (TestResult _ (TestError (PlanError NoInput))) =
   printError "There are no args or STDIN values in the specification."
 printResult (TestResult _ (TestError (PlanError NoOutput))) =
   printError "There are no STDOUT or STDERR values in the specification."
-printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executableName))))) =
+printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executablePath))))) =
   printError $
-  "The application \"" <> fromString executableName <> "\" does not exist."
+  "The application \"" <> showText executablePath <> "\" does not exist."
 printResult (TestResult _ (TestError (PlanError (NonExistentFixture path)))) =
-  printError $ "The fixture \"" <> showContents path <> "\" does not exist."
+  printError $ "The fixture \"" <> showText path <> "\" does not exist."
 printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture path e)))) =
   printError $
-  "The fixture \"" <> showContents path <> "\" could not be read.\n" <>
-  fromString e
-printResult (TestResult _ (TestError (NonExecutableCommand (Executable executableName)))) =
+  "The fixture \"" <> showText path <> "\" could not be read.\n" <> fromString e
+printResult (TestResult _ (TestError (PlanError (PlanFilterError filterError)))) =
+  printFilterError filterError
+printResult (TestResult _ (TestError (NonExecutableCommand (Executable executablePath)))) =
   printError $
-  "The application \"" <> fromString executableName <> "\" is not executable."
-printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executableName) e))) =
+  "The application \"" <> showText executablePath <> "\" is not executable."
+printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executablePath) e))) =
   printError $
-  "The application \"" <> fromString executableName <>
+  "The application \"" <> showText executablePath <>
   "\" could not be executed.\n" <>
   fromString e
+printResult (TestResult _ (TestError (FilterError filterError))) =
+  printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
   "The fixture \"" <> fromString propertyName <>
-  " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+  "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
   printError $
@@ -124,22 +128,42 @@ printResult (TestResult _ (TestError (BlessIOException e))) =
   "Blessing failed:\n" <>
   indentedAll messageIndentation (fromString (displayException e))
 
-printFailingInput :: Foldable f => String -> f Contents -> Output ()
+printFilterError :: TestFilterErrorMessage -> Output ()
+printFilterError (NonExecutableFilter (Executable executablePath)) =
+  printError $
+  "The application \"" <> showText executablePath <> "\" is not executable."
+printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
+  printError $
+  "The application \"" <> showText executablePath <>
+  "\" could not be executed.\n" <>
+  fromString e
+printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
+  printError $
+  "The application \"" <> showText executablePath <>
+  "\" failed with an exit status of " <>
+  showText status <>
+  "." <>
+  "\nSTDOUT:\n" <>
+  indentedAll messageIndentation stdOut <>
+  "\nSTDERR:\n" <>
+  indentedAll messageIndentation stdErr
+
+printFailingInput :: Foldable f => String -> f Text -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
     putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
     putPlainLn $ indented outputIndentation v
 
-printFailingOutput :: String -> PartResult Contents -> Output ()
+printFailingOutput :: String -> PartResult Text -> Output ()
 printFailingOutput _ PartSuccess = return ()
-printFailingOutput name (PartFailure expected actual) = do
+printFailingOutput name (PartFailure comparisons) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  printDiff (Vector.head expected) actual
-  forM_ (Vector.tail expected) $ \e -> do
+  uncurry printDiff (Vector.head comparisons)
+  forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
     putRed "      or: "
-    printDiff e actual
+    printDiff expected actual
 
-printDiff :: Contents -> Contents -> Output ()
+printDiff :: Text -> Text -> Output ()
 printDiff left right = do
   AppOptions { optionsColor = color
              , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
@@ -162,33 +186,33 @@ printSummary summary = do
     int testCount <> " " <> testWord <> ", " <> int failureCount <> " " <>
     failureWord
   where
-    pluralize :: Int -> Contents -> Contents -> Contents
+    pluralize :: Int -> Text -> Text -> Text
     pluralize 1 singular _ = singular
     pluralize _ _ plural = plural
 
-printError :: Contents -> Output ()
+printError :: Text -> Output ()
 printError = putRedLn . indentedAll messageIndentation
 
 handleDiscoveryError ::
-     (Contents -> Output ()) -> AppOptions -> TestDiscoveryErrorMessage -> IO ()
+     (Text -> Output ()) -> AppOptions -> TestDiscoveryErrorMessage -> IO ()
 handleDiscoveryError printErrorMessage options e =
   flip runReaderT options $
   printErrorMessage $
   case e of
     NoSuchLocation path ->
-      "There is no such location \"" <> showContents path <> "\"."
+      "There is no such location \"" <> showText path <> "\"."
     NoSuchTest path (TestName selectedTestName) ->
       "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
-      showContents path <>
+      showText path <>
       "\"."
     CannotSelectTestInDirectory path (TestName selectedTestName) ->
       "The test \"" <> fromString selectedTestName <>
       "\" cannot be selected from the directory \"" <>
-      showContents path <>
+      showText path <>
       "\".\n" <>
       "Tests must be selected from a single specification file."
     InvalidSpecification path message ->
-      "The test specification \"" <> showContents path <> "\" is invalid:\n" <>
+      "The test specification \"" <> showText path <> "\" is invalid:\n" <>
       indentedAll messageIndentation (fromString message)
 
 outputIndentation :: Int

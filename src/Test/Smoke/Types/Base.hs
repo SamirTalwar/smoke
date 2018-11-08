@@ -1,11 +1,32 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.Types.Base where
 
 import Data.Aeson
+import Data.Aeson.Types (Parser, typeMismatch)
+import Data.Default
 import Data.Text (Text)
+import qualified Data.Text as Text
+import Test.Smoke.Types.Paths
 
-type Contents = Text
+data Contents a
+  = Inline a
+  | FileLocation Path
+  deriving (Eq, Show)
+
+parseContents :: (Text -> a) -> Value -> Parser (Contents a)
+parseContents deserialize (String contents) =
+  return $ Inline (deserialize contents)
+parseContents deserialize (Object v) = do
+  maybeContents <- v .:? "contents"
+  maybeFile <- v .:? "file"
+  case (maybeContents, maybeFile) of
+    (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both."
+    (Just contents, Nothing) -> return $ Inline (deserialize contents)
+    (Nothing, Just file) -> return $ FileLocation file
+    (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\"."
+parseContents _ invalid = typeMismatch "contents" invalid
 
 newtype SuiteName = SuiteName
   { unSuiteName :: String
@@ -16,7 +37,7 @@ newtype TestName = TestName
   } deriving (Eq, Ord, Show)
 
 newtype Executable = Executable
-  { unExecutable :: String
+  { unExecutable :: Path
   } deriving (Eq, Show, FromJSON)
 
 newtype Command = Command
@@ -31,14 +52,26 @@ newtype Status = Status
   { unStatus :: Int
   } deriving (Eq, Show)
 
+instance Default Status where
+  def = Status 0
+
 newtype StdIn = StdIn
-  { unStdIn :: Contents
+  { unStdIn :: Text
   } deriving (Eq, Show)
+
+instance Default StdIn where
+  def = StdIn Text.empty
 
 newtype StdOut = StdOut
-  { unStdOut :: Contents
+  { unStdOut :: Text
   } deriving (Eq, Show)
 
+instance Default StdOut where
+  def = StdOut Text.empty
+
 newtype StdErr = StdErr
-  { unStdErr :: Contents
+  { unStdErr :: Text
   } deriving (Eq, Show)
+
+instance Default StdErr where
+  def = StdErr Text.empty

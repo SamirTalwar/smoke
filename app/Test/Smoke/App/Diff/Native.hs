@@ -5,12 +5,13 @@ module Test.Smoke.App.Diff.Native
 import Data.Algorithm.Diff (Diff(..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation(..))
 import Data.String (fromString)
+import Data.Text (Text)
 import qualified Data.Text as Text
 import Test.Smoke.App.Diff.Types
 
 data LineRange =
   LineRange (Int, Int)
-            [Contents]
+            [Text]
   deriving (Eq, Ord)
 
 engine :: DiffEngine
@@ -30,11 +31,10 @@ render _ left right =
   map prettyPrintOperation $
   diffToLineRanges $ getGroupedDiff (Text.lines left) (Text.lines right)
   where
-    diffToLineRanges :: [Diff [Contents]] -> [DiffOperation LineRange]
+    diffToLineRanges :: [Diff [Text]] -> [DiffOperation LineRange]
     diffToLineRanges = toLineRange 1 1
       where
-        toLineRange ::
-             Int -> Int -> [Diff [Contents]] -> [DiffOperation LineRange]
+        toLineRange :: Int -> Int -> [Diff [Text]] -> [DiffOperation LineRange]
         toLineRange _ _ [] = []
         toLineRange leftLine rightLine (Both ls _:rs) =
           let lins = length ls
@@ -64,7 +64,7 @@ render _ left right =
                 (LineRange (leftLine, leftLine + linesF - 1) lsF)
                 (LineRange (rightLine, rightLine + linesS - 1) lsS) :
               toLineRange (leftLine + linesF) (rightLine + linesS) rs
-    prettyPrintOperation :: DiffOperation LineRange -> Contents
+    prettyPrintOperation :: DiffOperation LineRange -> Text
     prettyPrintOperation (Deletion (LineRange leftNumbers leftContents) lineNoRight) =
       mconcat
         [ prettyRange leftNumbers
@@ -91,11 +91,11 @@ render _ left right =
         , fromString "---\n"
         , prettyLines '>' rightContents
         ]
-    prettyRange :: (Int, Int) -> Contents
+    prettyRange :: (Int, Int) -> Text
     prettyRange (start, end) =
       if start == end
         then fromString (show start)
         else mconcat
                [fromString (show start), fromString ",", fromString (show end)]
-    prettyLines :: Char -> [Contents] -> Contents
+    prettyLines :: Char -> [Text] -> Text
     prettyLines start = Text.unlines . map (mappend (fromString [start, ' ']))

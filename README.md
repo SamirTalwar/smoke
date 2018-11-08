@@ -56,45 +56,135 @@ At least one of standard output and standard error must be specified, though it 
 
 Our simplest calculator test case looks like this. It's a file named *smoke.yaml* (the file basename is a convention; you can name it anything you want ending in *.yaml*).
 
-    command:
-      - ruby
-      - calculator.rb
+```yaml
+command:
+  - ruby
+  - calculator.rb
 
-    tests:
-      - name: addition
-        stdin: |
-          2 + 2
-        stdout: |
-          4
+tests:
+  - name: addition
+    stdin: |
+      2 + 2
+    stdout: |
+      4
+```
 
 That's it.
 
 We might want to assert that certain things fail. For example, postfix notation should fail because the second token is expected to be an operator. In this example, our calculator is expected to produce a semi-reasonable error message and exit with a status of `2` to signify a parsing error.
 
-#### test/postfix-notation-fails.in:
+```yaml
+tests:
+  # ...
+  - name: postfix-notation-fails
+    stdin: |
+      5 3 *
+    exit-status: 2
+    stderr: |
+      "3" is not a valid operator.
+```
 
-    tests:
-      # ...
-      - name: postfix-notation-fails
-        stdin: |
-          5 3 *
-        exit-status: 2
-        stderr: |
-          "3" is not a valid operator.
+Sometimes the response might be one of a few different values, in which case, I can specify an array of possible outcomes:
+
+```yaml
+tests:
+  # ...
+  - name: square root
+    stdin: |
+      sqrt(4)
+    stdout:
+      - |
+        2
+      - |
+        -2
+```
+
+You can use files to specify the STDIN, STDOUT or STDERR values:
+
+```yaml
+tests:
+  - name: subtraction
+    stdin:
+      file: tests/subtraction.in
+    stdout:
+      file: tests/subtraction.out
+```
+
+And, of course, you can combine all these techniques together.
+
+### Example: HTTP requests
+
+Sometimes, things aren't quite so deterministic. When some of the output (or input) is meaningless, or if there's just too much, you can specify filters to transform the data.
+
+[httpbin.org][] provides a simple set of HTTP endpoints that repeat what you tell them to. When I `GET https://httpbin.org/get?foo=bar`, the response body looks like this:
+
+```json
+{
+    "args": {
+        "foo": "bar"
+    },
+    "headers": {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate",
+        "Connection": "close",
+        "Host": "httpbin.org",
+        "User-Agent": "HTTPie/1.0.0"
+    },
+    "origin": "1.2.3.4",
+    "url": "https://httpbin.org/get?foo=bar"
+}
+```
+
+Unfortunately, because of the `"origin"`, this isn't very testable, as that might as well be random data. Given that I only really care about the `"args"` property, I can use `jq` to just extract that part:
+
+```yaml
+command:
+  - http
+
+tests:
+  - name: get
+    args:
+      - GET
+      - https://httpbin.org/get?foo=bar
+    stdout:
+      contents: |
+        {
+          "foo": "bar"
+        }
+      filter:
+        - "jq"
+        - ".args"
+```
+
+Now my test passes every time.
+
+You can also specify the filter as an inline script by using a string rather than an array. It will be run with `sh -c`. We prefer the array structure, as it's more portable.
+
+[httpbin.org]: https://httpbin.org/
+
+### Further examples
+
+If you're looking for more examples, take a look in the `fixtures` directory.
 
 ## Running Tests
 
 In order to run tests against an application, you simply invoke Smoke with the directory containing the tests. Given the tests in the _test_ directory, we would run the tests as follows:
 
-    smoke test
+```sh
+smoke test
+```
 
 Tests can also be passed on an individual basis:
 
-    smoke test/smoke.yaml@addition test/smoke.yaml@postfix-notation-fails
+```sh
+smoke test/smoke.yaml@addition test/smoke.yaml@subtraction
+```
 
-To override the command, or to specify it on the command line in place of the `command` file, you can use the `--command` option:
+To override the command, or to specify it on the command line instead of the `command` property, you can use the `--command` option:
 
-    smoke --command='ruby calculator.rb' test
+```
+smoke --command='ruby calculator.rb' test
+```
 
 Bear in mind that Smoke simply splits the argument to the `--command` option by whitespace, so quoting, escaping, etc. will not work. For anything complicated, use a file instead.
 
@@ -122,23 +212,29 @@ Developers of Smoke pledge to follow the [Contributor Covenant][].
 
 You will need to set up Stack as above, and install a few dependencies:
 
-    make tools
+```sh
+make tools
+```
 
 We dog-food. Smoke is tested using itself.
 
 Before committing, these four commands should be run, and any failures should be fixed:
 
-    make build     # Builds the application using Stack.
-    make test      # Tests the application using itself, with the tests in the "test" directory.
-    make lint      # Lints the code using HLint.
-    make reformat  # Reformats the code using hindent.
+```sh
+make build     # Builds the application using Stack.
+make test      # Tests the application using itself, with the tests in the "test" directory.
+make lint      # Lints the code using HLint.
+make reformat  # Reformats the code using hindent.
+```
 
 On Windows, Makefiles don't work very well, so run the commands directly:
 
-    stack install --local-bin-path=out\build
-    .\out\build\smoke-exe --command=.\out\build\smoke-exe test
-    stack exec -- hlint .
-    stack exec -- hindent <file>
+```bat
+stack install --local-bin-path=out\build
+.\out\build\smoke-exe --command=.\out\build\smoke-exe test
+stack exec -- hlint .
+stack exec -- hindent <file>
+```
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

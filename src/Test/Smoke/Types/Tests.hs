@@ -46,4 +46,5 @@ instance FromJSON Test where
       (v .:? "stdin") <*>
       (v .:? "stdout" .!= noFixtures) <*>
       (v .:? "stderr" .!= noFixtures) <*>
-      (InlineFixture . Status <$> v .:? "exit-status" .!= 0)
+      (Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0) <*>
+       return Nothing)

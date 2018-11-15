@@ -17,7 +17,7 @@ import Test.Smoke.Files
 import Test.Smoke.Filters
 import Test.Smoke.Types
 
-type Planning = ExceptT TestPlanErrorMessage IO
+type Planning = ExceptT SmokePlanningError IO
 
 type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
@@ -60,7 +60,8 @@ readTest defaultCommand test = do
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture <$> testStdIn test)
-  filteredStdIn <- withExceptT PlanFilterError $ applyFilters unfilteredStdIn
+  filteredStdIn <-
+    withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
   (status, stdOut, stdErr) <- readExpectedOutputs test
   return $
     TestPlan
@@ -103,7 +104,7 @@ includeFilter :: Maybe FixtureFilter -> a -> Filtered a
 includeFilter maybeFilter contents =
   maybe (Unfiltered contents) (Filtered contents) maybeFilter
 
-handleMissingFileError :: Path -> IOError -> TestPlanErrorMessage
+handleMissingFileError :: Path -> IOError -> SmokePlanningError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path

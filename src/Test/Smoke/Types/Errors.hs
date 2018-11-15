@@ -5,7 +5,16 @@ import Data.Text (Text)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Paths
 
-data TestDiscoveryErrorMessage
+data SmokeError
+  = DiscoveryError SmokeDiscoveryError
+  | PlanningError SmokePlanningError
+  | ExecutionError SmokeExecutionError
+  | BlessError SmokeBlessError
+  deriving (Eq, Show)
+
+instance Exception SmokeError
+
+data SmokeDiscoveryError
   = NoSuchLocation Path
   | NoSuchTest Path
                TestName
@@ -15,9 +24,9 @@ data TestDiscoveryErrorMessage
                          String
   deriving (Eq, Show)
 
-instance Exception TestDiscoveryErrorMessage
+instance Exception SmokeDiscoveryError
 
-data TestPlanErrorMessage
+data SmokePlanningError
   = NoCommand
   | NoInput
   | NoOutput
@@ -25,12 +34,31 @@ data TestPlanErrorMessage
   | CouldNotReadFixture Path
                         String
   | NonExistentCommand Executable
-  | PlanFilterError TestFilterErrorMessage
+  | PlanningFilterError SmokeFilterError
   deriving (Eq, Show)
 
-instance Exception TestPlanErrorMessage
+instance Exception SmokePlanningError
 
-data TestFilterErrorMessage
+data SmokeExecutionError
+  = NonExecutableCommand Executable
+  | CouldNotExecuteCommand Executable
+                           String
+  | ExecutionFilterError SmokeFilterError
+  deriving (Eq, Show)
+
+instance Exception SmokeExecutionError
+
+data SmokeBlessError
+  = CouldNotBlessInlineFixture String
+                               Text
+  | CouldNotBlessAMissingValue String
+  | CouldNotBlessWithMultipleValues String
+  | BlessIOException IOException
+  deriving (Eq, Show)
+
+instance Exception SmokeBlessError
+
+data SmokeFilterError
   = NonExecutableFilter Executable
   | CouldNotExecuteFilter Executable
                           String
@@ -40,25 +68,4 @@ data TestFilterErrorMessage
                     StdErr
   deriving (Eq, Show)
 
-instance Exception TestFilterErrorMessage
-
-data TestErrorMessage
-  = NonExecutableCommand Executable
-  | CouldNotExecuteCommand Executable
-                           String
-  | FilterError TestFilterErrorMessage
-  | PlanError TestPlanErrorMessage
-  | BlessError TestBlessErrorMessage
-  | BlessIOException IOException
-  deriving (Eq, Show)
-
-instance Exception TestErrorMessage
-
-data TestBlessErrorMessage
-  = CouldNotBlessInlineFixture String
-                               Text
-  | CouldNotBlessAMissingValue String
-  | CouldNotBlessWithMultipleValues String
-  deriving (Eq, Show)
-
-instance Exception TestBlessErrorMessage
+instance Exception SmokeFilterError

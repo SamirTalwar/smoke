@@ -16,7 +16,7 @@ import Test.Smoke.Errors
 import Test.Smoke.Filters
 import Test.Smoke.Types
 
-type Execution = ExceptT TestErrorMessage IO
+type Execution = ExceptT SmokeExecutionError IO
 
 type ActualOutputs = (Status, StdOut, StdErr)
 
@@ -30,13 +30,13 @@ runTests (Plan suites) =
         testResults <-
           forM testPlans $ \case
             Left (TestPlanError test errorMessage) ->
-              return $ TestResult test $ TestError $ PlanError errorMessage
+              return $ TestResult test $ TestError $ PlanningError errorMessage
             Right testPlan -> runTest testPlan
         return $ Right testResults
 
 runTest :: TestPlan -> IO TestResult
 runTest testPlan =
-  handleError (TestResult (planTest testPlan) . TestError) <$>
+  handleError (TestResult (planTest testPlan) . TestError . ExecutionError) <$>
   runExceptT (processOutput testPlan =<< executeTest testPlan)
 
 executeTest :: TestPlan -> Execution ActualOutputs
@@ -51,13 +51,13 @@ executeTest (TestPlan _ executable (Args args) (StdIn processStdIn) _ _ _) = do
 processOutput :: TestPlan -> ActualOutputs -> Execution TestResult
 processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) = do
   filteredStatus <-
-    withExceptT FilterError $
+    withExceptT ExecutionFilterError $
     applyFiltersFromFixture (testStatus test) actualStatus
   filteredStdOut <-
-    withExceptT FilterError $
+    withExceptT ExecutionFilterError $
     applyFiltersFromFixtures (testStdOut test) actualStdOut
   filteredStdErr <-
-    withExceptT FilterError $
+    withExceptT ExecutionFilterError $
     applyFiltersFromFixtures (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
@@ -77,7 +77,7 @@ processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expec
         then PartSuccess
         else PartFailure comparison
 
-handleExecutionError :: Executable -> IOError -> TestErrorMessage
+handleExecutionError :: Executable -> IOError -> SmokeExecutionError
 handleExecutionError executable e =
   if isPermissionError e
     then NonExecutableCommand executable

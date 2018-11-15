@@ -6,8 +6,7 @@ import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Tests
 
 newtype Plan =
-  Plan [( SuiteName
-        , Either TestDiscoveryErrorMessage [Either TestPlanError TestPlan])]
+  Plan [(SuiteName, Either SmokeDiscoveryError [Either TestPlanError TestPlan])]
   deriving (Eq, Show)
 
 data TestPlan = TestPlan
@@ -22,5 +21,5 @@ data TestPlan = TestPlan
 
 data TestPlanError =
   TestPlanError Test
-                TestPlanErrorMessage
+                SmokePlanningError
   deriving (Eq, Show)

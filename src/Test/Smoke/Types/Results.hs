@@ -10,7 +10,7 @@ type Results = [SuiteResult]
 
 data SuiteResult = SuiteResult
   { suiteResultSuiteName :: SuiteName
-  , suiteResultTestResults :: Either TestDiscoveryErrorMessage [TestResult]
+  , suiteResultTestResults :: Either SmokeDiscoveryError [TestResult]
   }
 
 data TestResult =
@@ -23,7 +23,7 @@ data TestOutcome
                 (PartResult Status)
                 (PartResult StdOut)
                 (PartResult StdErr)
-  | TestError TestErrorMessage
+  | TestError SmokeError
   deriving (Eq, Show)
 
 data PartResult a

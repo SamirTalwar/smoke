@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Test.Smoke.Runner
+module Test.Smoke.Execution
   ( runTests
   ) where
 

@@ -82,11 +82,14 @@ default.nix: smoke.cabal $(TOOLS_BIN_DIR)/cabal2nix
 .PHONY: tools
 tools: $(TOOLS_BIN_DIR)/cabal2nix $(TOOLS_BIN_DIR)/hindent $(TOOLS_BIN_DIR)/hlint
 
-$(TOOLS_BIN_DIR)/cabal2nix:
+$(TOOLS_BIN_DIR)/cabal2nix: stack.yaml
 	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) cabal2nix
+	touch $@
 
-$(TOOLS_BIN_DIR)/hindent:
+$(TOOLS_BIN_DIR)/hindent: stack.yaml
 	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) hindent
+	touch $@
 
-$(TOOLS_BIN_DIR)/hlint:
+$(TOOLS_BIN_DIR)/hlint: stack.yaml
 	$(STACK) install --local-bin-path=$(TOOLS_BIN_DIR) hlint
+	touch $@

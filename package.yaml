@@ -14,7 +14,7 @@ category: Testing
 description: Please see README.md
 
 dependencies:
-  - base >= 4.9.1 && < 5
+  - base >= 4.12 && < 5
   - aeson
   - data-default
   - directory

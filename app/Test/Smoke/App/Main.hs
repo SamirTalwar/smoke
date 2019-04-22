@@ -77,9 +77,7 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
-  printFailingInput
-    "input"
-    (unStdIn <$> (const (planStdIn testPlan) <$> testStdIn test))
+  printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)

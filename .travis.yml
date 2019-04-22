@@ -1,12 +1,14 @@
 os:
   - linux
   - osx
+
 sudo: false
+
 language: generic
 
 cache:
   directories:
-    - $HOME/.stack
+    - "$HOME/.stack"
 
 addons:
   apt:
@@ -24,6 +26,7 @@ before_install:
       travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
     fi
   - stack setup
+
 install:
   - stack --no-terminal install --only-dependencies
 

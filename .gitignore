@@ -1,4 +1,6 @@
 out
 
+.envrc
+
 .stack-work
 *.cabal

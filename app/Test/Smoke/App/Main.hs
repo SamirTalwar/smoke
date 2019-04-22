@@ -32,7 +32,7 @@ main = do
       case optionsMode options of
         Check -> outputResults options results
         Bless -> outputResults options =<< blessResults results) `catch` \e -> do
-    handleDiscoveryError putError options e
+    printDiscoveryError putError options e
     exitWith (ExitFailure 2)
 
 outputResults :: AppOptions -> Results -> IO ()
@@ -50,8 +50,7 @@ printResults results =
       Left discoveryErrorMessage -> do
         printTitle showSuiteNames thisSuiteName Nothing
         appOptions <- ask
-        liftIO $
-          handleDiscoveryError printError appOptions discoveryErrorMessage
+        liftIO $ printDiscoveryError printError appOptions discoveryErrorMessage
       Right testResults ->
         forM_ testResults $ \testResult@(TestResult test _) -> do
           printTitle showSuiteNames thisSuiteName (Just $ testName test)
@@ -84,31 +83,34 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "output" (unStdOut <$> stdOutResult)
   printFailingOutput "error" (unStdErr <$> stdErrResult)
-printResult (TestResult _ (TestError (PlanError NoCommand))) =
+printResult (TestResult _ (TestError (DiscoveryError discoveryError))) = do
+  options <- ask
+  liftIO $ printDiscoveryError printError options discoveryError
+printResult (TestResult _ (TestError (PlanningError NoCommand))) =
   printError "There is no command."
-printResult (TestResult _ (TestError (PlanError NoInput))) =
+printResult (TestResult _ (TestError (PlanningError NoInput))) =
   printError "There are no args or STDIN values in the specification."
-printResult (TestResult _ (TestError (PlanError NoOutput))) =
+printResult (TestResult _ (TestError (PlanningError NoOutput))) =
   printError "There are no STDOUT or STDERR values in the specification."
-printResult (TestResult _ (TestError (PlanError (NonExistentCommand (Executable executablePath))))) =
+printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executable executablePath))))) =
   printError $
   "The application \"" <> showText executablePath <> "\" does not exist."
-printResult (TestResult _ (TestError (PlanError (NonExistentFixture path)))) =
+printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
   printError $ "The fixture \"" <> showText path <> "\" does not exist."
-printResult (TestResult _ (TestError (PlanError (CouldNotReadFixture path e)))) =
+printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path e)))) =
   printError $
   "The fixture \"" <> showText path <> "\" could not be read.\n" <> fromString e
-printResult (TestResult _ (TestError (PlanError (PlanFilterError filterError)))) =
+printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
   printFilterError filterError
-printResult (TestResult _ (TestError (NonExecutableCommand (Executable executablePath)))) =
+printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand (Executable executablePath))))) =
   printError $
   "The application \"" <> showText executablePath <> "\" is not executable."
-printResult (TestResult _ (TestError (CouldNotExecuteCommand (Executable executablePath) e))) =
+printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Executable executablePath) e)))) =
   printError $
   "The application \"" <> showText executablePath <>
   "\" could not be executed.\n" <>
   fromString e
-printResult (TestResult _ (TestError (FilterError filterError))) =
+printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
   printError $
@@ -123,12 +125,34 @@ printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValue
   printError $
   "There are multiple expected \"" <> fromString propertyName <>
   "\" values, so the result cannot be blessed.\n"
-printResult (TestResult _ (TestError (BlessIOException e))) =
+printResult (TestResult _ (TestError (BlessError (BlessIOException e)))) =
   printError $
   "Blessing failed:\n" <>
   indentedAll messageIndentation (fromString (displayException e))
 
-printFilterError :: TestFilterErrorMessage -> Output ()
+printDiscoveryError ::
+     (Text -> Output ()) -> AppOptions -> SmokeDiscoveryError -> IO ()
+printDiscoveryError printErrorMessage options e =
+  flip runReaderT options $
+  printErrorMessage $
+  case e of
+    NoSuchLocation path ->
+      "There is no such location \"" <> showText path <> "\"."
+    NoSuchTest path (TestName selectedTestName) ->
+      "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
+      showText path <>
+      "\"."
+    CannotSelectTestInDirectory path (TestName selectedTestName) ->
+      "The test \"" <> fromString selectedTestName <>
+      "\" cannot be selected from the directory \"" <>
+      showText path <>
+      "\".\n" <>
+      "Tests must be selected from a single specification file."
+    InvalidSpecification path message ->
+      "The test specification \"" <> showText path <> "\" is invalid:\n" <>
+      indentedAll messageIndentation (fromString message)
+
+printFilterError :: SmokeFilterError -> Output ()
 printFilterError (NonExecutableFilter (Executable executablePath)) =
   printError $
   "The application \"" <> showText executablePath <> "\" is not executable."
@@ -192,28 +216,6 @@ printSummary summary = do
 
 printError :: Text -> Output ()
 printError = putRedLn . indentedAll messageIndentation
-
-handleDiscoveryError ::
-     (Text -> Output ()) -> AppOptions -> TestDiscoveryErrorMessage -> IO ()
-handleDiscoveryError printErrorMessage options e =
-  flip runReaderT options $
-  printErrorMessage $
-  case e of
-    NoSuchLocation path ->
-      "There is no such location \"" <> showText path <> "\"."
-    NoSuchTest path (TestName selectedTestName) ->
-      "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
-      showText path <>
-      "\"."
-    CannotSelectTestInDirectory path (TestName selectedTestName) ->
-      "The test \"" <> fromString selectedTestName <>
-      "\" cannot be selected from the directory \"" <>
-      showText path <>
-      "\".\n" <>
-      "Tests must be selected from a single specification file."
-    InvalidSpecification path message ->
-      "The test specification \"" <> showText path <> "\" is invalid:\n" <>
-      indentedAll messageIndentation (fromString message)
 
 outputIndentation :: Int
 outputIndentation = 10

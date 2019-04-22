@@ -15,7 +15,7 @@ import Test.Smoke.Errors
 import Test.Smoke.Files
 import Test.Smoke.Types
 
-type Discovery = ExceptT TestDiscoveryErrorMessage IO
+type Discovery = ExceptT SmokeDiscoveryError IO
 
 data Root
   = DirectoryRoot Path
@@ -50,7 +50,7 @@ discoverTestsInLocations locations = do
   return $ List.sortOn fst $ concat testsBySuite
 
 discoverTestsInSpecificationFile ::
-     Path -> IO (SuiteName, Either TestDiscoveryErrorMessage Suite)
+     Path -> IO (SuiteName, Either SmokeDiscoveryError Suite)
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   suite <- runExceptTIO $ decodeSpecificationFile directory path

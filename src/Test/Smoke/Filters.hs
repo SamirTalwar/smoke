@@ -13,7 +13,7 @@ import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
 import Test.Smoke.Types
 
-type Filtering = ExceptT TestFilterErrorMessage IO
+type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
@@ -55,7 +55,7 @@ runScript executable (Args args) value = do
         (StdOut processStdOut)
         (StdErr processStdErr)
 
-handleExecutionError :: Executable -> IOError -> TestFilterErrorMessage
+handleExecutionError :: Executable -> IOError -> SmokeFilterError
 handleExecutionError executable e =
   if isPermissionError e
     then NonExecutableFilter executable

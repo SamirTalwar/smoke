@@ -17,7 +17,7 @@ data TestSpecification =
   TestSpecification (Maybe Command)
                     Suites
 
-type Suites = [(SuiteName, Either TestDiscoveryErrorMessage Suite)]
+type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
 data Suite = Suite
   { suiteCommand :: Maybe Command

@@ -47,9 +47,9 @@ blessResult (TestResult test (TestFailure _ status stdOut stdErr))
            writeFixtures (testStdErr test) (snd (Vector.head comparisons))
          _ -> return ()
        return $ TestResult test TestSuccess
-     `catch` (\(e :: TestBlessErrorMessage) ->
+     `catch` (\(e :: SmokeBlessError) ->
                 return (TestResult test $ TestError $ BlessError e)) `catch`
-    (return . TestResult test . TestError . BlessIOException)
+    (return . TestResult test . TestError . BlessError . BlessIOException)
   where
     isFailureWithMultipleExpectedValues (PartFailure comparisons) =
       Vector.length comparisons > 1

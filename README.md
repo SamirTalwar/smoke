@@ -17,7 +17,9 @@ It's not a replacement for other, smaller tests. We recommend writing unit tests
 
 ## Installation
 
-Currently, Smoke is in alpha, and as such is not packaged. You will need to build it yourself.
+You can download the latest release from the [Releases][] page.
+
+You can also build it yourself.
 
 1.  Install [Stack][], which we will use to compile the Haskell code.
 2.  Clone the repository and `cd` into the directory.
@@ -29,6 +31,7 @@ If you are using [Nix][] you can build Smoke via `nix-build`.
 
 Smoke is distributed under [the MIT license][mit license].
 
+[releases]: https://github.com/SamirTalwar/Smoke/releases
 [stack]: https://docs.haskellstack.org/en/stable/README/
 [nix]: https://nixos.org/nix
 [mit license]: http://samirtalwar.mit-license.org/

@@ -1,9 +1,9 @@
-build: off
-
 cache:
   - '%LOCALAPPDATA%\Programs\stack'
   - '%APPDATA%\stack'
   - .stack-work
+
+build: off
 
 before_build:
   - curl -o stack.zip -L --insecure https://www.stackage.org/stack/windows-x86_64
@@ -12,7 +12,24 @@ before_build:
 
 build_script:
   - stack --no-terminal build
-  - stack --no-terminal install --local-bin-path=out\build
+  - stack --no-terminal install --local-bin-path=.\out\build
+  - md .\out\publish
+  - if /i %APPVEYOR_REPO_TAG% equ true copy .\out\build\smoke.exe .\out\publish\smoke-%APPVEYOR_REPO_TAG_NAME%-windows-x64.exe
 
 test_script:
   - '.\out\build\smoke --command=.\out\build\smoke test'
+
+artifacts:
+  - name: published
+    path: out\publish\smoke-$(APPVEYOR_REPO_TAG_NAME)-windows-x64.exe
+
+deploy:
+  provider: GitHub
+  draft: true
+  description: "Smoke $(APPVEYOR_REPO_TAG_NAME)"
+  artifact: out\publish\smoke-$(APPVEYOR_REPO_TAG_NAME)-windows-x64.exe
+  force_update: true
+  auth_token:
+    secure: "QfL5WkDKhP5KNpeXpEgYGzLz65B7/hcVuhwwyRFul/rGEKYszbAVQ/vmFWtWVVcX"
+  on:
+    APPVEYOR_REPO_TAG: true

@@ -36,3 +36,20 @@ script:
     if [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
       make lint
     fi
+
+before_deploy:
+  - make out/build/release/smoke
+  - mkdir -p out/publish
+  - cp out/build/release/smoke "out/publish/smoke-${TRAVIS_TAG}-$(uname -s)-$(uname -m)"
+
+deploy:
+  provider: releases
+  draft: true
+  file_glob: true
+  file: out/publish/*
+  overwrite: true
+  skip_cleanup: true
+  on:
+    tags: true
+  api_key:
+    secure: "dt3YESE3S86tqhWu0J8HxTTsTewcj6S3o//P9hwlFAcPUsqzlZLL9KmySnYvNQ91TuBpUu2blXVRY+CFPU59MEIXtSI4ZSHWEd9vetMdW7GcoN8HYNQapL0jEvIx1D2495jCWr6gEHERFUr6eJgI0ZasmlIPSPL5H3vFS2SxGRs="

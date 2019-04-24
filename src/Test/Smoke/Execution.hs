@@ -55,15 +55,15 @@ processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expec
     applyFiltersFromFixture (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT ExecutionFilterError $
-    applyFiltersFromFixtures (testStdOut test) actualStdOut
+    ifEmpty actualStdOut <$> applyFiltersFromFixtures (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT ExecutionFilterError $
-    applyFiltersFromFixtures (testStdErr test) actualStdErr
+    ifEmpty actualStdErr <$> applyFiltersFromFixtures (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
-        result $ defaultIfEmpty $ Vector.zip expectedStdOuts filteredStdOut
+        result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
   let stdErrResult =
-        result $ defaultIfEmpty $ Vector.zip expectedStdErrs filteredStdErr
+        result $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
   return $
     TestResult test $
     if statusResult == PartSuccess &&
@@ -87,7 +87,10 @@ convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0
 convertExitCode (ExitFailure value) = Status value
 
-defaultIfEmpty :: Default a => Vector a -> Vector a
-defaultIfEmpty xs
-  | Vector.null xs = Vector.singleton def
+ifEmpty :: a -> Vector a -> Vector a
+ifEmpty x xs
+  | Vector.null xs = Vector.singleton x
   | otherwise = xs
+
+defaultIfEmpty :: Default a => Vector a -> Vector a
+defaultIfEmpty = ifEmpty def

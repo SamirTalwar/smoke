@@ -1,0 +1,7 @@
+tests:
+  - name: stderr
+    args:
+      - fixtures/stderr
+    exit-status: 1
+    stdout:
+      file: io/stderr.out

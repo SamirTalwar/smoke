@@ -1,0 +1,10 @@
+copy to STDERR
+  succeeded
+copy to STDOUT
+  input:  here is some text
+  output: @@ -1 +0,0 @@
+          -here is some text
+  error:  @@ -0,0 +1 @@
+          +here is some text
+
+2 tests, 1 failure

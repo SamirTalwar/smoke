@@ -1,0 +1,17 @@
+command:
+  - sh
+  - -c
+  - cat >&2
+
+tests:
+  - name: copy to STDERR
+    stdin: |
+      here is some text
+    stderr: |
+      here is some text
+
+  - name: copy to STDOUT
+    stdin: |
+      here is some text
+    stdout: |
+      here is some text

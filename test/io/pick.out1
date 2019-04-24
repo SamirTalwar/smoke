@@ -4,7 +4,7 @@ bad/wrong
           tres
           quatro
           cinqo
-  output: @@ -1 +1 @@
+  stdout: @@ -1 +1 @@
           -one
           +uno
       or: @@ -1 +1 @@

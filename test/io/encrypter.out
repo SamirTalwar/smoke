@@ -1,6 +1,6 @@
 word
   input:  word
-  output: @@ -1 +1 @@
+  stdout: @@ -1 +1 @@
           -xpse
           +jbeq
 lines
@@ -8,7 +8,7 @@ lines
           two
           three
           four
-  output: @@ -1,4 +1,4 @@
+  stdout: @@ -1,4 +1,4 @@
           -pof
           -uxp
           -uisff
@@ -19,7 +19,7 @@ lines
           +sbhe
 color
   input:  this is a [32mgreen[0m word
-  output: @@ -1 +1 @@
+  stdout: @@ -1 +1 @@
           -uijt jt b [32mhsffo[0m xpse
           +guvf vf n [32mterra[0m jbeq
 

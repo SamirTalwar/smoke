@@ -79,8 +79,8 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
     (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
-  printFailingOutput "output" (unStdOut <$> stdOutResult)
-  printFailingOutput "error" (unStdErr <$> stdErrResult)
+  printFailingOutput "stdout" (unStdOut <$> stdOutResult)
+  printFailingOutput "stderr" (unStdErr <$> stdErrResult)
 printResult (TestResult _ (TestError (DiscoveryError discoveryError))) = do
   options <- ask
   liftIO $ printDiscoveryError printError options discoveryError

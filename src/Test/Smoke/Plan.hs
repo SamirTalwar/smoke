@@ -10,7 +10,7 @@ import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import System.Directory (doesFileExist, findExecutable)
+import System.Directory (doesFileExist, findExecutable, getCurrentDirectory)
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
 import Test.Smoke.Files
@@ -23,18 +23,21 @@ type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
+  currentWorkingDirectory <- WorkingDirectory <$> getCurrentDirectory
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
         Left errorMessage -> return (suiteName, Left errorMessage)
-        Right (Suite thisSuiteCommand tests) -> do
+        Right (Suite thisSuiteWorkingDirectory thisSuiteCommand tests) -> do
           let defaultCommand = thisSuiteCommand <|> specificationCommand
+          let defaultWorkingDirectory =
+                fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
           testPlans <-
             forM tests $ \test ->
               runExceptT $
               withExceptT (TestPlanError test) $ do
                 validateTest defaultCommand test
-                readTest defaultCommand test
+                readTest defaultWorkingDirectory defaultCommand test
           return (suiteName, Right testPlans)
   return $ Plan suitePlans
 
@@ -48,8 +51,10 @@ validateTest defaultCommand test = do
   where
     isEmpty (Fixtures fixtures) = Vector.null fixtures
 
-readTest :: Maybe Command -> Test -> Planning TestPlan
-readTest defaultCommand test = do
+readTest :: WorkingDirectory -> Maybe Command -> Test -> Planning TestPlan
+readTest defaultWorkingDirectory defaultCommand test = do
+  let workingDirectory =
+        fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
   (executable, args) <-
     splitCommand (testCommand test <|> defaultCommand) (testArgs test)
   let executableName = show $ unExecutable executable
@@ -66,6 +71,7 @@ readTest defaultCommand test = do
   return $
     TestPlan
       { planTest = test
+      , planWorkingDirectory = workingDirectory
       , planExecutable = executable
       , planArgs = args
       , planStdIn = filteredStdIn

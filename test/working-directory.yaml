@@ -1,0 +1,6 @@
+tests:
+  - name: working-directory
+    args:
+      - fixtures/working-directory
+    stdout:
+      file: io/working-directory.out

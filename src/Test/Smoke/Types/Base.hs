@@ -8,6 +8,7 @@ import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Default
 import Data.Text (Text)
 import qualified Data.Text as Text
+import System.FilePath (FilePath)
 import Test.Smoke.Types.Paths
 
 data Contents a
@@ -35,6 +36,10 @@ newtype SuiteName = SuiteName
 newtype TestName = TestName
   { unTestName :: String
   } deriving (Eq, Ord, Show)
+
+newtype WorkingDirectory = WorkingDirectory
+  { unWorkingDirectory :: FilePath
+  } deriving (Eq, Show, FromJSON)
 
 newtype Executable = Executable
   { unExecutable :: Path

@@ -1,0 +1,6 @@
+global/set the working directory for the whole specification
+  succeeded
+local/set the working directory for a test
+  succeeded
+
+2 tests, 0 failures

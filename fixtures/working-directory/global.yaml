@@ -1,0 +1,13 @@
+working-directory: fixtures/working-directory
+
+tests:
+  - name: set the working directory for the whole specification
+    command:
+      - ruby
+      - echo.rb
+    args:
+      - uno
+      - dos
+      - tres
+    stdout: |
+      uno dos tres

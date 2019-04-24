@@ -11,7 +11,8 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
-import System.Process.Text (readProcessWithExitCode)
+import System.Process.ListLike (cwd, proc)
+import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Errors
 import Test.Smoke.Filters
 import Test.Smoke.Types
@@ -40,25 +41,30 @@ runTest testPlan =
   runExceptT (processOutput testPlan =<< executeTest testPlan)
 
 executeTest :: TestPlan -> Execution ActualOutputs
-executeTest (TestPlan _ executable (Args args) (StdIn processStdIn) _ _ _) = do
+executeTest (TestPlan _ (WorkingDirectory workingDirectory) executable (Args args) (StdIn processStdIn) _ _ _) = do
   let executableName = show $ unExecutable executable
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
-    tryIOError $ readProcessWithExitCode executableName args processStdIn
+    tryIOError $
+    readCreateProcessWithExitCode
+      ((proc executableName args) {cwd = Just workingDirectory})
+      processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
 
 processOutput :: TestPlan -> ActualOutputs -> Execution TestResult
-processOutput testPlan@(TestPlan test _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) = do
+processOutput testPlan@(TestPlan test _ _ _ _ expectedStatus expectedStdOuts expectedStdErrs) (actualStatus, actualStdOut, actualStdErr) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $
     applyFiltersFromFixture (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT ExecutionFilterError $
-    ifEmpty actualStdOut <$> applyFiltersFromFixtures (testStdOut test) actualStdOut
+    ifEmpty actualStdOut <$>
+    applyFiltersFromFixtures (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT ExecutionFilterError $
-    ifEmpty actualStdErr <$> applyFiltersFromFixtures (testStdErr test) actualStdErr
+    ifEmpty actualStdErr <$>
+    applyFiltersFromFixtures (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
         result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut

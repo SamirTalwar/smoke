@@ -20,16 +20,20 @@ data TestSpecification =
 type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
 data Suite = Suite
-  { suiteCommand :: Maybe Command
+  { suiteWorkingDirectory :: Maybe WorkingDirectory
+  , suiteCommand :: Maybe Command
   , suiteTests :: [Test]
   } deriving (Eq, Show)
 
 instance FromJSON Suite where
   parseJSON =
-    withObject "Suite" $ \v -> Suite <$> (v .:? "command") <*> (v .: "tests")
+    withObject "Suite" $ \v ->
+      Suite <$> (v .:? "working-directory") <*> (v .:? "command") <*>
+      (v .: "tests")
 
 data Test = Test
   { testName :: TestName
+  , testWorkingDirectory :: Maybe WorkingDirectory
   , testCommand :: Maybe Command
   , testArgs :: Maybe Args
   , testStdIn :: Maybe (Fixture StdIn)
@@ -41,7 +45,8 @@ data Test = Test
 instance FromJSON Test where
   parseJSON =
     withObject "Test" $ \v ->
-      Test <$> (TestName <$> v .: "name") <*> (v .:? "command") <*>
+      Test <$> (TestName <$> v .: "name") <*> (v .:? "working-directory") <*>
+      (v .:? "command") <*>
       (v .:? "args") <*>
       (v .:? "stdin") <*>
       (v .:? "stdout" .!= noFixtures) <*>

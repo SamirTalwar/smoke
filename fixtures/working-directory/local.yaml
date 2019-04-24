@@ -1,0 +1,12 @@
+tests:
+  - name: set the working directory for a test
+    working-directory: fixtures/working-directory
+    command:
+      - ruby
+      - echo.rb
+    args:
+      - one
+      - two
+      - three
+    stdout: |
+      one two three

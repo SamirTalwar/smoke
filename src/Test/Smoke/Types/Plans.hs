@@ -11,6 +11,7 @@ newtype Plan =
 
 data TestPlan = TestPlan
   { planTest :: Test
+  , planWorkingDirectory :: WorkingDirectory
   , planExecutable :: Executable
   , planArgs :: Args
   , planStdIn :: StdIn

@@ -41,11 +41,12 @@ discoverTestsInLocations locations = do
         let (directory, suiteName) = splitSuitePath path
         suite <-
           runExceptTIO $ do
-            Suite command tests <- decodeSpecificationFile directory path
+            Suite workingDirectory command tests <-
+              decodeSpecificationFile directory path
             selectedTest <-
               onNothingThrow (NoSuchTest path selectedTestName) $
               List.find ((== selectedTestName) . testName) tests
-            return $ Suite command [selectedTest]
+            return $ Suite workingDirectory command [selectedTest]
         return [(suiteName, Right suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
@@ -67,8 +68,8 @@ decodeSpecificationFile directory path =
   prefixSuiteFixturesWith directory <$> ExceptT (decodeFileEither (show path))
 
 prefixSuiteFixturesWith :: Path -> Suite -> Suite
-prefixSuiteFixturesWith location (Suite command tests) =
-  Suite command (map (prefixTestFixturesWith location) tests)
+prefixSuiteFixturesWith location (Suite workingDirectory command tests) =
+  Suite workingDirectory command (map (prefixTestFixturesWith location) tests)
 
 prefixTestFixturesWith :: Path -> Test -> Test
 prefixTestFixturesWith location test =

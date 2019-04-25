@@ -10,6 +10,7 @@ cache:
   directories:
     - "$HOME/.stack"
     - ".stack-work/tools"
+  timeout: 600
 
 addons:
   apt:

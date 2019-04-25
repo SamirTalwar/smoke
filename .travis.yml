@@ -9,6 +9,7 @@ language: generic
 cache:
   directories:
     - "$HOME/.stack"
+    - ".stack-work/tools"
 
 addons:
   apt:

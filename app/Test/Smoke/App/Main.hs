@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -45,16 +46,15 @@ outputResults options results = do
 
 printResults :: Results -> Output ()
 printResults results =
-  forM_ results $ \(SuiteResult thisSuiteName thisSuiteResult) ->
-    case thisSuiteResult of
-      Left discoveryErrorMessage -> do
-        printTitle showSuiteNames thisSuiteName Nothing
-        appOptions <- ask
-        liftIO $ printDiscoveryError printError appOptions discoveryErrorMessage
-      Right testResults ->
-        forM_ testResults $ \testResult@(TestResult test _) -> do
-          printTitle showSuiteNames thisSuiteName (Just $ testName test)
-          printResult testResult
+  forM_ results $ \case
+    SuiteResultError suiteName discoveryErrorMessage -> do
+      printTitle showSuiteNames suiteName Nothing
+      appOptions <- ask
+      liftIO $ printDiscoveryError printError appOptions discoveryErrorMessage
+    SuiteResult suiteName _ testResults ->
+      forM_ testResults $ \testResult@(TestResult test _) -> do
+        printTitle showSuiteNames suiteName (Just $ testName test)
+        printResult testResult
   where
     uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
     showSuiteNames = length uniqueSuiteNames > 1

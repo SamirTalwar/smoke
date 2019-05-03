@@ -7,6 +7,7 @@ import Data.Vector (Vector)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Fixtures
+import Test.Smoke.Types.Paths
 
 data Options = Options
   { optionsCommand :: Maybe Command
@@ -20,16 +21,11 @@ data TestSpecification =
 type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
 data Suite = Suite
-  { suiteWorkingDirectory :: Maybe WorkingDirectory
+  { suiteLocation :: Path
+  , suiteWorkingDirectory :: Maybe WorkingDirectory
   , suiteCommand :: Maybe Command
   , suiteTests :: [Test]
   } deriving (Eq, Show)
-
-instance FromJSON Suite where
-  parseJSON =
-    withObject "Suite" $ \v ->
-      Suite <$> (v .:? "working-directory") <*> (v .:? "command") <*>
-      (v .: "tests")
 
 data Test = Test
   { testName :: TestName

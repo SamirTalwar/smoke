@@ -5,6 +5,7 @@ module Test.Smoke.Files
   , getCurrentWorkingDirectory
   , getFileType
   , readFromPath
+  , resolvePath
   , splitFileName
   , unPath
   , writeToPath
@@ -71,9 +72,15 @@ writeToPath :: Path -> Text -> IO ()
 writeToPath path = TextIO.writeFile $ unPath path
 
 -- Utilities
+resolvePath :: Path -> IO Path
+resolvePath path = do
+  currentWorkingDirectory <- getCurrentWorkingDirectory
+  return $ currentWorkingDirectory </> path
+
 unPath :: Path -> FilePath
 unPath (AbsolutePath value) = value
-unPath (RelativePath value) = value
+unPath (RelativePath value) =
+  error $ "Cannot extract a relative path (" ++ value ++ ")."
 
 unFileName :: FileName -> String
 unFileName (FileName value) = value

@@ -43,7 +43,7 @@ $(BIN_RELEASE): clean
 	stack install --local-bin-path=$(OUT_RELEASE)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
-	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
+	$(STACK) install --fast --library-profiling --executable-profiling --local-bin-path=$(OUT_DEBUG)
 
 .PHONY: clean
 clean:

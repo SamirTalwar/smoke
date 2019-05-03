@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.Discovery
   ( discoverTests
@@ -6,7 +7,9 @@ module Test.Smoke.Discovery
 
 import Control.Exception (throwIO)
 import Control.Monad (forM)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), withExceptT)
+import Data.Aeson hiding (Options)
 import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -22,6 +25,18 @@ data Root
   | FileRoot Path
   | SingleRoot Path
                TestName
+
+data PartialSuite = PartialSuite
+  { partialSuiteWorkingDirectory :: Maybe WorkingDirectory
+  , partialSuiteCommand :: Maybe Command
+  , partialSuiteTests :: [Test]
+  } deriving (Eq, Show)
+
+instance FromJSON PartialSuite where
+  parseJSON =
+    withObject "Suite" $ \v ->
+      PartialSuite <$> (v .:? "working-directory") <*> (v .:? "command") <*>
+      (v .: "tests")
 
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =
@@ -41,12 +56,11 @@ discoverTestsInLocations locations = do
         let (directory, suiteName) = splitSuitePath path
         suite <-
           runExceptTIO $ do
-            Suite workingDirectory command tests <-
-              decodeSpecificationFile directory path
+            suite <- decodeSpecificationFile directory path
             selectedTest <-
               onNothingThrow (NoSuchTest path selectedTestName) $
-              List.find ((== selectedTestName) . testName) tests
-            return $ Suite workingDirectory command [selectedTest]
+              List.find ((== selectedTestName) . testName) (suiteTests suite)
+            return $ suite {suiteTests = [selectedTest]}
         return [(suiteName, Right suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
@@ -63,30 +77,14 @@ splitSuitePath path = (directory, SuiteName $ show $ dropExtension fileName)
     (directory, fileName) = splitFileName path
 
 decodeSpecificationFile :: Path -> Path -> Discovery Suite
-decodeSpecificationFile directory path =
-  withExceptT (InvalidSpecification path . prettyPrintParseException) $
-  prefixSuiteFixturesWith directory <$> ExceptT (decodeFileEither (show path))
-
-prefixSuiteFixturesWith :: Path -> Suite -> Suite
-prefixSuiteFixturesWith location (Suite workingDirectory command tests) =
-  Suite workingDirectory command (map (prefixTestFixturesWith location) tests)
-
-prefixTestFixturesWith :: Path -> Test -> Test
-prefixTestFixturesWith location test =
-  test
-    { testStdIn = prefixFixtureWith location <$> testStdIn test
-    , testStdOut = prefixFixturesWith location $ testStdOut test
-    , testStdErr = prefixFixturesWith location $ testStdErr test
-    }
-
-prefixFixtureWith :: Path -> Fixture a -> Fixture a
-prefixFixtureWith _ fixture@(Fixture (Inline _) _) = fixture
-prefixFixtureWith location (Fixture (FileLocation path) fixtureFilter) =
-  Fixture (FileLocation (location </> path)) fixtureFilter
-
-prefixFixturesWith :: Path -> Fixtures a -> Fixtures a
-prefixFixturesWith location (Fixtures fixtures) =
-  Fixtures $ prefixFixtureWith location <$> fixtures
+decodeSpecificationFile directory path = do
+  PartialSuite workingDirectory command tests <-
+    do filePath <- liftIO $ unPath <$> resolvePath path
+       withExceptT (InvalidSpecification path . prettyPrintParseException) .
+         ExceptT $
+         decodeFileEither filePath
+  location <- liftIO $ resolvePath directory
+  return $ Suite location workingDirectory command tests
 
 parseRoot :: String -> IO Root
 parseRoot location = do
@@ -96,7 +94,7 @@ parseRoot location = do
             , if null s
                 then Nothing
                 else Just (TestName (strip (tail s))))
-  fileType <- getFileType path
+  fileType <- resolvePath path >>= getFileType
   case (fileType, selectedTestName) of
     (NonExistentFile, _) -> throwIO $ NoSuchLocation path
     (Directory, Just selected) ->

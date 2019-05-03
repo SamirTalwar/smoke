@@ -27,8 +27,8 @@ planTests (TestSpecification specificationCommand suites) = do
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
-        Left errorMessage -> return (suiteName, Left errorMessage)
-        Right (Suite thisSuiteWorkingDirectory thisSuiteCommand tests) -> do
+        Left errorMessage -> return $ SuitePlanError suiteName errorMessage
+        Right (Suite location thisSuiteWorkingDirectory thisSuiteCommand tests) -> do
           let defaultCommand = thisSuiteCommand <|> specificationCommand
           let defaultWorkingDirectory =
                 fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
@@ -37,8 +37,8 @@ planTests (TestSpecification specificationCommand suites) = do
               runExceptT $
               withExceptT (TestPlanError test) $ do
                 validateTest defaultCommand test
-                readTest defaultWorkingDirectory defaultCommand test
-          return (suiteName, Right testPlans)
+                readTest location defaultWorkingDirectory defaultCommand test
+          return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
@@ -51,10 +51,12 @@ validateTest defaultCommand test = do
   where
     isEmpty (Fixtures fixtures) = Vector.null fixtures
 
-readTest :: WorkingDirectory -> Maybe Command -> Test -> Planning TestPlan
-readTest defaultWorkingDirectory defaultCommand test = do
-  let workingDirectory =
-        fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
+readTest ::
+     Path -> WorkingDirectory -> Maybe Command -> Test -> Planning TestPlan
+readTest location defaultWorkingDirectory defaultCommand test = do
+  workingDirectory <-
+    resolveWorkingDirectory $
+    fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
   (executable, args) <-
     splitCommand (testCommand test <|> defaultCommand) (testArgs test)
   let executableName = show $ unExecutable executable
@@ -64,10 +66,10 @@ readTest defaultWorkingDirectory defaultCommand test = do
     liftIO (findExecutable executableName)
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
-    sequence (readFixture <$> testStdIn test)
+    sequence (readFixture location <$> testStdIn test)
   filteredStdIn <-
     withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
-  (status, stdOut, stdErr) <- readExpectedOutputs test
+  (status, stdOut, stdErr) <- readExpectedOutputs location test
   return $
     TestPlan
       { planTest = test
@@ -87,24 +89,27 @@ splitCommand maybeCommand maybeArgs = do
   let args = commandArgs ++ maybe [] unArgs maybeArgs
   return (Executable (makePath executableName), Args args)
 
-readExpectedOutputs :: Test -> Planning ExpectedOutputs
-readExpectedOutputs test = do
-  expectedStatus <- unfiltered <$> readFixture (testStatus test)
-  expectedStdOuts <- Vector.map unfiltered <$> readFixtures (testStdOut test)
-  expectedStdErrs <- Vector.map unfiltered <$> readFixtures (testStdErr test)
+readExpectedOutputs :: Path -> Test -> Planning ExpectedOutputs
+readExpectedOutputs location test = do
+  expectedStatus <- unfiltered <$> readFixture location (testStatus test)
+  expectedStdOuts <-
+    Vector.map unfiltered <$> readFixtures location (testStdOut test)
+  expectedStdErrs <-
+    Vector.map unfiltered <$> readFixtures location (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
-readFixture :: FixtureType a => Fixture a -> Planning (Filtered a)
-readFixture (Fixture (Inline contents) maybeFilter) =
+readFixture :: FixtureType a => Path -> Fixture a -> Planning (Filtered a)
+readFixture _ (Fixture (Inline contents) maybeFilter) =
   return $ includeFilter maybeFilter contents
-readFixture (Fixture (FileLocation path) maybeFilter) =
+readFixture location (Fixture (FileLocation path) maybeFilter) =
   includeFilter maybeFilter . deserializeFixture <$>
   withExceptT
     (handleMissingFileError path)
-    (ExceptT $ tryIOError $ readFromPath path)
+    (ExceptT $ tryIOError $ readFromPath (location </> path))
 
-readFixtures :: FixtureType a => Fixtures a -> Planning (Vector (Filtered a))
-readFixtures (Fixtures fixtures) = mapM readFixture fixtures
+readFixtures ::
+     FixtureType a => Path -> Fixtures a -> Planning (Vector (Filtered a))
+readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
 
 includeFilter :: Maybe FixtureFilter -> a -> Filtered a
 includeFilter maybeFilter contents =
@@ -115,3 +120,8 @@ handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path
     else CouldNotReadFixture path (show e)
+
+resolveWorkingDirectory :: WorkingDirectory -> Planning WorkingDirectory
+resolveWorkingDirectory workingDirectory =
+  WorkingDirectory <$>
+  (liftIO . resolvePath $ unWorkingDirectory workingDirectory)

@@ -12,10 +12,10 @@ data SummaryResult
 summarizeResults :: Results -> Summary
 summarizeResults results = Summary successes failures
   where
-    allResults =
-      concatMap
-        (either (const [Failure]) (map summarizeResult) . suiteResultTestResults)
-        results
+    summarizeSuiteResult (SuiteResultError _ _) = [Failure]
+    summarizeSuiteResult (SuiteResult _ _ testResults) =
+      map summarizeResult testResults
+    allResults = concatMap summarizeSuiteResult results
     total = length allResults
     failures = length $ filter (== Failure) allResults
     successes = total - failures

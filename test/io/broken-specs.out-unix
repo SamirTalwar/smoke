@@ -5,10 +5,10 @@ no-inputs
 no-outputs
   There are no STDOUT or STDERR values in the specification.
 missing-input-file
-  The fixture "fixtures/broken-specs/io/missing.in" does not exist.
+  The fixture "io/missing.in" does not exist.
 missing-output-file
-  The fixture "fixtures/broken-specs/io/missing.out" does not exist.
+  The fixture "io/missing.out" does not exist.
 missing-error-file
-  The fixture "fixtures/broken-specs/io/missing.err" does not exist.
+  The fixture "io/missing.err" does not exist.
 
 6 tests, 6 failures

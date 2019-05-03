@@ -2,9 +2,11 @@ module Test.Smoke.Files
   ( (</>)
   , dropExtension
   , findFilesInPath
+  , getCurrentWorkingDirectory
   , getFileType
   , readFromPath
   , splitFileName
+  , unPath
   , writeToPath
   , yamlFiles
   ) where
@@ -30,6 +32,9 @@ getFileType path = do
     (False, False) -> return NonExistentFile
 
 -- Search
+getCurrentWorkingDirectory :: IO Path
+getCurrentWorkingDirectory = makePath <$> Directory.getCurrentDirectory
+
 findFilesInPath :: Glob.Pattern -> Path -> IO [Path]
 findFilesInPath filePattern (AbsolutePath directory) =
   map AbsolutePath <$> Glob.globDir1 filePattern directory

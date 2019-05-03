@@ -10,7 +10,7 @@ import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import System.Directory (doesFileExist, findExecutable, getCurrentDirectory)
+import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
 import Test.Smoke.Files
@@ -23,7 +23,7 @@ type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
-  currentWorkingDirectory <- WorkingDirectory <$> getCurrentDirectory
+  currentWorkingDirectory <- WorkingDirectory <$> getCurrentWorkingDirectory
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of

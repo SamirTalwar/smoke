@@ -14,6 +14,7 @@ import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.ListLike (cwd, proc)
 import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Errors
+import Test.Smoke.Files
 import Test.Smoke.Filters
 import Test.Smoke.Types
 
@@ -48,7 +49,7 @@ executeTest (TestPlan _ (WorkingDirectory workingDirectory) executable (Args arg
     ExceptT $
     tryIOError $
     readCreateProcessWithExitCode
-      ((proc executableName args) {cwd = Just workingDirectory})
+      ((proc executableName args) {cwd = Just (unPath workingDirectory)})
       processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
 

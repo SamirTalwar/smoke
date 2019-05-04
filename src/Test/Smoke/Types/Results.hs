@@ -1,9 +1,11 @@
 module Test.Smoke.Types.Results where
 
+import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import Path
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
+import Test.Smoke.Types.Files
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
 
@@ -30,6 +32,7 @@ data TestOutcome
       (PartResult Status)
       (PartResult StdOut)
       (PartResult StdErr)
+      (Map (Path Rel File) (PartResult TestFileContents))
   | TestError SmokeError
   deriving (Eq, Show)
 

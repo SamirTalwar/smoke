@@ -2,13 +2,19 @@
 
 module Test.Smoke.Types.Tests where
 
+import Control.Monad ((<=<))
+import Control.Monad.Catch.Pure (runCatchT)
 import Data.Aeson hiding (Options)
 import Data.Aeson.Types (Parser)
+import Data.Map.Strict (Map)
 import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Path
+import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
+import Test.Smoke.Types.Files
 import Test.Smoke.Types.Fixtures
 
 data Options =
@@ -42,6 +48,7 @@ data Test =
     , testStdOut :: Fixtures StdOut
     , testStdErr :: Fixtures StdErr
     , testStatus :: Fixture Status
+    , testFiles :: Map (Path Rel File) (Fixtures TestFileContents)
     }
   deriving (Eq, Show)
 
@@ -64,7 +71,9 @@ parseTest location =
     (v .:? "stdout" .!= noFixtures) <*>
     (v .:? "stderr" .!= noFixtures) <*>
     (Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0) <*>
-     return Nothing)
+     return Nothing) <*>
+    (mapFromTraversable <$>
+     (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty)))
 
 parseWorkingDirectory ::
      Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)
@@ -72,3 +81,12 @@ parseWorkingDirectory _ Nothing = return Nothing
 parseWorkingDirectory location (Just filePath) =
   either (fail . show) (return . Just . WorkingDirectory) $
   location <//> filePath
+
+parseTestFile :: Value -> Parser (Path Rel File, Fixtures TestFileContents)
+parseTestFile =
+  withObject "File" $ \v -> do
+    path <-
+      (either (fail . show) return <=< runCatchT . parseAbsOrRelFile) =<<
+      v .: "path"
+    contents <- v .: "contents"
+    return (path, contents)

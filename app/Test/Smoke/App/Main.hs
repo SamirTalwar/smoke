@@ -8,6 +8,7 @@ import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.List as List
+import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, isNothing)
 import Data.Monoid ((<>))
 import Data.String (fromString)
@@ -73,7 +74,7 @@ printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
 
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
-printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
+printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
@@ -81,6 +82,8 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
+  forM_ (Map.assocs fileResults) $ \(_, fileResult) ->
+    printFailingOutput "file" (unTestFileContents <$> fileResult)
 printResult (TestResult _ (TestError (DiscoveryError discoveryError))) = do
   options <- ask
   liftIO $ printDiscoveryError printError options discoveryError
@@ -89,7 +92,8 @@ printResult (TestResult _ (TestError (PlanningError NoCommand))) =
 printResult (TestResult _ (TestError (PlanningError NoInput))) =
   printError "There are no args or STDIN values in the specification."
 printResult (TestResult _ (TestError (PlanningError NoOutput))) =
-  printError "There are no STDOUT or STDERR values in the specification."
+  printError
+    "There are no STDOUT or STDERR values, or files, in the specification."
 printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executable executablePath))))) =
   printError $
   "The application " <> showPath executablePath <> " does not exist."
@@ -109,6 +113,9 @@ printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Ex
   printError $
   "The application " <> showPath executablePath <> " could not be executed.\n" <>
   fromString e
+printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
+  printError $
+  "The output file \"" <> showText path <> "\" does not exist." <> fromString e
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =

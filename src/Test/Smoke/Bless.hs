@@ -7,8 +7,11 @@ module Test.Smoke.Bless
 
 import Control.Exception (catch, throwIO)
 import Control.Monad (forM)
+import Data.Map.Strict ((!))
+import qualified Data.Map.Strict as Map
 import qualified Data.Vector as Vector
 import Path
+import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
@@ -21,7 +24,7 @@ blessResults results =
       return $ SuiteResult suiteName location blessedResults
 
 blessResult :: Path Abs Dir -> TestResult -> IO TestResult
-blessResult location (TestResult test (TestFailure _ status stdOut stdErr))
+blessResult location (TestResult test (TestFailure _ status stdOut stdErr files))
   | isFailureWithMultipleExpectedValues status =
     return $
     TestResult test $
@@ -34,6 +37,10 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr))
     return $
     TestResult test $
     TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
+  | any isFailureWithMultipleExpectedValues (Map.elems files) =
+    return $
+    TestResult test $
+    TestError (BlessError (CouldNotBlessWithMultipleValues "files"))
   | otherwise =
     do case status of
          PartFailure comparisons ->
@@ -56,6 +63,14 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr))
              (testStdErr test)
              (snd (Vector.head comparisons))
          _ -> return ()
+       forWithKeyM_ files $ \path fileResult ->
+         case fileResult of
+           PartFailure comparisons ->
+             writeFixtures
+               location
+               (testFiles test ! path)
+               (snd (Vector.head comparisons))
+           _ -> return ()
        return $ TestResult test TestSuccess
      `catch` (\(e :: SmokeBlessError) ->
                 return (TestResult test $ TestError $ BlessError e)) `catch`

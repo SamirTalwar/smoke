@@ -3,7 +3,7 @@ no-command
 no-inputs
   There are no args or STDIN values in the specification.
 no-outputs
-  There are no STDOUT or STDERR values in the specification.
+  There are no STDOUT or STDERR values, or files, in the specification.
 missing-input-file
   The fixture "io\missing.in" does not exist.
 missing-output-file

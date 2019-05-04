@@ -1,0 +1,24 @@
+working-directory: .
+
+tests:
+  - name: copy a file
+    command:
+      - cp
+    args:
+      - input.file
+      - output.file
+    files:
+      - path: output.file
+        contents:
+          file: input.file
+
+  - name: uppercase a file
+    command:
+      - sh
+      - -c
+    args:
+      - tr '[:lower:]' '[:upper:]' < input.file > output.file
+    files:
+      - path: output.file
+        contents: |
+          HERE IS SOME TEXT.

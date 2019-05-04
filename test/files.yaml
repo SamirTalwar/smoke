@@ -1,0 +1,7 @@
+tests:
+  - name: files
+    args:
+      - fixtures/files
+    exit-status: 0
+    stdout:
+      file: io/files.out

@@ -40,6 +40,7 @@ data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable String
+  | CouldNotReadFile (Path Rel File) String
   | ExecutionFilterError SmokeFilterError
   deriving (Eq, Show)
 

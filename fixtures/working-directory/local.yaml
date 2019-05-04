@@ -1,5 +1,5 @@
 tests:
-  - name: set the working directory for a test
+  - name: set the working directory
     working-directory: fixtures/working-directory
     command:
       - ruby
@@ -10,3 +10,27 @@ tests:
       - three
     stdout: |
       one two three
+
+  - name: set the working directory to another directory
+    working-directory: fixtures/working-directory/nested
+    command:
+      - ruby
+      - ../echo.rb
+    args:
+      - raz
+      - dwa
+      - trzy
+    stdout: |
+      raz dwa trzy
+
+  - name: resolve `..`
+    working-directory: fixtures/working-directory/..
+    command:
+      - ruby
+      - working-directory/echo.rb
+    args:
+      - unu
+      - doi
+      - trei
+    stdout: |
+      unu doi trei

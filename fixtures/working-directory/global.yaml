@@ -11,3 +11,15 @@ tests:
       - tres
     stdout: |
       uno dos tres
+
+  - name: override the working directory
+    working-directory: fixtures/working-directory/nested
+    command:
+      - ruby
+      - ../echo.rb
+    args:
+      - ein
+      - zwei
+      - drei
+    stdout: |
+      ein zwei drei

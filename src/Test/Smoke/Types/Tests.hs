@@ -3,7 +3,10 @@
 module Test.Smoke.Types.Tests where
 
 import Data.Aeson hiding (Options)
+import Data.Aeson.Types (Parser)
 import Data.Vector (Vector)
+import Path
+import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Fixtures
@@ -20,16 +23,11 @@ data TestSpecification =
 type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
 data Suite = Suite
-  { suiteWorkingDirectory :: Maybe WorkingDirectory
+  { suiteLocation :: Path Abs Dir
+  , suiteWorkingDirectory :: Maybe WorkingDirectory
   , suiteCommand :: Maybe Command
   , suiteTests :: [Test]
   } deriving (Eq, Show)
-
-instance FromJSON Suite where
-  parseJSON =
-    withObject "Suite" $ \v ->
-      Suite <$> (v .:? "working-directory") <*> (v .:? "command") <*>
-      (v .: "tests")
 
 data Test = Test
   { testName :: TestName
@@ -42,14 +40,30 @@ data Test = Test
   , testStatus :: Fixture Status
   } deriving (Eq, Show)
 
-instance FromJSON Test where
-  parseJSON =
-    withObject "Test" $ \v ->
-      Test <$> (TestName <$> v .: "name") <*> (v .:? "working-directory") <*>
-      (v .:? "command") <*>
-      (v .:? "args") <*>
-      (v .:? "stdin") <*>
-      (v .:? "stdout" .!= noFixtures) <*>
-      (v .:? "stderr" .!= noFixtures) <*>
-      (Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0) <*>
-       return Nothing)
+parseSuite :: Path Abs Dir -> Value -> Parser Suite
+parseSuite location =
+  withObject "Suite" $ \v ->
+    Suite location <$>
+    (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (v .:? "command") <*>
+    (mapM (parseTest location) =<< (v .: "tests"))
+
+parseTest :: Path Abs Dir -> Value -> Parser Test
+parseTest location =
+  withObject "Test" $ \v ->
+    Test <$> (TestName <$> v .: "name") <*>
+    (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (v .:? "command") <*>
+    (v .:? "args") <*>
+    (v .:? "stdin") <*>
+    (v .:? "stdout" .!= noFixtures) <*>
+    (v .:? "stderr" .!= noFixtures) <*>
+    (Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0) <*>
+     return Nothing)
+
+parseWorkingDirectory ::
+     Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)
+parseWorkingDirectory _ Nothing = return Nothing
+parseWorkingDirectory location (Just filePath) =
+  either (fail . show) (return . Just . WorkingDirectory) $
+  location <//> filePath

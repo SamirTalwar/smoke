@@ -8,6 +8,7 @@ import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
+import Path
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.Text (readProcessWithExitCode)
@@ -17,11 +18,9 @@ type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) =
-  runScript
-    (Executable (makePath "sh"))
-    (Args ["-c", Text.unpack script])
-    unfilteredValue
+applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) = do
+  sh <- parseRelFile "sh"
+  runScript (Executable sh) (Args ["-c", Text.unpack script]) unfilteredValue
 applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptExecutable scriptArgs)) =
   runScript scriptExecutable scriptArgs unfilteredValue
 
@@ -42,7 +41,7 @@ runScript executable (Args args) value = do
     ExceptT $
     tryIOError $
     readProcessWithExitCode
-      (show (unExecutable executable))
+      (toFilePath (unExecutable executable))
       args
       (serializeFixture value)
   case exitCode of

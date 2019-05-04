@@ -1,4 +1,4 @@
-working-directory: fixtures/working-directory
+working-directory: .
 
 tests:
   - name: set the working directory for the whole specification
@@ -11,3 +11,15 @@ tests:
       - tres
     stdout: |
       uno dos tres
+
+  - name: override the working directory
+    working-directory: nested
+    command:
+      - ruby
+      - ../echo.rb
+    args:
+      - ein
+      - zwei
+      - drei
+    stdout: |
+      ein zwei drei

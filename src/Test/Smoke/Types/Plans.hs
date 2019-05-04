@@ -1,12 +1,21 @@
 module Test.Smoke.Types.Plans where
 
 import Data.Vector (Vector)
+import Path
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Tests
 
 newtype Plan =
-  Plan [(SuiteName, Either SmokeDiscoveryError [Either TestPlanError TestPlan])]
+  Plan [SuitePlan]
+  deriving (Eq, Show)
+
+data SuitePlan
+  = SuitePlanError { suitePlanErrorName :: SuiteName
+                   , suitePlanError :: SmokeDiscoveryError }
+  | SuitePlan { suitePlanName :: SuiteName
+              , suitePlanLocation :: Path Abs Dir
+              , suitePlanTests :: [Either TestPlanError TestPlan] }
   deriving (Eq, Show)
 
 data TestPlan = TestPlan

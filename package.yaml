@@ -18,8 +18,10 @@ dependencies:
   - aeson
   - data-default
   - directory
+  - exceptions
   - filepath
   - Glob
+  - path
   - process
   - process-extras
   - text

@@ -12,6 +12,7 @@ import Data.String (IsString(..))
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
+import Path
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
@@ -20,6 +21,9 @@ type Output a = ReaderT AppOptions IO a
 
 showText :: Show a => a -> Text
 showText = Text.pack . show
+
+showPath :: Path b t -> Text
+showPath path = "\"" <> Text.pack (toFilePath path) <> "\""
 
 int :: Int -> Text
 int = fromString . show

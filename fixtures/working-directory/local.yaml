@@ -1,6 +1,6 @@
 tests:
   - name: set the working directory
-    working-directory: fixtures/working-directory
+    working-directory: .
     command:
       - ruby
       - echo.rb
@@ -12,7 +12,7 @@ tests:
       one two three
 
   - name: set the working directory to another directory
-    working-directory: fixtures/working-directory/nested
+    working-directory: nested
     command:
       - ruby
       - ../echo.rb
@@ -24,7 +24,7 @@ tests:
       raz dwa trzy
 
   - name: resolve `..`
-    working-directory: fixtures/working-directory/..
+    working-directory: ..
     command:
       - ruby
       - working-directory/echo.rb

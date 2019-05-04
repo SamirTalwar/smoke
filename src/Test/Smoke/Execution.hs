@@ -4,17 +4,19 @@ module Test.Smoke.Execution
   ( runTests
   ) where
 
-import Control.Monad (forM)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT, withExceptT)
+import Control.Monad (forM, unless)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import Data.Default
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Path
+import System.Directory (doesDirectoryExist)
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
 import System.Process.ListLike (cwd, proc)
 import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Errors
-import Test.Smoke.Files
 import Test.Smoke.Filters
 import Test.Smoke.Types
 
@@ -41,14 +43,19 @@ runTest testPlan =
   runExceptT (processOutput testPlan =<< executeTest testPlan)
 
 executeTest :: TestPlan -> Execution ActualOutputs
-executeTest (TestPlan _ (WorkingDirectory workingDirectory) executable (Args args) (StdIn processStdIn) _ _ _) = do
-  let executableName = show $ unExecutable executable
+executeTest (TestPlan _ workingDirectory executable (Args args) (StdIn processStdIn) _ _ _) = do
+  let workingDirectoryFilePath =
+        toFilePath $ unWorkingDirectory workingDirectory
+  workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
+  unless workingDirectoryExists $
+    throwE $ NonExistentWorkingDirectory workingDirectory
+  let executableName = toFilePath $ unExecutable executable
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
     tryIOError $
     readCreateProcessWithExitCode
-      ((proc executableName args) {cwd = Just (unPath workingDirectory)})
+      ((proc executableName args) {cwd = Just workingDirectoryFilePath})
       processStdIn
   return (convertExitCode exitCode, StdOut processStdOut, StdErr processStdErr)
 

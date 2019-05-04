@@ -92,21 +92,22 @@ printResult (TestResult _ (TestError (PlanningError NoOutput))) =
   printError "There are no STDOUT or STDERR values in the specification."
 printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executable executablePath))))) =
   printError $
-  "The application \"" <> showText executablePath <> "\" does not exist."
+  "The application " <> showPath executablePath <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
-  printError $ "The fixture \"" <> showText path <> "\" does not exist."
+  printError $ "The fixture " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path e)))) =
   printError $
-  "The fixture \"" <> showText path <> "\" could not be read.\n" <> fromString e
+  "The fixture " <> showPath path <> " could not be read.\n" <> fromString e
 printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
   printFilterError filterError
+printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
+  printError $ "The working directory " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand (Executable executablePath))))) =
   printError $
-  "The application \"" <> showText executablePath <> "\" is not executable."
+  "The application " <> showPath executablePath <> " is not executable."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Executable executablePath) e)))) =
   printError $
-  "The application \"" <> showText executablePath <>
-  "\" could not be executed.\n" <>
+  "The application " <> showPath executablePath <> " could not be executed.\n" <>
   fromString e
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
@@ -135,33 +136,33 @@ printDiscoveryError printErrorMessage options e =
   printErrorMessage $
   case e of
     NoSuchLocation path ->
-      "There is no such location \"" <> showText path <> "\"."
+      "There is no such location \"" <> fromString path <> "\"."
     NoSuchTest path (TestName selectedTestName) ->
-      "There is no such test \"" <> fromString selectedTestName <> "\" in \"" <>
-      showText path <>
-      "\"."
+      "There is no such test \"" <> fromString selectedTestName <> "\" in " <>
+      showPath path <>
+      "."
     CannotSelectTestInDirectory path (TestName selectedTestName) ->
       "The test \"" <> fromString selectedTestName <>
-      "\" cannot be selected from the directory \"" <>
-      showText path <>
-      "\".\n" <>
+      "\" cannot be selected from the directory " <>
+      showPath path <>
+      ".\n" <>
       "Tests must be selected from a single specification file."
     InvalidSpecification path message ->
-      "The test specification \"" <> showText path <> "\" is invalid:\n" <>
+      "The test specification " <> showPath path <> " is invalid:\n" <>
       indentedAll messageIndentation (fromString message)
 
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError (NonExecutableFilter (Executable executablePath)) =
   printError $
-  "The application \"" <> showText executablePath <> "\" is not executable."
+  "The application \"" <> showPath executablePath <> "\" is not executable."
 printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
   printError $
-  "The application \"" <> showText executablePath <>
+  "The application \"" <> showPath executablePath <>
   "\" could not be executed.\n" <>
   fromString e
 printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  "The application \"" <> showText executablePath <>
+  "The application \"" <> showPath executablePath <>
   "\" failed with an exit status of " <>
   showText status <>
   "." <>

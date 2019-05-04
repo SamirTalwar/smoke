@@ -2,8 +2,9 @@ module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
 import Data.Text (Text)
+import Path
+import System.FilePath (FilePath)
 import Test.Smoke.Types.Base
-import Test.Smoke.Types.Paths
 
 data SmokeError
   = DiscoveryError SmokeDiscoveryError
@@ -15,12 +16,12 @@ data SmokeError
 instance Exception SmokeError
 
 data SmokeDiscoveryError
-  = NoSuchLocation Path
-  | NoSuchTest Path
+  = NoSuchLocation FilePath
+  | NoSuchTest (Path Rel File)
                TestName
-  | CannotSelectTestInDirectory Path
+  | CannotSelectTestInDirectory (Path Rel Dir)
                                 TestName
-  | InvalidSpecification Path
+  | InvalidSpecification (Path Rel File)
                          String
   deriving (Eq, Show)
 
@@ -30,8 +31,8 @@ data SmokePlanningError
   = NoCommand
   | NoInput
   | NoOutput
-  | NonExistentFixture Path
-  | CouldNotReadFixture Path
+  | NonExistentFixture (Path Rel File)
+  | CouldNotReadFixture (Path Rel File)
                         String
   | NonExistentCommand Executable
   | PlanningFilterError SmokeFilterError
@@ -40,7 +41,8 @@ data SmokePlanningError
 instance Exception SmokePlanningError
 
 data SmokeExecutionError
-  = NonExecutableCommand Executable
+  = NonExistentWorkingDirectory WorkingDirectory
+  | NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable
                            String
   | ExecutionFilterError SmokeFilterError

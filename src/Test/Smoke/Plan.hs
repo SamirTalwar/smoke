@@ -10,11 +10,12 @@ import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
+import Path
 import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
-import Test.Smoke.Files
 import Test.Smoke.Filters
+import Test.Smoke.Paths
 import Test.Smoke.Types
 
 type Planning = ExceptT SmokePlanningError IO
@@ -52,14 +53,17 @@ validateTest defaultCommand test = do
     isEmpty (Fixtures fixtures) = Vector.null fixtures
 
 readTest ::
-     Path -> WorkingDirectory -> Maybe Command -> Test -> Planning TestPlan
+     Path Abs Dir
+  -> WorkingDirectory
+  -> Maybe Command
+  -> Test
+  -> Planning TestPlan
 readTest location defaultWorkingDirectory defaultCommand test = do
-  workingDirectory <-
-    resolveWorkingDirectory $
-    fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
+  let workingDirectory =
+        fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
   (executable, args) <-
     splitCommand (testCommand test <|> defaultCommand) (testArgs test)
-  let executableName = show $ unExecutable executable
+  let executableName = toFilePath $ unExecutable executable
   executableExists <- liftIO (doesFileExist executableName)
   unless executableExists $
     onNothingThrow_ (NonExistentCommand executable) =<<
@@ -86,10 +90,11 @@ splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)
 splitCommand maybeCommand maybeArgs = do
   (executableName:commandArgs) <-
     onNothingThrow NoCommand (unCommand <$> maybeCommand)
-  let args = commandArgs ++ maybe [] unArgs maybeArgs
-  return (Executable (makePath executableName), Args args)
+  executable <- Executable <$> parseAbsOrRelFile executableName
+  let args = Args $ commandArgs ++ maybe [] unArgs maybeArgs
+  return (executable, args)
 
-readExpectedOutputs :: Path -> Test -> Planning ExpectedOutputs
+readExpectedOutputs :: Path Abs Dir -> Test -> Planning ExpectedOutputs
 readExpectedOutputs location test = do
   expectedStatus <- unfiltered <$> readFixture location (testStatus test)
   expectedStdOuts <-
@@ -98,7 +103,8 @@ readExpectedOutputs location test = do
     Vector.map unfiltered <$> readFixtures location (testStdErr test)
   return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
-readFixture :: FixtureType a => Path -> Fixture a -> Planning (Filtered a)
+readFixture ::
+     FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)
 readFixture _ (Fixture (Inline contents) maybeFilter) =
   return $ includeFilter maybeFilter contents
 readFixture location (Fixture (FileLocation path) maybeFilter) =
@@ -108,20 +114,18 @@ readFixture location (Fixture (FileLocation path) maybeFilter) =
     (ExceptT $ tryIOError $ readFromPath (location </> path))
 
 readFixtures ::
-     FixtureType a => Path -> Fixtures a -> Planning (Vector (Filtered a))
+     FixtureType a
+  => Path Abs Dir
+  -> Fixtures a
+  -> Planning (Vector (Filtered a))
 readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
 
 includeFilter :: Maybe FixtureFilter -> a -> Filtered a
 includeFilter maybeFilter contents =
   maybe (Unfiltered contents) (Filtered contents) maybeFilter
 
-handleMissingFileError :: Path -> IOError -> SmokePlanningError
+handleMissingFileError :: Path Rel File -> IOError -> SmokePlanningError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path
     else CouldNotReadFixture path (show e)
-
-resolveWorkingDirectory :: WorkingDirectory -> Planning WorkingDirectory
-resolveWorkingDirectory workingDirectory =
-  WorkingDirectory <$>
-  (liftIO . resolvePath $ unWorkingDirectory workingDirectory)

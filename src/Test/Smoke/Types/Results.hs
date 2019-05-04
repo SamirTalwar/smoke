@@ -1,9 +1,9 @@
 module Test.Smoke.Types.Results where
 
 import Data.Vector (Vector)
+import Path
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
-import Test.Smoke.Types.Paths
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
 
@@ -13,7 +13,7 @@ data SuiteResult
   = SuiteResultError { suiteResultErrorSuiteName :: SuiteName
                      , suiteResultError :: SmokeDiscoveryError }
   | SuiteResult { suiteResultSuiteName :: SuiteName
-                , suiteResultLocation :: Path
+                , suiteResultLocation :: Path Abs Dir
                 , suiteResultTestResults :: [TestResult] }
 
 data TestResult =

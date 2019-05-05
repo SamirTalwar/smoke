@@ -52,6 +52,9 @@ indentedAll n = Text.unlines . map (mappend (spaces n)) . Text.lines
 putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
+putPlain :: Text -> Output ()
+putPlain = liftIO . TextIO.putStr
+
 putPlainLn :: Text -> Output ()
 putPlainLn = hPutStrWithLn stdout
 
@@ -64,11 +67,11 @@ putRed = putColor Red
 putRedLn :: Text -> Output ()
 putRedLn = putColorLn Red
 
-putColorLn :: Color -> Text -> Output ()
-putColorLn color = withColor color (hPutStrWithLn stdout)
-
 putColor :: Color -> Text -> Output ()
-putColor color = withColor color (liftIO . TextIO.putStr)
+putColor color = withColor color putPlain
+
+putColorLn :: Color -> Text -> Output ()
+putColorLn color = withColor color putPlainLn
 
 putError :: Text -> Output ()
 putError = withColor Red $ hPutStrWithLn stderr

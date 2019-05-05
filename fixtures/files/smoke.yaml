@@ -22,3 +22,47 @@ tests:
       - path: output.file
         contents: |
           HERE IS SOME TEXT.
+
+  - name: lowercase a file
+    command:
+      - sh
+      - -c
+    args:
+      - tr '[:lower:]' '[:upper:]' < input.file > output.file
+    files:
+      - path: output.file
+        contents: |
+          here is some text.
+
+  - name: multiple files
+    command:
+      - sh
+      - -c
+    args:
+      - echo three > one; echo two > two; echo one > three
+    files:
+      - path: one
+        contents: |
+          one
+      - path: two
+        contents: |
+          two
+      - path: three
+        contents: |
+          three
+
+  - name: multiple possible file contents
+    command:
+      - sh
+      - -c
+    args:
+      - echo 0 > output.file
+    files:
+      - path: output.file
+        contents:
+          - |
+            1
+          - |
+            2
+          - |
+            3

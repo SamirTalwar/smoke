@@ -2,6 +2,6 @@ tests:
   - name: files
     args:
       - fixtures/files
-    exit-status: 0
+    exit-status: 1
     stdout:
       file: io/files.out

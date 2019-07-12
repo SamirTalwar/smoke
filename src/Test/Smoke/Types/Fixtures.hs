@@ -13,8 +13,7 @@ import Test.Smoke.Types.Base
 import Test.Smoke.Types.Filters
 
 data Fixture a =
-  Fixture (Contents a)
-          (Maybe FixtureFilter)
+  Fixture (Contents a) (Maybe FixtureFilter)
   deriving (Eq, Show)
 
 newtype Fixtures a =

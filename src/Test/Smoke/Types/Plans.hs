@@ -11,25 +11,30 @@ newtype Plan =
   deriving (Eq, Show)
 
 data SuitePlan
-  = SuitePlanError { suitePlanErrorName :: SuiteName
-                   , suitePlanError :: SmokeDiscoveryError }
-  | SuitePlan { suitePlanName :: SuiteName
-              , suitePlanLocation :: Path Abs Dir
-              , suitePlanTests :: [Either TestPlanError TestPlan] }
+  = SuitePlanError
+      { suitePlanErrorName :: SuiteName
+      , suitePlanError :: SmokeDiscoveryError
+      }
+  | SuitePlan
+      { suitePlanName :: SuiteName
+      , suitePlanLocation :: Path Abs Dir
+      , suitePlanTests :: [Either TestPlanError TestPlan]
+      }
   deriving (Eq, Show)
 
-data TestPlan = TestPlan
-  { planTest :: Test
-  , planWorkingDirectory :: WorkingDirectory
-  , planExecutable :: Executable
-  , planArgs :: Args
-  , planStdIn :: StdIn
-  , planStatus :: Status
-  , planStdOut :: Vector StdOut
-  , planStdErr :: Vector StdErr
-  } deriving (Eq, Show)
+data TestPlan =
+  TestPlan
+    { planTest :: Test
+    , planWorkingDirectory :: WorkingDirectory
+    , planExecutable :: Executable
+    , planArgs :: Args
+    , planStdIn :: StdIn
+    , planStatus :: Status
+    , planStdOut :: Vector StdOut
+    , planStdErr :: Vector StdErr
+    }
+  deriving (Eq, Show)
 
 data TestPlanError =
-  TestPlanError Test
-                SmokePlanningError
+  TestPlanError Test SmokePlanningError
   deriving (Eq, Show)

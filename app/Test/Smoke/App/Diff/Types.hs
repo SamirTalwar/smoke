@@ -8,11 +8,12 @@ module Test.Smoke.App.Diff.Types
 import Data.Text (Text)
 import Test.Smoke.App.OptionColorOutput
 
-data DiffEngine = DiffEngine
-  { engineName :: String
-  , engineEnabled :: IO Bool
-  , engineRender :: PrintDiff
-  }
+data DiffEngine =
+  DiffEngine
+    { engineName :: String
+    , engineEnabled :: IO Bool
+    , engineRender :: PrintDiff
+    }
 
 type PrintDiff = ColorOutput -> RenderDiff
 

@@ -17,12 +17,9 @@ instance Exception SmokeError
 
 data SmokeDiscoveryError
   = NoSuchLocation FilePath
-  | NoSuchTest (Path Rel File)
-               TestName
-  | CannotSelectTestInDirectory (Path Rel Dir)
-                                TestName
-  | InvalidSpecification (Path Rel File)
-                         String
+  | NoSuchTest (Path Rel File) TestName
+  | CannotSelectTestInDirectory (Path Rel Dir) TestName
+  | InvalidSpecification (Path Rel File) String
   deriving (Eq, Show)
 
 instance Exception SmokeDiscoveryError
@@ -32,8 +29,7 @@ data SmokePlanningError
   | NoInput
   | NoOutput
   | NonExistentFixture (Path Rel File)
-  | CouldNotReadFixture (Path Rel File)
-                        String
+  | CouldNotReadFixture (Path Rel File) String
   | NonExistentCommand Executable
   | PlanningFilterError SmokeFilterError
   deriving (Eq, Show)
@@ -43,16 +39,14 @@ instance Exception SmokePlanningError
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | NonExecutableCommand Executable
-  | CouldNotExecuteCommand Executable
-                           String
+  | CouldNotExecuteCommand Executable String
   | ExecutionFilterError SmokeFilterError
   deriving (Eq, Show)
 
 instance Exception SmokeExecutionError
 
 data SmokeBlessError
-  = CouldNotBlessInlineFixture String
-                               Text
+  = CouldNotBlessInlineFixture String Text
   | CouldNotBlessAMissingValue String
   | CouldNotBlessWithMultipleValues String
   | BlessIOException IOException
@@ -62,12 +56,8 @@ instance Exception SmokeBlessError
 
 data SmokeFilterError
   = NonExecutableFilter Executable
-  | CouldNotExecuteFilter Executable
-                          String
-  | ExecutionFailed Executable
-                    Status
-                    StdOut
-                    StdErr
+  | CouldNotExecuteFilter Executable String
+  | ExecutionFailed Executable Status StdOut StdErr
   deriving (Eq, Show)
 
 instance Exception SmokeFilterError

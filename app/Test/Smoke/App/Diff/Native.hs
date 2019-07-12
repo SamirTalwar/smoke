@@ -10,8 +10,7 @@ import qualified Data.Text as Text
 import Test.Smoke.App.Diff.Types
 
 data LineRange =
-  LineRange (Int, Int)
-            [Text]
+  LineRange (Int, Int) [Text]
   deriving (Eq, Ord)
 
 engine :: DiffEngine

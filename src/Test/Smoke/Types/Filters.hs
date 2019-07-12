@@ -10,8 +10,7 @@ import Test.Smoke.Types.Base
 
 data FixtureFilter
   = InlineFixtureFilter Text
-  | CommandFixtureFilter Executable
-                         Args
+  | CommandFixtureFilter Executable Args
   deriving (Eq, Show)
 
 instance FromJSON FixtureFilter where
@@ -33,8 +32,7 @@ instance FromJSON FixtureFilter where
 
 data Filtered a
   = Unfiltered a
-  | Filtered a
-             FixtureFilter
+  | Filtered a FixtureFilter
   deriving (Eq, Show)
 
 unfiltered :: Filtered a -> a

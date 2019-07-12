@@ -10,22 +10,26 @@ import Test.Smoke.Types.Tests
 type Results = [SuiteResult]
 
 data SuiteResult
-  = SuiteResultError { suiteResultErrorSuiteName :: SuiteName
-                     , suiteResultError :: SmokeDiscoveryError }
-  | SuiteResult { suiteResultSuiteName :: SuiteName
-                , suiteResultLocation :: Path Abs Dir
-                , suiteResultTestResults :: [TestResult] }
+  = SuiteResultError
+      { suiteResultErrorSuiteName :: SuiteName
+      , suiteResultError :: SmokeDiscoveryError
+      }
+  | SuiteResult
+      { suiteResultSuiteName :: SuiteName
+      , suiteResultLocation :: Path Abs Dir
+      , suiteResultTestResults :: [TestResult]
+      }
 
 data TestResult =
-  TestResult Test
-             TestOutcome
+  TestResult Test TestOutcome
 
 data TestOutcome
   = TestSuccess
-  | TestFailure TestPlan
-                (PartResult Status)
-                (PartResult StdOut)
-                (PartResult StdErr)
+  | TestFailure
+      TestPlan
+      (PartResult Status)
+      (PartResult StdOut)
+      (PartResult StdErr)
   | TestError SmokeError
   deriving (Eq, Show)
 

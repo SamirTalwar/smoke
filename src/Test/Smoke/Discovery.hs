@@ -24,8 +24,7 @@ type Discovery = ExceptT SmokeDiscoveryError IO
 data Root
   = DirectoryRoot (Path Rel Dir)
   | FileRoot (Path Rel File)
-  | SingleRoot (Path Rel File)
-               TestName
+  | SingleRoot (Path Rel File) TestName
 
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =

@@ -57,7 +57,7 @@ At least one of standard output and standard error must be specified, though it 
 
 ### Example: Calculator
 
-Our simplest calculator test case looks like this. It's a file named *smoke.yaml* (the file basename is a convention; you can name it anything you want ending in *.yaml*).
+Our simplest calculator test case looks like this. It's a file named _smoke.yaml_ (the file basename is a convention; you can name it anything you want ending in _.yaml_).
 
 ```yaml
 command:
@@ -123,18 +123,18 @@ Sometimes, things aren't quite so deterministic. When some of the output (or inp
 
 ```json
 {
-    "args": {
-        "foo": "bar"
-    },
-    "headers": {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "close",
-        "Host": "httpbin.org",
-        "User-Agent": "HTTPie/1.0.0"
-    },
-    "origin": "1.2.3.4",
-    "url": "https://httpbin.org/get?foo=bar"
+  "args": {
+    "foo": "bar"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "close",
+    "Host": "httpbin.org",
+    "User-Agent": "HTTPie/1.0.0"
+  },
+  "origin": "1.2.3.4",
+  "url": "https://httpbin.org/get?foo=bar"
 }
 ```
 

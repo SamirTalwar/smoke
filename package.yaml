@@ -66,3 +66,8 @@ executables:
           - app/unix
         dependencies:
           - unix
+
+build-tools:
+  - cabal2nix
+  - hindent
+  - hlint

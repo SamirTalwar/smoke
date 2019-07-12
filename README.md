@@ -213,11 +213,7 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-You will need to set up Stack as above, and install a few dependencies:
-
-```sh
-make tools
-```
+You will need to set up Stack as above.
 
 We dog-food. Smoke is tested using itself.
 
@@ -225,18 +221,20 @@ Before committing, these four commands should be run, and any failures should be
 
 ```sh
 make build     # Builds the application using Stack.
+make reformat  # Reformats the code using hindent.
 make test      # Tests the application using itself, with the tests in the "test" directory.
 make lint      # Lints the code using HLint.
-make reformat  # Reformats the code using hindent.
 ```
+
+(You can typically just run `make reformat check` to trigger them all.)
 
 On Windows, Makefiles don't work very well, so run the commands directly:
 
 ```bat
 stack install --local-bin-path=out\build
+stack exec -- hindent <file>
 .\out\build\smoke-exe --command=.\out\build\smoke-exe test
 stack exec -- hlint .
-stack exec -- hindent <file>
 ```
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.

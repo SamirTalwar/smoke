@@ -27,6 +27,11 @@ before_install:
       travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
     fi
   - stack setup
+  - mkdir -p ~/.stack
+  - |
+    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
+      cp stack.config.macos.yaml ~/.stack/config.yaml
+    fi
 
 install:
   - stack --no-terminal install --only-dependencies

@@ -68,6 +68,10 @@ executables:
           - unix
 
 build-tools:
-  - cabal2nix
   - hindent
   - hlint
+
+when:
+- condition: "!os(windows)"
+  build-tools:
+    - cabal2nix

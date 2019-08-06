@@ -25,6 +25,8 @@ dependencies:
   - path
   - process
   - process-extras
+  - tar
+  - temporary
   - text
   - transformers
   - vector
@@ -73,6 +75,6 @@ build-tools:
   - hlint
 
 when:
-- condition: "!os(windows)"
-  build-tools:
-    - cabal2nix
+  - condition: "!os(windows)"
+    build-tools:
+      - cabal2nix

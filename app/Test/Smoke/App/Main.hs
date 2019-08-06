@@ -116,7 +116,16 @@ printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Ex
   fromString e
 printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
   printError $
-  "The output file \"" <> showText path <> "\" does not exist." <> fromString e
+  "The output file \"" <> showPath path <> "\" does not exist.\n" <>
+  fromString e
+printResult (TestResult _ (TestError (ExecutionError (CouldNotStoreDirectory path e)))) =
+  printError $
+  "The directory \"" <> showPath path <> "\" could not be stored.\n" <>
+  fromString e
+printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory path e)))) =
+  printError $
+  "The directory \"" <> showPath path <> "\" could not be reverted.\n" <>
+  fromString e
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =

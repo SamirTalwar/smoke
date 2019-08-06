@@ -90,6 +90,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
       , planStdOut = stdOut
       , planStdErr = stdErr
       , planFiles = files
+      , planRevert = testRevert test
       }
 
 splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)

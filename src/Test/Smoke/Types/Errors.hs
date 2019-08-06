@@ -41,6 +41,8 @@ data SmokeExecutionError
   | NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable String
   | CouldNotReadFile (Path Rel File) String
+  | CouldNotStoreDirectory (Path Rel Dir) String
+  | CouldNotRevertDirectory (Path Rel Dir) String
   | ExecutionFilterError SmokeFilterError
   deriving (Eq, Show)
 

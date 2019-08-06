@@ -49,6 +49,7 @@ data Test =
     , testStdErr :: Fixtures StdErr
     , testStatus :: Fixture Status
     , testFiles :: Map (Path Rel File) (Fixtures TestFileContents)
+    , testRevert :: Vector (Path Rel Dir)
     }
   deriving (Eq, Show)
 
@@ -73,7 +74,8 @@ parseTest location =
     (Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0) <*>
      return Nothing) <*>
     (mapFromTraversable <$>
-     (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty)))
+     (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))) <*>
+    (v .:? "revert" .!= Vector.empty)
 
 parseWorkingDirectory ::
      Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)

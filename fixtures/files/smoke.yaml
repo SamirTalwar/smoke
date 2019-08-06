@@ -11,6 +11,8 @@ tests:
       - path: output.file
         contents:
           file: input.file
+    revert:
+      - fixtures/files
 
   - name: uppercase a file
     command:
@@ -22,6 +24,8 @@ tests:
       - path: output.file
         contents: |
           HERE IS SOME TEXT.
+    revert:
+      - fixtures/files
 
   - name: lowercase a file
     command:
@@ -33,6 +37,8 @@ tests:
       - path: output.file
         contents: |
           here is some text.
+    revert:
+      - fixtures/files
 
   - name: multiple files
     command:
@@ -50,6 +56,8 @@ tests:
       - path: three
         contents: |
           three
+    revert:
+      - fixtures/files
 
   - name: multiple possible file contents
     command:
@@ -66,3 +74,20 @@ tests:
             2
           - |
             3
+    revert:
+      - fixtures/files
+
+  - name: increment a number
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        NUMBER="$(cat number)"
+        echo "$NUMBER + 1" | bc > number
+    files:
+      - path: number
+        contents: |
+          8
+    revert:
+      - fixtures/files

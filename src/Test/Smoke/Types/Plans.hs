@@ -35,6 +35,7 @@ data TestPlan =
     , planStdOut :: Vector StdOut
     , planStdErr :: Vector StdErr
     , planFiles :: Map (Path Rel File) (Vector TestFileContents)
+    , planRevert :: Vector (Path Rel Dir)
     }
   deriving (Eq, Show)
 

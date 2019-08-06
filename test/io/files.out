@@ -33,5 +33,7 @@ multiple possible file contents
       or: @@ -1 +1 @@
           -3
           +0
+increment a number
+  succeeded
 
-5 tests, 3 failures
+6 tests, 3 failures

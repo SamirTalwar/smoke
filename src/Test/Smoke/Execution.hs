@@ -87,21 +87,22 @@ executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn 
       return (absolutePath, contents)
 
 revertingDirectories :: Vector (Path Rel Dir) -> Execution a -> Execution a
-revertingDirectories paths execution
-  | Vector.null paths = execution
-  | otherwise = do
-    let path = Vector.head paths
-    let filePath = toFilePath path
-    withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do
-      tryIO (CouldNotStoreDirectory path . show) $ do
-        hClose handle
-        Tar.create tarFile filePath ["."]
-      result <- execution
-      tryIO (CouldNotRevertDirectory path . show) $ do
-        removeDirectoryRecursive filePath
-        createDirectory filePath
-        Tar.extract filePath tarFile
-      return result
+revertingDirectories paths execution =
+  Vector.foldl (flip revertingDirectory) execution paths
+
+revertingDirectory :: Path Rel Dir -> Execution a -> Execution a
+revertingDirectory path execution = do
+  let filePath = toFilePath path
+  withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do
+    tryIO (CouldNotStoreDirectory path . show) $ do
+      hClose handle
+      Tar.create tarFile filePath ["."]
+    result <- execution
+    tryIO (CouldNotRevertDirectory path . show) $ do
+      removeDirectoryRecursive filePath
+      createDirectory filePath
+      Tar.extract filePath tarFile
+    return result
 
 processOutput ::
      Path Abs Dir -> TestPlan -> ActualOutputs -> Execution TestResult

@@ -91,3 +91,24 @@ tests:
           8
     revert:
       - fixtures/files
+
+  - name: write to two files
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        echo one >> single/thing
+        echo one >> multiple/things
+        echo two >> multiple/things
+    files:
+      - path: single/thing
+        contents: |
+          one
+      - path: multiple/things
+        contents: |
+          one
+          two
+    revert:
+      - fixtures/files/single
+      - fixtures/files/multiple

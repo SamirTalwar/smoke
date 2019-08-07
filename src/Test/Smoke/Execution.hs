@@ -86,11 +86,11 @@ executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn 
         tryIO (CouldNotReadFile path . show) $ readFromPath absolutePath
       return (absolutePath, contents)
 
-revertingDirectories :: Vector (Path Rel Dir) -> Execution a -> Execution a
+revertingDirectories :: Vector (Path Abs Dir) -> Execution a -> Execution a
 revertingDirectories paths execution =
   Vector.foldl (flip revertingDirectory) execution paths
 
-revertingDirectory :: Path Rel Dir -> Execution a -> Execution a
+revertingDirectory :: Path Abs Dir -> Execution a -> Execution a
 revertingDirectory path execution = do
   let filePath = toFilePath path
   withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do

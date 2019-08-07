@@ -79,6 +79,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
   stdErr <- Vector.map unfiltered <$> readFixtures location (testStdErr test)
   files <-
     mapM (fmap (Vector.map unfiltered) . readFixtures location) (testFiles test)
+  let revert = Vector.map (location </>) (testRevert test)
   return $
     TestPlan
       { planTest = test
@@ -90,7 +91,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
       , planStdOut = stdOut
       , planStdErr = stdErr
       , planFiles = files
-      , planRevert = testRevert test
+      , planRevert = revert
       }
 
 splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)

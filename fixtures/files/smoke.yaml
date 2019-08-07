@@ -12,7 +12,7 @@ tests:
         contents:
           file: input.file
     revert:
-      - fixtures/files
+      - .
 
   - name: uppercase a file
     command:
@@ -25,7 +25,7 @@ tests:
         contents: |
           HERE IS SOME TEXT.
     revert:
-      - fixtures/files
+      - .
 
   - name: lowercase a file
     command:
@@ -38,7 +38,7 @@ tests:
         contents: |
           here is some text.
     revert:
-      - fixtures/files
+      - .
 
   - name: multiple files
     command:
@@ -57,7 +57,7 @@ tests:
         contents: |
           three
     revert:
-      - fixtures/files
+      - .
 
   - name: multiple possible file contents
     command:
@@ -75,7 +75,7 @@ tests:
           - |
             3
     revert:
-      - fixtures/files
+      - .
 
   - name: increment a number
     command:
@@ -90,7 +90,7 @@ tests:
         contents: |
           8
     revert:
-      - fixtures/files
+      - .
 
   - name: write to two files
     command:
@@ -110,5 +110,5 @@ tests:
           one
           two
     revert:
-      - fixtures/files/single
-      - fixtures/files/multiple
+      - ./single
+      - ./multiple

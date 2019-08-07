@@ -81,7 +81,7 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
-  printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
+  printFailingOutput "status" ((<> "\n") . showInt . unStatus <$> statusResult)
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
   printFailingFilesOutput fileResults
@@ -101,8 +101,8 @@ printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executa
 printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
   printError $ "The fixture " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path e)))) =
-  printError $
-  "The fixture " <> showPath path <> " could not be read.\n" <> fromString e
+  printErrorWithException e $
+  "The fixture " <> showPath path <> " could not be read."
 printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
@@ -111,21 +111,17 @@ printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand (Exec
   printError $
   "The application " <> showPath executablePath <> " is not executable."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Executable executablePath) e)))) =
-  printError $
-  "The application " <> showPath executablePath <> " could not be executed.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The application " <> showPath executablePath <> " could not be executed."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
-  printError $
-  "The output file \"" <> showPath path <> "\" does not exist.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The output file \"" <> showPath path <> "\" does not exist."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotStoreDirectory path e)))) =
-  printError $
-  "The directory \"" <> showPath path <> "\" could not be stored.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The directory \"" <> showPath path <> "\" could not be stored."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory path e)))) =
-  printError $
-  "The directory \"" <> showPath path <> "\" could not be reverted.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The directory \"" <> showPath path <> "\" could not be reverted."
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
@@ -173,10 +169,8 @@ printFilterError (NonExecutableFilter (Executable executablePath)) =
   printError $
   "The application \"" <> showPath executablePath <> "\" is not executable."
 printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
-  printError $
-  "The application \"" <> showPath executablePath <>
-  "\" could not be executed.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The application \"" <> showPath executablePath <> "\" could not be executed."
 printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
   "The application \"" <> showPath executablePath <>
@@ -246,7 +240,7 @@ printSummary summary = do
           then putGreenLn
           else putRedLn
   printSummaryLine $
-    int testCount <> " " <> testWord <> ", " <> int failureCount <> " " <>
+    showInt testCount <> " " <> testWord <> ", " <> showInt failureCount <> " " <>
     failureWord
   where
     pluralize :: Int -> Text -> Text -> Text
@@ -255,6 +249,10 @@ printSummary summary = do
 
 printError :: Text -> Output ()
 printError = putRedLn . indentedAll messageIndentation
+
+printErrorWithException :: IOError -> Text -> Output ()
+printErrorWithException exception =
+  putRedLn . indentedAll messageIndentation . (<> "\n" <> showText exception)
 
 outputIndentation :: Int
 outputIndentation = 10

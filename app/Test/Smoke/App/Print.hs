@@ -20,13 +20,13 @@ import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 type Output a = ReaderT AppOptions IO a
 
 showText :: Show a => a -> Text
-showText = Text.pack . show
+showText = fromString . show
 
 showPath :: Path b t -> Text
 showPath path = "\"" <> Text.pack (toFilePath path) <> "\""
 
-int :: Int -> Text
-int = fromString . show
+showInt :: Int -> Text
+showInt = fromString . show
 
 hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')

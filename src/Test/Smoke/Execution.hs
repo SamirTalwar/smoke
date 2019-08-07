@@ -82,8 +82,7 @@ executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn 
     readTestFile :: Path Rel File -> Execution (Path Abs File, Text)
     readTestFile path = do
       let absolutePath = location </> path
-      contents <-
-        tryIO (CouldNotReadFile path . show) $ readFromPath absolutePath
+      contents <- tryIO (CouldNotReadFile path) $ readFromPath absolutePath
       return (absolutePath, contents)
 
 revertingDirectories :: Vector (Path Abs Dir) -> Execution a -> Execution a
@@ -94,11 +93,11 @@ revertingDirectory :: Path Abs Dir -> Execution a -> Execution a
 revertingDirectory path execution = do
   let filePath = toFilePath path
   withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do
-    tryIO (CouldNotStoreDirectory path . show) $ do
+    tryIO (CouldNotStoreDirectory path) $ do
       hClose handle
       Tar.create tarFile filePath ["."]
     result <- execution
-    tryIO (CouldNotRevertDirectory path . show) $ do
+    tryIO (CouldNotRevertDirectory path) $ do
       removeDirectoryRecursive filePath
       createDirectory filePath
       Tar.extract filePath tarFile
@@ -160,7 +159,7 @@ handleExecutionError :: Executable -> IOError -> SmokeExecutionError
 handleExecutionError executable e =
   if isPermissionError e
     then NonExecutableCommand executable
-    else CouldNotExecuteCommand executable (show e)
+    else CouldNotExecuteCommand executable e
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

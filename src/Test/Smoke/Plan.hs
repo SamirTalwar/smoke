@@ -127,4 +127,4 @@ handleMissingFileError :: Path Rel File -> IOError -> SmokePlanningError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path
-    else CouldNotReadFixture path (show e)
+    else CouldNotReadFixture path e

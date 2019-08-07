@@ -124,23 +124,21 @@ printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory pa
   "The directory \"" <> showPath path <> "\" could not be reverted."
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)))) =
   printError $
-  "The fixture \"" <> fromString propertyName <>
+  "The fixture \"" <> showText fixtureName' <>
   "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue fixtureName')))) =
   printError $
-  "There are no expected \"" <> fromString propertyName <>
+  "There are no expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues propertyName)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues fixtureName')))) =
   printError $
-  "There are multiple expected \"" <> fromString propertyName <>
+  "There are multiple expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
 printResult (TestResult _ (TestError (BlessError (BlessIOException e)))) =
-  printError $
-  "Blessing failed:\n" <>
-  indentedAll messageIndentation (fromString (displayException e))
+  printErrorWithException e "Blessing failed."
 
 printDiscoveryError ::
      (Text -> Output ()) -> AppOptions -> SmokeDiscoveryError -> IO ()
@@ -252,7 +250,9 @@ printError = putRedLn . indentedAll messageIndentation
 
 printErrorWithException :: IOError -> Text -> Output ()
 printErrorWithException exception =
-  putRedLn . indentedAll messageIndentation . (<> "\n" <> showText exception)
+  putRedLn .
+  indentedAll messageIndentation .
+  (<> "\n" <> fromString (displayException exception))
 
 outputIndentation :: Int
 outputIndentation = 10

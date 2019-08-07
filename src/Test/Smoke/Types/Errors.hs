@@ -49,9 +49,9 @@ data SmokeExecutionError
 instance Exception SmokeExecutionError
 
 data SmokeBlessError
-  = CouldNotBlessInlineFixture String Text
-  | CouldNotBlessAMissingValue String
-  | CouldNotBlessWithMultipleValues String
+  = CouldNotBlessInlineFixture FixtureName Text
+  | CouldNotBlessAMissingValue FixtureName
+  | CouldNotBlessWithMultipleValues FixtureName
   | BlessIOException IOException
   deriving (Eq, Show)
 

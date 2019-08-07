@@ -6,6 +6,7 @@ module Test.Smoke.Types.Base where
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Default
+import Data.String (IsString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Path
@@ -99,3 +100,9 @@ newtype StdErr =
 
 instance Default StdErr where
   def = StdErr Text.empty
+
+newtype FixtureName =
+  FixtureName
+    { unFixtureName :: String
+    }
+  deriving (Eq, Show, IsString)

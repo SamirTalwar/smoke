@@ -79,12 +79,12 @@ tests:
 
   - name: increment a number
     command:
-      - sh
-      - -c
-    args:
-      - |
-        NUMBER="$(cat number)"
-        echo "$NUMBER + 1" | bc > number
+      - ruby
+      - "-"
+    stdin: |
+      num = File.read('number').to_i
+      num += 1
+      File.write('number', num.to_s + "\n")
     files:
       - path: number
         contents: |

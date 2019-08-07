@@ -115,13 +115,13 @@ printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Ex
   "The application " <> showPath executablePath <> " could not be executed."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
   printErrorWithException e $
-  "The output file \"" <> showPath path <> "\" does not exist."
+  "The output file " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotStoreDirectory path e)))) =
   printErrorWithException e $
-  "The directory \"" <> showPath path <> "\" could not be stored."
+  "The directory " <> showPath path <> " could not be stored."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory path e)))) =
   printErrorWithException e $
-  "The directory \"" <> showPath path <> "\" could not be reverted."
+  "The directory " <> showPath path <> " could not be reverted."
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)))) =
@@ -165,14 +165,14 @@ printDiscoveryError printErrorMessage options e =
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError (NonExecutableFilter (Executable executablePath)) =
   printError $
-  "The application \"" <> showPath executablePath <> "\" is not executable."
+  "The application " <> showPath executablePath <> " is not executable."
 printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
   printErrorWithException e $
-  "The application \"" <> showPath executablePath <> "\" could not be executed."
+  "The application " <> showPath executablePath <> " could not be executed."
 printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  "The application \"" <> showPath executablePath <>
-  "\" failed with an exit status of " <>
+  "The application " <> showPath executablePath <>
+  " failed with an exit status of " <>
   showText status <>
   "." <>
   "\nSTDOUT:\n" <>

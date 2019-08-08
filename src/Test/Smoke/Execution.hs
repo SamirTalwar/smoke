@@ -87,7 +87,7 @@ executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn 
 
 revertingDirectories :: Vector (Path Abs Dir) -> Execution a -> Execution a
 revertingDirectories paths execution =
-  Vector.foldl (flip revertingDirectory) execution paths
+  Vector.foldr revertingDirectory execution paths
 
 revertingDirectory :: Path Abs Dir -> Execution a -> Execution a
 revertingDirectory path execution = do

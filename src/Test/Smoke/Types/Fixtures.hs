@@ -24,7 +24,7 @@ noFixtures :: Fixtures a
 noFixtures = Fixtures Vector.empty
 
 class FixtureType a where
-  fixtureName :: Contents a -> String
+  fixtureName :: Contents a -> FixtureName
   serializeFixture :: a -> Text
   deserializeFixture :: Text -> a
 

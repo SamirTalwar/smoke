@@ -1,0 +1,114 @@
+working-directory: .
+
+tests:
+  - name: copy a file
+    command:
+      - cp
+    args:
+      - input.file
+      - output.file
+    files:
+      - path: output.file
+        contents:
+          file: input.file
+    revert:
+      - .
+
+  - name: uppercase a file
+    command:
+      - sh
+      - -c
+    args:
+      - tr '[:lower:]' '[:upper:]' < input.file > output.file
+    files:
+      - path: output.file
+        contents: |
+          HERE IS SOME TEXT.
+    revert:
+      - .
+
+  - name: lowercase a file
+    command:
+      - sh
+      - -c
+    args:
+      - tr '[:lower:]' '[:upper:]' < input.file > output.file
+    files:
+      - path: output.file
+        contents: |
+          here is some text.
+    revert:
+      - .
+
+  - name: multiple files
+    command:
+      - sh
+      - -c
+    args:
+      - echo three > one; echo two > two; echo one > three
+    files:
+      - path: one
+        contents: |
+          one
+      - path: two
+        contents: |
+          two
+      - path: three
+        contents: |
+          three
+    revert:
+      - .
+
+  - name: multiple possible file contents
+    command:
+      - sh
+      - -c
+    args:
+      - echo 0 > output.file
+    files:
+      - path: output.file
+        contents:
+          - |
+            1
+          - |
+            2
+          - |
+            3
+    revert:
+      - .
+
+  - name: increment a number
+    command:
+      - ruby
+      - "-"
+    stdin: |
+      num = File.read('number').to_i
+      num += 1
+      File.write('number', num.to_s + "\n")
+    files:
+      - path: number
+        contents: |
+          8
+    revert:
+      - .
+
+  - name: write to two files
+    command:
+      - sh
+      - -c
+    args:
+      - |
+        echo one >> single/thing
+        echo one >> multiple/things
+        echo two >> multiple/things
+    files:
+      - path: single/thing
+        contents: |
+          one
+      - path: multiple/things
+        contents: |
+          one
+          two
+    revert:
+      - ./single
+      - ./multiple

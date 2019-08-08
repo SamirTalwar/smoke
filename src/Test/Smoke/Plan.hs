@@ -6,6 +6,7 @@ import Control.Applicative ((<|>))
 import Control.Monad (forM, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -19,8 +20,6 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 type Planning = ExceptT SmokePlanningError IO
-
-type ExpectedOutputs = (Status, Vector StdOut, Vector StdErr)
 
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
@@ -47,10 +46,13 @@ validateTest defaultCommand test = do
   when (isNothing (testCommand test <|> defaultCommand)) $ throwE NoCommand
   when (isNothing (testArgs test) && isNothing (testStdIn test)) $
     throwE NoInput
-  when (isEmpty (testStdOut test) && isEmpty (testStdErr test)) $
+  when
+    (isEmptyFixtures (testStdOut test) &&
+     isEmptyFixtures (testStdErr test) && isEmptyFiles (testFiles test)) $
     throwE NoOutput
   where
-    isEmpty (Fixtures fixtures) = Vector.null fixtures
+    isEmptyFixtures (Fixtures fixtures) = Vector.null fixtures
+    isEmptyFiles = Map.null
 
 readTest ::
      Path Abs Dir
@@ -71,19 +73,25 @@ readTest location defaultWorkingDirectory defaultCommand test = do
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture location <$> testStdIn test)
-  filteredStdIn <-
-    withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
-  (status, stdOut, stdErr) <- readExpectedOutputs location test
+  stdIn <- withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
+  status <- unfiltered <$> readFixture location (testStatus test)
+  stdOut <- Vector.map unfiltered <$> readFixtures location (testStdOut test)
+  stdErr <- Vector.map unfiltered <$> readFixtures location (testStdErr test)
+  files <-
+    mapM (fmap (Vector.map unfiltered) . readFixtures location) (testFiles test)
+  let revert = Vector.map (location </>) (testRevert test)
   return $
     TestPlan
       { planTest = test
       , planWorkingDirectory = workingDirectory
       , planExecutable = executable
       , planArgs = args
-      , planStdIn = filteredStdIn
+      , planStdIn = stdIn
       , planStatus = status
       , planStdOut = stdOut
       , planStdErr = stdErr
+      , planFiles = files
+      , planRevert = revert
       }
 
 splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)
@@ -93,15 +101,6 @@ splitCommand maybeCommand maybeArgs = do
   executable <- Executable <$> parseAbsOrRelFile executableName
   let args = Args $ commandArgs ++ maybe [] unArgs maybeArgs
   return (executable, args)
-
-readExpectedOutputs :: Path Abs Dir -> Test -> Planning ExpectedOutputs
-readExpectedOutputs location test = do
-  expectedStatus <- unfiltered <$> readFixture location (testStatus test)
-  expectedStdOuts <-
-    Vector.map unfiltered <$> readFixtures location (testStdOut test)
-  expectedStdErrs <-
-    Vector.map unfiltered <$> readFixtures location (testStdErr test)
-  return (expectedStatus, expectedStdOuts, expectedStdErrs)
 
 readFixture ::
      FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)
@@ -128,4 +127,4 @@ handleMissingFileError :: Path Rel File -> IOError -> SmokePlanningError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path
-    else CouldNotReadFixture path (show e)
+    else CouldNotReadFixture path e

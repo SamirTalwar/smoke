@@ -20,13 +20,13 @@ import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 type Output a = ReaderT AppOptions IO a
 
 showText :: Show a => a -> Text
-showText = Text.pack . show
+showText = fromString . show
 
 showPath :: Path b t -> Text
 showPath path = "\"" <> Text.pack (toFilePath path) <> "\""
 
-int :: Int -> Text
-int = fromString . show
+showInt :: Int -> Text
+showInt = fromString . show
 
 hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')
@@ -52,6 +52,9 @@ indentedAll n = Text.unlines . map (mappend (spaces n)) . Text.lines
 putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
+putPlain :: Text -> Output ()
+putPlain = liftIO . TextIO.putStr
+
 putPlainLn :: Text -> Output ()
 putPlainLn = hPutStrWithLn stdout
 
@@ -64,11 +67,11 @@ putRed = putColor Red
 putRedLn :: Text -> Output ()
 putRedLn = putColorLn Red
 
-putColorLn :: Color -> Text -> Output ()
-putColorLn color = withColor color (hPutStrWithLn stdout)
-
 putColor :: Color -> Text -> Output ()
-putColor color = withColor color (liftIO . TextIO.putStr)
+putColor color = withColor color putPlain
+
+putColorLn :: Color -> Text -> Output ()
+putColorLn color = withColor color putPlainLn
 
 putError :: Text -> Output ()
 putError = withColor Red $ hPutStrWithLn stderr

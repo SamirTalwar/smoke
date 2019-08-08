@@ -8,12 +8,15 @@ import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import qualified Data.List as List
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, isNothing)
 import Data.Monoid ((<>))
 import Data.String (fromString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
+import Path
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.Diff
@@ -73,14 +76,15 @@ printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
 
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
-printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult)) = do
+printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
   printFailingInput
     "args"
     (Text.unlines . map fromString . unArgs <$> testArgs test)
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
-  printFailingOutput "status" ((<> "\n") . int . unStatus <$> statusResult)
+  printFailingOutput "status" ((<> "\n") . showInt . unStatus <$> statusResult)
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
+  printFailingFilesOutput fileResults
 printResult (TestResult _ (TestError (DiscoveryError discoveryError))) = do
   options <- ask
   liftIO $ printDiscoveryError printError options discoveryError
@@ -89,15 +93,16 @@ printResult (TestResult _ (TestError (PlanningError NoCommand))) =
 printResult (TestResult _ (TestError (PlanningError NoInput))) =
   printError "There are no args or STDIN values in the specification."
 printResult (TestResult _ (TestError (PlanningError NoOutput))) =
-  printError "There are no STDOUT or STDERR values in the specification."
+  printError
+    "There are no STDOUT or STDERR values, or files, in the specification."
 printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executable executablePath))))) =
   printError $
   "The application " <> showPath executablePath <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
   printError $ "The fixture " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path e)))) =
-  printError $
-  "The fixture " <> showPath path <> " could not be read.\n" <> fromString e
+  printErrorWithException e $
+  "The fixture " <> showPath path <> " could not be read."
 printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
   printFilterError filterError
 printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
@@ -106,28 +111,34 @@ printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand (Exec
   printError $
   "The application " <> showPath executablePath <> " is not executable."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Executable executablePath) e)))) =
-  printError $
-  "The application " <> showPath executablePath <> " could not be executed.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The application " <> showPath executablePath <> " could not be executed."
+printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
+  printErrorWithException e $
+  "The output file " <> showPath path <> " does not exist."
+printResult (TestResult _ (TestError (ExecutionError (CouldNotStoreDirectory path e)))) =
+  printErrorWithException e $
+  "The directory " <> showPath path <> " could not be stored."
+printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory path e)))) =
+  printErrorWithException e $
+  "The directory " <> showPath path <> " could not be reverted."
 printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
   printFilterError filterError
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture propertyName propertyValue)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)))) =
   printError $
-  "The fixture \"" <> fromString propertyName <>
+  "The fixture \"" <> showText fixtureName' <>
   "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue propertyName)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue fixtureName')))) =
   printError $
-  "There are no expected \"" <> fromString propertyName <>
+  "There are no expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues propertyName)))) =
+printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues fixtureName')))) =
   printError $
-  "There are multiple expected \"" <> fromString propertyName <>
+  "There are multiple expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
 printResult (TestResult _ (TestError (BlessError (BlessIOException e)))) =
-  printError $
-  "Blessing failed:\n" <>
-  indentedAll messageIndentation (fromString (displayException e))
+  printErrorWithException e "Blessing failed."
 
 printDiscoveryError ::
      (Text -> Output ()) -> AppOptions -> SmokeDiscoveryError -> IO ()
@@ -154,16 +165,14 @@ printDiscoveryError printErrorMessage options e =
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError (NonExecutableFilter (Executable executablePath)) =
   printError $
-  "The application \"" <> showPath executablePath <> "\" is not executable."
+  "The application " <> showPath executablePath <> " is not executable."
 printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
-  printError $
-  "The application \"" <> showPath executablePath <>
-  "\" could not be executed.\n" <>
-  fromString e
+  printErrorWithException e $
+  "The application " <> showPath executablePath <> " could not be executed."
 printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  "The application \"" <> showPath executablePath <>
-  "\" failed with an exit status of " <>
+  "The application " <> showPath executablePath <>
+  " failed with an exit status of " <>
   showText status <>
   "." <>
   "\nSTDOUT:\n" <>
@@ -181,6 +190,29 @@ printFailingOutput :: String -> PartResult Text -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure comparisons) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
+  uncurry printDiff (Vector.head comparisons)
+  forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
+    putRed "      or: "
+    printDiff expected actual
+
+printFailingFilesOutput ::
+     Map (Path Rel File) (PartResult TestFileContents) -> Output ()
+printFailingFilesOutput fileResults =
+  if all isSuccess (Map.elems fileResults)
+    then return ()
+    else do
+      putRedLn "  files:"
+      forM_ (Map.assocs fileResults) $ \(path, fileResult) ->
+        printFailingFileOutput path (unTestFileContents <$> fileResult)
+  where
+    isSuccess PartSuccess = True
+    isSuccess (PartFailure _) = False
+
+printFailingFileOutput :: Path Rel File -> PartResult Text -> Output ()
+printFailingFileOutput _ PartSuccess = return ()
+printFailingFileOutput path (PartFailure comparisons) = do
+  putRedLn $ fromString ("    " ++ toFilePath path ++ ":")
+  putPlain $ fromString $ indentedKey ""
   uncurry printDiff (Vector.head comparisons)
   forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
     putRed "      or: "
@@ -206,7 +238,7 @@ printSummary summary = do
           then putGreenLn
           else putRedLn
   printSummaryLine $
-    int testCount <> " " <> testWord <> ", " <> int failureCount <> " " <>
+    showInt testCount <> " " <> testWord <> ", " <> showInt failureCount <> " " <>
     failureWord
   where
     pluralize :: Int -> Text -> Text -> Text
@@ -215,6 +247,12 @@ printSummary summary = do
 
 printError :: Text -> Output ()
 printError = putRedLn . indentedAll messageIndentation
+
+printErrorWithException :: IOError -> Text -> Output ()
+printErrorWithException exception =
+  putRedLn .
+  indentedAll messageIndentation .
+  (<> "\n" <> fromString (displayException exception))
 
 outputIndentation :: Int
 outputIndentation = 10

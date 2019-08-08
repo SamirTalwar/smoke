@@ -58,4 +58,4 @@ handleExecutionError :: Executable -> IOError -> SmokeFilterError
 handleExecutionError executable e =
   if isPermissionError e
     then NonExecutableFilter executable
-    else CouldNotExecuteFilter executable (show e)
+    else CouldNotExecuteFilter executable e

@@ -5,10 +5,10 @@ let
   inherit (nixpkgs) pkgs;
 
   f = { mkDerivation, aeson, ansi-terminal, base, cabal2nix
-      , data-default, Diff, directory, exceptions, filepath, Glob
-      , hindent, hlint, hpack, mtl, optparse-applicative, path, process
-      , process-extras, stdenv, temporary, text, transformers, unix
-      , vector, yaml
+      , containers, data-default, Diff, directory, exceptions, filepath
+      , Glob, hindent, hlint, hpack, mtl, optparse-applicative, path
+      , process, process-extras, stdenv, tar, temporary, text
+      , transformers, unix, vector, yaml
       }:
       mkDerivation {
         pname = "smoke";
@@ -17,14 +17,15 @@ let
         isLibrary = true;
         isExecutable = true;
         libraryHaskellDepends = [
-          aeson base data-default directory exceptions filepath Glob path
-          process process-extras text transformers vector yaml
+          aeson base containers data-default directory exceptions filepath
+          Glob path process process-extras tar temporary text transformers
+          vector yaml
         ];
         libraryToolDepends = [ cabal2nix hindent hlint hpack ];
         executableHaskellDepends = [
-          aeson ansi-terminal base data-default Diff directory exceptions
-          filepath Glob mtl optparse-applicative path process process-extras
-          temporary text transformers unix vector yaml
+          aeson ansi-terminal base containers data-default Diff directory
+          exceptions filepath Glob mtl optparse-applicative path process
+          process-extras tar temporary text transformers unix vector yaml
         ];
         executableToolDepends = [ cabal2nix hindent hlint ];
         preConfigure = "hpack";

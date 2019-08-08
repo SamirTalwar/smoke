@@ -16,6 +16,7 @@ description: Please see README.md
 dependencies:
   - base >= 4.12 && < 5
   - aeson
+  - containers
   - data-default
   - directory
   - exceptions
@@ -24,6 +25,8 @@ dependencies:
   - path
   - process
   - process-extras
+  - tar
+  - temporary
   - text
   - transformers
   - vector
@@ -72,6 +75,6 @@ build-tools:
   - hlint
 
 when:
-- condition: "!os(windows)"
-  build-tools:
-    - cabal2nix
+  - condition: "!os(windows)"
+    build-tools:
+      - cabal2nix

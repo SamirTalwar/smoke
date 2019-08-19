@@ -12,7 +12,7 @@ onNothingThrow :: Monad m => e -> Maybe a -> ExceptT e m a
 onNothingThrow exception = maybe (throwE exception) return
 
 onNothingThrow_ :: Monad m => e -> Maybe a -> ExceptT e m ()
-onNothingThrow_ exception = maybe (throwE exception) (const $ return ())
+onNothingThrow_ exception = (>> return ()) . onNothingThrow exception
 
 handleError :: (a -> b) -> Either a b -> b
 handleError handler = either handler id

@@ -58,7 +58,7 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless test
 
 .PHONY: lint
-lint: build
+lint: dependencies
 	stack exec -- hlint .
 	stack exec -- hindent --validate $(SRC)
 	@ (set -ex; \
@@ -72,8 +72,12 @@ lint: build
 check: test lint
 
 .PHONY: reformat
-reformat: build
+reformat: dependencies
 	stack exec -- hindent $(SRC)
+
+.PHONY: dependencies
+dependencies:
+	stack install --only-dependencies
 
 default.nix: build
 	stack exec -- cabal2nix --shell . > default.nix

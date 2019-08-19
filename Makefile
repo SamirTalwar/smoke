@@ -60,7 +60,7 @@ bless: build
 .PHONY: lint
 lint: build
 	stack exec -- hlint .
-	echo $(SRC) | xargs -n1 stack exec -- hindent --validate
+	stack exec -- hindent --validate $(SRC)
 	@ (set -ex; \
 		NIX_FILE="$$(mktemp)"; \
 		stack exec -- cabal2nix --shell . > "$$NIX_FILE"; \
@@ -73,7 +73,7 @@ check: test lint
 
 .PHONY: reformat
 reformat: build
-	echo $(SRC) | xargs -n1 stack exec -- hindent
+	stack exec -- hindent $(SRC)
 
 default.nix: build
 	stack exec -- cabal2nix --shell . > default.nix

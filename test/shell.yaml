@@ -1,0 +1,6 @@
+tests:
+  - name: shell
+    args:
+      - fixtures/shell
+    stdout:
+      file: io/shell.out

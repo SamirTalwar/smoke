@@ -12,6 +12,7 @@ import qualified Data.Vector as Vector
 import Path
 import Test.Smoke.Maps
 import Test.Smoke.Paths
+import Test.Smoke.Types.Args
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Files

@@ -4,6 +4,7 @@ module Test.Smoke.Filters
   , applyFiltersFromFixtures
   ) where
 
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
@@ -16,8 +17,8 @@ type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (FixtureFilter executable)) =
-  runFilter executable unfilteredValue
+applyFilters (Filtered unfilteredValue (FixtureFilter command)) =
+  runFilter command unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a
 applyFiltersFromFixture (Fixture _ Nothing) value = return value
@@ -29,8 +30,9 @@ applyFiltersFromFixtures ::
 applyFiltersFromFixtures (Fixtures fixtures) value =
   Vector.mapM (`applyFiltersFromFixture` value) fixtures
 
-runFilter :: FixtureType a => Executable -> a -> Filtering a
-runFilter executable value = do
+runFilter :: FixtureType a => Command -> a -> Filtering a
+runFilter command value = do
+  executable <- liftIO $ convertCommandToExecutable command
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $

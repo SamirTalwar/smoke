@@ -1,0 +1,14 @@
+write to STDERR with the default shell
+  succeeded
+write to STDERR with custom shell flags
+  succeeded
+write to STDERR with a custom shell
+  succeeded
+write the args to STDERR
+  succeeded
+write the args to STDERR with a custom shell
+  succeeded
+write STDIN to STDERR
+  succeeded
+
+6 tests, 0 failures

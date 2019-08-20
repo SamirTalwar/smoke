@@ -1,3 +1,7 @@
+shell:
+  - sh
+  - -e
+
 tests:
   - name: STDIN pre-processing, inline
     command:
@@ -7,6 +11,20 @@ tests:
         a b c
       filter: |
         tr '[:lower:]' '[:upper:]'
+    stdout: |
+      A B C
+
+  - name: STDIN pre-processing, inline, with a custom shell
+    command:
+      - cat
+    stdin:
+      contents: |
+        a b c
+      filter:
+        shell:
+          - bash
+        script: |
+          tr '[:lower:]' '[:upper:]'
     stdout: |
       A B C
 
@@ -46,6 +64,22 @@ tests:
         A B C
       filter: |
         tr '[:lower:]' '[:upper:]'
+
+  - name: STDOUT post-processing, inline, with a custom shell
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents: |
+        A B C
+      filter:
+        shell:
+          - bash
+        script: |
+          tr '[:lower:]' '[:upper:]'
 
   - name: STDOUT post-processing, with a script
     command:
@@ -91,11 +125,8 @@ tests:
         - fixtures/processing-filters/shout.rb
 
   - name: STDERR post-processing, inline
-    command:
-      - sh
-    args:
-      - -c
-      - "echo a b c >&2"
+    command: |
+      echo a b c >&2
     stderr:
       contents: |
         A B C

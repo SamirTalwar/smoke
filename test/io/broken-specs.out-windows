@@ -1,7 +1,5 @@
 no-command
   There is no command.
-no-inputs
-  There are no args or STDIN values in the specification.
 no-outputs
   There are no STDOUT or STDERR values, or files, in the specification.
 missing-input-file
@@ -11,4 +9,4 @@ missing-output-file
 missing-error-file
   The fixture "io\missing.err" does not exist.
 
-6 tests, 6 failures
+5 tests, 5 failures

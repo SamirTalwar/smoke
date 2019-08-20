@@ -15,6 +15,7 @@ import Path
 import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Errors
+import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Paths
 import Test.Smoke.Types
@@ -44,8 +45,6 @@ planTests (TestSpecification specificationCommand suites) = do
 validateTest :: Maybe Command -> Test -> Planning ()
 validateTest defaultCommand test = do
   when (isNothing (testCommand test <|> defaultCommand)) $ throwE NoCommand
-  when (isNothing (testArgs test) && isNothing (testStdIn test)) $
-    throwE NoInput
   when
     (isEmptyFixtures (testStdOut test) &&
      isEmptyFixtures (testStdErr test) && isEmptyFiles (testFiles test)) $
@@ -63,7 +62,9 @@ readTest ::
 readTest location defaultWorkingDirectory defaultCommand test = do
   let workingDirectory =
         fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
-  executable <- convertCommandToExecutable (testCommand test <|> defaultCommand)
+  command <-
+    maybe (throwE NoCommand) return (testCommand test <|> defaultCommand)
+  executable <- liftIO $ convertCommandToExecutable command
   let args = fromMaybe mempty (testArgs test)
   let executableName =
         case executable of
@@ -96,16 +97,6 @@ readTest location defaultWorkingDirectory defaultCommand test = do
       , planFiles = files
       , planRevert = revert
       }
-
-convertCommandToExecutable :: Maybe Command -> Planning Executable
-convertCommandToExecutable Nothing = throwE NoCommand
-convertCommandToExecutable (Just (Command command))
-  | Vector.null command = throwE NoCommand
-  | otherwise = do
-    let executableName = Vector.head command
-    executablePath <- parseAbsOrRelFile executableName
-    let commandArgs = Vector.tail command
-    return $ ExecutableProgram executablePath (Args commandArgs)
 
 readFixture ::
      FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)

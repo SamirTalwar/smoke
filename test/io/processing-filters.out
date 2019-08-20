@@ -1,5 +1,7 @@
 STDIN pre-processing, inline
   succeeded
+STDIN pre-processing, inline, with a custom shell
+  succeeded
 STDIN pre-processing, with a script
   succeeded
 test failure after STDIN pre-processing
@@ -8,6 +10,8 @@ test failure after STDIN pre-processing
           -a b c
           +A B C
 STDOUT post-processing, inline
+  succeeded
+STDOUT post-processing, inline, with a custom shell
   succeeded
 STDOUT post-processing, with a script
   succeeded
@@ -23,4 +27,4 @@ test failure after STDOUT post-processing
 STDERR post-processing, inline
   succeeded
 
-8 tests, 2 failures
+10 tests, 2 failures

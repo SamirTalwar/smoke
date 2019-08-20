@@ -3,14 +3,12 @@ copy a file
 uppercase a file
   succeeded
 lowercase a file
-  args:   tr '[:lower:]' '[:upper:]' < input.file > output.file
   files:
     output.file:
           @@ -1 +1 @@
           -here is some text.
           +HERE IS SOME TEXT.
 multiple files
-  args:   echo three > one; echo two > two; echo one > three
   files:
     one:
           @@ -1 +1 @@
@@ -21,7 +19,6 @@ multiple files
           -three
           +one
 multiple possible file contents
-  args:   echo 0 > output.file
   files:
     output.file:
           @@ -1 +1 @@

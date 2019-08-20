@@ -1,7 +1,8 @@
-command:
+shell:
   - sh
-  - -c
-  - cat >&2
+
+command: |
+  cat >&2
 
 tests:
   - name: copy to STDERR

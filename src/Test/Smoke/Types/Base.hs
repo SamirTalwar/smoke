@@ -10,7 +10,11 @@ import Data.String (IsString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Path
+import Test.Smoke.Shell
+import Test.Smoke.Types.Args
+import Test.Smoke.Types.Shell
 
 data Contents a
   = Inline a
@@ -54,24 +58,30 @@ newtype Script =
     }
   deriving (Eq, Show)
 
-newtype Args =
-  Args
-    { unArgs :: Vector String
-    }
-  deriving (Eq, Show, Semigroup, Monoid, FromJSON)
-
-data Shell =
-  Shell (Path Rel File) Args
-  deriving (Eq, Show)
-
 data Executable
   = ExecutableProgram (Path Rel File) Args
   | ExecutableScript Shell Script
   deriving (Eq, Show)
 
-newtype Command =
-  Command (Vector String)
-  deriving (Eq, Show, FromJSON)
+data Command
+  = CommandArgs (Vector String)
+  | CommandScript Shell Script
+  deriving (Eq, Show)
+
+instance FromJSON Command where
+  parseJSON (Object v) = do
+    specifiedShell <- v .:? "shell"
+    shell <- maybe defaultShell return specifiedShell
+    script <- v .: "script"
+    return $ CommandScript shell (Script script)
+  parseJSON (String script) = do
+    shell <- defaultShell
+    return $ CommandScript shell (Script script)
+  parseJSON (Array args) =
+    if Vector.null args
+      then typeMismatch "shell" (Array args)
+      else CommandArgs <$> sequence (parseJSON <$> args)
+  parseJSON invalid = typeMismatch "command" invalid
 
 newtype Status =
   Status

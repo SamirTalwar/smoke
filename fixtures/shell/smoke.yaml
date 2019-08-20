@@ -1,0 +1,69 @@
+tests:
+  - name: write to STDERR with the default shell
+    command: |
+      echo 'Something.' >&2
+      false
+      echo 'Something else.' >&2
+    stderr: |
+      Something.
+      Something else.
+
+  - name: write to STDERR with custom shell flags
+    command:
+      shell:
+        - sh
+        - -e
+      script: |
+        echo 'Something.' >&2
+        false
+        echo 'Something else.' >&2
+    exit-status: 1
+    stderr: |
+      Something.
+
+  - name: write to STDERR with a custom shell
+    command:
+      shell:
+        - bash
+      script: |
+        echo 'Something.' >&2
+        false
+        echo 'Something else.' >&2
+    stderr: |
+      Something.
+      Something else.
+
+  - name: write the args to STDERR
+    command: |
+      echo $1 $2 $3
+    args:
+      - a
+      - b
+      - c
+      - d
+      - e
+    stdout: |
+      a b c
+
+  - name: write the args to STDERR with a custom shell
+    command:
+      shell:
+        - bash
+      script: |
+        echo $1 $2 $3
+    args:
+      - a
+      - b
+      - c
+      - d
+      - e
+    stdout: |
+      a b c
+
+  - name: write STDIN to STDERR
+    command: |
+      cat >&2
+    stdin: |
+      Something.
+    stderr: |
+      Something.

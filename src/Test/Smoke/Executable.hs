@@ -2,6 +2,7 @@ module Test.Smoke.Executable where
 
 import Data.Text (Text)
 import qualified Data.Text.IO as Text.IO
+import qualified Data.Vector as Vector
 import Path
 import System.Exit (ExitCode)
 import System.IO (hClose)
@@ -18,7 +19,7 @@ runExecutable ::
   -> IO (ExitCode, Text, Text)
 runExecutable (ExecutableProgram executablePath) (Args args) (StdIn stdIn) workingDirectory =
   readCreateProcessWithExitCode
-    ((proc (toFilePath executablePath) args)
+    ((proc (toFilePath executablePath) (Vector.toList args))
        {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
     stdIn
 runExecutable (ExecutableScript (Shell shell) script) (Args args) (StdIn stdIn) workingDirectory =
@@ -26,6 +27,9 @@ runExecutable (ExecutableScript (Shell shell) script) (Args args) (StdIn stdIn) 
     Text.IO.hPutStr scriptHandle script
     hClose scriptHandle
     readCreateProcessWithExitCode
-      ((proc (head shell) (tail shell ++ [scriptPath] ++ args))
+      ((proc
+          (Vector.head shell)
+          (Vector.toList
+             (Vector.tail shell <> Vector.singleton scriptPath <> args)))
          {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
       stdIn

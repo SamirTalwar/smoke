@@ -51,7 +51,7 @@ optionParser isTTY foundDiffEngine = do
 commandParser :: Parser (Maybe Command)
 commandParser =
   optional
-    (Command . words <$>
+    (Command . Vector.fromList . words <$>
      strOption (long "command" <> help "Specify or override the command to run"))
 
 modeParser :: Parser Mode

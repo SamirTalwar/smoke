@@ -68,7 +68,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
   let executableName =
         case executable of
           ExecutableProgram executablePath -> toFilePath executablePath
-          ExecutableScript (Shell shell) _ -> head shell
+          ExecutableScript (Shell shell) _ -> Vector.head shell
   executableExists <- liftIO (doesFileExist executableName)
   unless executableExists $ do
     foundExecutable <- liftIO (findExecutable executableName)
@@ -102,11 +102,14 @@ splitCommand maybeCommand maybeArgs = do
   (executable, commandArgs) <-
     case maybeCommand of
       Nothing -> throwE NoCommand
-      Just (Command []) -> throwE NoCommand
-      Just (Command (executableName:commandArgs)) -> do
-        executable <- ExecutableProgram <$> parseAbsOrRelFile executableName
-        return (executable, commandArgs)
-  let args = Args $ commandArgs ++ maybe [] unArgs maybeArgs
+      Just (Command command)
+        | Vector.null command -> throwE NoCommand
+        | otherwise -> do
+          let executableName = Vector.head command
+          let commandArgs = Vector.tail command
+          executable <- ExecutableProgram <$> parseAbsOrRelFile executableName
+          return (executable, commandArgs)
+  let args = Args commandArgs <> fromMaybe mempty maybeArgs
   return (executable, args)
 
 readFixture ::

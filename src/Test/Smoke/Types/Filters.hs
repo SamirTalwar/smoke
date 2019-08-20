@@ -24,9 +24,12 @@ instance FromJSON FixtureFilter where
             return $
             FixtureFilter
               (ExecutableProgram executable)
-              (Args (Vector.toList (Vector.tail command)))
+              (Args (Vector.tail command))
   parseJSON (String script) =
-    return $ FixtureFilter (ExecutableScript (Shell ["sh"]) script) (Args [])
+    return $
+    FixtureFilter
+      (ExecutableScript (Shell (Vector.singleton "sh")) script)
+      mempty
   parseJSON invalid = typeMismatch "filter" invalid
 
 data Filtered a

@@ -79,7 +79,8 @@ printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
 printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
   printFailingInput
     "args"
-    (Text.unlines . map fromString . unArgs <$> testArgs test)
+    (Text.unlines . Vector.toList . Vector.map fromString . unArgs <$>
+     testArgs test)
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
   printFailingOutput "status" ((<> "\n") . showInt . unStatus <$> statusResult)
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)

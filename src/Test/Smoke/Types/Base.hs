@@ -9,6 +9,7 @@ import Data.Default
 import Data.String (IsString)
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Vector (Vector)
 import Path
 
 data Contents a
@@ -48,7 +49,7 @@ newtype WorkingDirectory =
   deriving (Eq, Show, FromJSON)
 
 newtype Shell =
-  Shell [String]
+  Shell (Vector String)
   deriving (Eq, Show)
 
 data Executable
@@ -57,16 +58,14 @@ data Executable
   deriving (Eq, Show)
 
 newtype Command =
-  Command
-    { unCommand :: [String]
-    }
+  Command (Vector String)
   deriving (Eq, Show, FromJSON)
 
 newtype Args =
   Args
-    { unArgs :: [String]
+    { unArgs :: Vector String
     }
-  deriving (Eq, Show, FromJSON)
+  deriving (Eq, Show, Semigroup, Monoid, FromJSON)
 
 newtype Status =
   Status

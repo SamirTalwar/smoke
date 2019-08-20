@@ -3,14 +3,12 @@ module Test.Smoke.Types.Filters where
 import Control.Monad.Catch.Pure (runCatchT)
 import Data.Aeson
 import Data.Aeson.Types (typeMismatch)
-import Data.Text (Text)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 
-data FixtureFilter
-  = InlineFixtureFilter Text
-  | CommandFixtureFilter Executable Args
+data FixtureFilter =
+  FixtureFilter Executable Args
   deriving (Eq, Show)
 
 instance FromJSON FixtureFilter where
@@ -24,10 +22,11 @@ instance FromJSON FixtureFilter where
           Left exception -> fail $ show exception
           Right executable ->
             return $
-            CommandFixtureFilter
-              (Executable executable)
+            FixtureFilter
+              (ExecutableProgram executable)
               (Args (Vector.toList (Vector.tail command)))
-  parseJSON (String script) = return $ InlineFixtureFilter script
+  parseJSON (String script) =
+    return $ FixtureFilter (ExecutableScript (Shell ["sh"]) script) (Args [])
   parseJSON invalid = typeMismatch "filter" invalid
 
 data Filtered a

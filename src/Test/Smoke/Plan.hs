@@ -65,11 +65,14 @@ readTest location defaultWorkingDirectory defaultCommand test = do
         fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
   (executable, args) <-
     splitCommand (testCommand test <|> defaultCommand) (testArgs test)
-  let executableName = toFilePath $ unExecutable executable
+  let executableName =
+        case executable of
+          ExecutableProgram executablePath -> toFilePath executablePath
+          ExecutableScript (Shell shell) _ -> head shell
   executableExists <- liftIO (doesFileExist executableName)
-  unless executableExists $
-    onNothingThrow_ (NonExistentCommand executable) =<<
-    liftIO (findExecutable executableName)
+  unless executableExists $ do
+    foundExecutable <- liftIO (findExecutable executableName)
+    onNothingThrow_ (NonExistentCommand executable) foundExecutable
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture location <$> testStdIn test)
@@ -96,9 +99,13 @@ readTest location defaultWorkingDirectory defaultCommand test = do
 
 splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)
 splitCommand maybeCommand maybeArgs = do
-  (executableName:commandArgs) <-
-    onNothingThrow NoCommand (unCommand <$> maybeCommand)
-  executable <- Executable <$> parseAbsOrRelFile executableName
+  (executable, commandArgs) <-
+    case maybeCommand of
+      Nothing -> throwE NoCommand
+      Just (Command []) -> throwE NoCommand
+      Just (Command (executableName:commandArgs)) -> do
+        executable <- ExecutableProgram <$> parseAbsOrRelFile executableName
+        return (executable, commandArgs)
   let args = Args $ commandArgs ++ maybe [] unArgs maybeArgs
   return (executable, args)
 

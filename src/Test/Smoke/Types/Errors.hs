@@ -58,7 +58,8 @@ data SmokeBlessError
 instance Exception SmokeBlessError
 
 data SmokeFilterError
-  = NonExecutableFilter Executable
+  = MissingFilterScript
+  | NonExecutableFilter Executable
   | CouldNotExecuteFilter Executable IOError
   | ExecutionFailed Executable Status StdOut StdErr
   deriving (Eq, Show)

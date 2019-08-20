@@ -15,6 +15,7 @@ import qualified Data.Text.IO as TextIO
 import Path
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
+import Test.Smoke (Executable(..), Shell(..))
 import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
 type Output a = ReaderT AppOptions IO a
@@ -22,11 +23,17 @@ type Output a = ReaderT AppOptions IO a
 showText :: Show a => a -> Text
 showText = fromString . show
 
+showInt :: Int -> Text
+showInt = showText
+
 showPath :: Path b t -> Text
 showPath path = "\"" <> Text.pack (toFilePath path) <> "\""
 
-showInt :: Int -> Text
-showInt = fromString . show
+showExecutable :: Executable -> Text
+showExecutable (ExecutableProgram executablePath) =
+  "The application " <> showPath executablePath
+showExecutable (ExecutableScript (Shell shell) _) =
+  "The shell " <> "\"" <> Text.pack (unwords shell) <> "\""
 
 hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')

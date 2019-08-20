@@ -47,11 +47,14 @@ newtype WorkingDirectory =
     }
   deriving (Eq, Show, FromJSON)
 
-newtype Executable =
-  Executable
-    { unExecutable :: Path Rel File
-    }
-  deriving (Eq, Show, FromJSON)
+newtype Shell =
+  Shell [String]
+  deriving (Eq, Show)
+
+data Executable
+  = ExecutableProgram (Path Rel File)
+  | ExecutableScript Shell Text
+  deriving (Eq, Show)
 
 newtype Command =
   Command

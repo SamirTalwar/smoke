@@ -5,24 +5,19 @@ module Test.Smoke.Filters
   ) where
 
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
-import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
-import Path
 import System.Exit (ExitCode(..))
 import System.IO.Error (isPermissionError, tryIOError)
-import System.Process.Text (readProcessWithExitCode)
+import Test.Smoke.Executable
 import Test.Smoke.Types
 
 type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) = do
-  sh <- parseRelFile "sh"
-  runScript (Executable sh) (Args ["-c", Text.unpack script]) unfilteredValue
-applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptExecutable scriptArgs)) =
-  runScript scriptExecutable scriptArgs unfilteredValue
+applyFilters (Filtered unfilteredValue (FixtureFilter executable args)) =
+  runFilter executable args unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a
 applyFiltersFromFixture (Fixture _ Nothing) value = return value
@@ -34,16 +29,13 @@ applyFiltersFromFixtures ::
 applyFiltersFromFixtures (Fixtures fixtures) value =
   Vector.mapM (`applyFiltersFromFixture` value) fixtures
 
-runScript :: FixtureType a => Executable -> Args -> a -> Filtering a
-runScript executable (Args args) value = do
+runFilter :: FixtureType a => Executable -> Args -> a -> Filtering a
+runFilter executable args value = do
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
     tryIOError $
-    readProcessWithExitCode
-      (toFilePath (unExecutable executable))
-      args
-      (serializeFixture value)
+    runExecutable executable args (StdIn (serializeFixture value)) Nothing
   case exitCode of
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->

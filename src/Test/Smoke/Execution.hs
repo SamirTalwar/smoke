@@ -24,9 +24,8 @@ import System.Exit (ExitCode(..))
 import System.IO (hClose)
 import System.IO.Error (isPermissionError, tryIOError)
 import System.IO.Temp (withSystemTempFile)
-import System.Process.ListLike (cwd, proc)
-import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Errors
+import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Maps
 import Test.Smoke.Paths
@@ -57,19 +56,16 @@ runTest location testPlan =
   runExceptT (processOutput location testPlan =<< executeTest location testPlan)
 
 executeTest :: Path Abs Dir -> TestPlan -> Execution ActualOutputs
-executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn processStdIn) _ _ _ files revert) = do
+executeTest location (TestPlan _ workingDirectory executable args processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
   unless workingDirectoryExists $
     throwE $ NonExistentWorkingDirectory workingDirectory
-  let executableName = toFilePath $ unExecutable executable
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
       tryIO (handleExecutionError executable) $
-      readCreateProcessWithExitCode
-        ((proc executableName args) {cwd = Just workingDirectoryFilePath})
-        processStdIn
+      runExecutable executable args processStdIn (Just workingDirectory)
     actualFiles <-
       Map.map TestFileContents . Map.fromList <$>
       mapM readTestFile (Map.keys files)

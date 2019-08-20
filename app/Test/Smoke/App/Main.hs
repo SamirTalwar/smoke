@@ -95,9 +95,8 @@ printResult (TestResult _ (TestError (PlanningError NoInput))) =
 printResult (TestResult _ (TestError (PlanningError NoOutput))) =
   printError
     "There are no STDOUT or STDERR values, or files, in the specification."
-printResult (TestResult _ (TestError (PlanningError (NonExistentCommand (Executable executablePath))))) =
-  printError $
-  "The application " <> showPath executablePath <> " does not exist."
+printResult (TestResult _ (TestError (PlanningError (NonExistentCommand executable)))) =
+  printError $ showExecutable executable <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
   printError $ "The fixture " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path e)))) =
@@ -107,12 +106,11 @@ printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterE
   printFilterError filterError
 printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
   printError $ "The working directory " <> showPath path <> " does not exist."
-printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand (Executable executablePath))))) =
-  printError $
-  "The application " <> showPath executablePath <> " is not executable."
-printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand (Executable executablePath) e)))) =
+printResult (TestResult _ (TestError (ExecutionError (NonExecutableCommand executable)))) =
+  printError $ showExecutable executable <> " is not executable."
+printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand executable e)))) =
   printErrorWithException e $
-  "The application " <> showPath executablePath <> " could not be executed."
+  showExecutable executable <> " could not be executed."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path e)))) =
   printErrorWithException e $
   "The output file " <> showPath path <> " does not exist."
@@ -163,16 +161,16 @@ printDiscoveryError printErrorMessage options e =
       indentedAll messageIndentation (fromString message)
 
 printFilterError :: SmokeFilterError -> Output ()
-printFilterError (NonExecutableFilter (Executable executablePath)) =
-  printError $
-  "The application " <> showPath executablePath <> " is not executable."
-printFilterError (CouldNotExecuteFilter (Executable executablePath) e) =
+printFilterError MissingFilterScript =
+  printError "The filter script is missing."
+printFilterError (NonExecutableFilter executable) =
+  printError $ showExecutable executable <> " is not executable."
+printFilterError (CouldNotExecuteFilter executable e) =
   printErrorWithException e $
-  "The application " <> showPath executablePath <> " could not be executed."
-printFilterError (ExecutionFailed (Executable executablePath) (Status status) (StdOut stdOut) (StdErr stdErr)) =
+  showExecutable executable <> " could not be executed."
+printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  "The application " <> showPath executablePath <>
-  " failed with an exit status of " <>
+  showExecutable executable <> " failed with an exit status of " <>
   showText status <>
   "." <>
   "\nSTDOUT:\n" <>

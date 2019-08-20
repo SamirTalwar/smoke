@@ -17,19 +17,20 @@ runExecutable ::
   -> StdIn
   -> Maybe WorkingDirectory
   -> IO (ExitCode, Text, Text)
-runExecutable (ExecutableProgram executablePath) (Args args) (StdIn stdIn) workingDirectory =
+runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdIn) workingDirectory =
   readCreateProcessWithExitCode
-    ((proc (toFilePath executablePath) (Vector.toList args))
+    ((proc
+        (toFilePath executablePath)
+        (Vector.toList (unArgs (executableArgs <> args))))
        {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
     stdIn
-runExecutable (ExecutableScript (Shell shell) script) (Args args) (StdIn stdIn) workingDirectory =
+runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) args stdIn workingDirectory =
   withSystemTempFile "smoke.sh" $ \scriptPath scriptHandle -> do
     Text.IO.hPutStr scriptHandle script
     hClose scriptHandle
-    readCreateProcessWithExitCode
-      ((proc
-          (Vector.head shell)
-          (Vector.toList
-             (Vector.tail shell <> Vector.singleton scriptPath <> args)))
-         {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
+    let executableArgs = shellArgs <> Args (Vector.singleton scriptPath)
+    runExecutable
+      (ExecutableProgram shellPath executableArgs)
+      args
       stdIn
+      workingDirectory

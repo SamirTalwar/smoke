@@ -1,14 +1,16 @@
 module Test.Smoke.Types.Filters where
 
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Catch.Pure (runCatchT)
 import Data.Aeson
 import Data.Aeson.Types (typeMismatch)
 import qualified Data.Vector as Vector
+import Path
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 
-data FixtureFilter =
-  FixtureFilter Executable Args
+newtype FixtureFilter =
+  FixtureFilter Executable
   deriving (Eq, Show)
 
 instance FromJSON FixtureFilter where
@@ -18,24 +20,23 @@ instance FromJSON FixtureFilter where
       then typeMismatch "filter" array
       else do
         eitherExecutable <- runCatchT (parseAbsOrRelFile (Vector.head command))
-        case eitherExecutable of
-          Left exception -> fail $ show exception
-          Right executable ->
-            return $
-            FixtureFilter
-              (ExecutableProgram executable)
-              (Args (Vector.tail command))
-  parseJSON (String script) =
-    return $
-    FixtureFilter
-      (ExecutableScript (Shell (Vector.singleton "sh")) script)
-      mempty
+        executable <- either (fail . show) return eitherExecutable
+        return $
+          FixtureFilter
+            (ExecutableProgram executable (Args (Vector.tail command)))
+  parseJSON (String script) = do
+    eitherSh <- runCatchT getSh
+    sh <- either (fail . show) return eitherSh
+    return $ FixtureFilter (ExecutableScript (Shell sh mempty) (Script script))
   parseJSON invalid = typeMismatch "filter" invalid
 
 data Filtered a
   = Unfiltered a
   | Filtered a FixtureFilter
   deriving (Eq, Show)
+
+getSh :: MonadThrow m => m (Path Rel File)
+getSh = parseAbsOrRelFile "sh"
 
 unfiltered :: Filtered a -> a
 unfiltered (Unfiltered value) = value

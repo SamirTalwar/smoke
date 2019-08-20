@@ -12,7 +12,6 @@ import Data.String (IsString(..))
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
-import qualified Data.Vector as Vector
 import Path
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
@@ -31,10 +30,10 @@ showPath :: Path b t -> Text
 showPath path = "\"" <> Text.pack (toFilePath path) <> "\""
 
 showExecutable :: Executable -> Text
-showExecutable (ExecutableProgram executablePath) =
+showExecutable (ExecutableProgram executablePath _) =
   "The application " <> showPath executablePath
-showExecutable (ExecutableScript (Shell shell) _) =
-  "The shell " <> "\"" <> Text.pack (unwords (Vector.toList shell)) <> "\""
+showExecutable (ExecutableScript (Shell shellPath _) _) =
+  "The shell " <> showPath shellPath
 
 hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')

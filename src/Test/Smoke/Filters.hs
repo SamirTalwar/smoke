@@ -16,8 +16,8 @@ type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (FixtureFilter executable args)) =
-  runFilter executable args unfilteredValue
+applyFilters (Filtered unfilteredValue (FixtureFilter executable)) =
+  runFilter executable unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a
 applyFiltersFromFixture (Fixture _ Nothing) value = return value
@@ -29,13 +29,13 @@ applyFiltersFromFixtures ::
 applyFiltersFromFixtures (Fixtures fixtures) value =
   Vector.mapM (`applyFiltersFromFixture` value) fixtures
 
-runFilter :: FixtureType a => Executable -> Args -> a -> Filtering a
-runFilter executable args value = do
+runFilter :: FixtureType a => Executable -> a -> Filtering a
+runFilter executable value = do
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (handleExecutionError executable) $
     ExceptT $
     tryIOError $
-    runExecutable executable args (StdIn (serializeFixture value)) Nothing
+    runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
   case exitCode of
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->

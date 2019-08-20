@@ -63,12 +63,12 @@ readTest ::
 readTest location defaultWorkingDirectory defaultCommand test = do
   let workingDirectory =
         fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
-  (executable, args) <-
-    splitCommand (testCommand test <|> defaultCommand) (testArgs test)
+  executable <- convertCommandToExecutable (testCommand test <|> defaultCommand)
+  let args = fromMaybe mempty (testArgs test)
   let executableName =
         case executable of
-          ExecutableProgram executablePath -> toFilePath executablePath
-          ExecutableScript (Shell shell) _ -> Vector.head shell
+          ExecutableProgram executablePath _ -> toFilePath executablePath
+          ExecutableScript (Shell shellPath _) _ -> toFilePath shellPath
   executableExists <- liftIO (doesFileExist executableName)
   unless executableExists $ do
     foundExecutable <- liftIO (findExecutable executableName)
@@ -97,20 +97,15 @@ readTest location defaultWorkingDirectory defaultCommand test = do
       , planRevert = revert
       }
 
-splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)
-splitCommand maybeCommand maybeArgs = do
-  (executable, commandArgs) <-
-    case maybeCommand of
-      Nothing -> throwE NoCommand
-      Just (Command command)
-        | Vector.null command -> throwE NoCommand
-        | otherwise -> do
-          let executableName = Vector.head command
-          let commandArgs = Vector.tail command
-          executable <- ExecutableProgram <$> parseAbsOrRelFile executableName
-          return (executable, commandArgs)
-  let args = Args commandArgs <> fromMaybe mempty maybeArgs
-  return (executable, args)
+convertCommandToExecutable :: Maybe Command -> Planning Executable
+convertCommandToExecutable Nothing = throwE NoCommand
+convertCommandToExecutable (Just (Command command))
+  | Vector.null command = throwE NoCommand
+  | otherwise = do
+    let executableName = Vector.head command
+    executablePath <- parseAbsOrRelFile executableName
+    let commandArgs = Vector.tail command
+    return $ ExecutableProgram executablePath (Args commandArgs)
 
 readFixture ::
      FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)

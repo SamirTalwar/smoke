@@ -48,24 +48,30 @@ newtype WorkingDirectory =
     }
   deriving (Eq, Show, FromJSON)
 
-newtype Shell =
-  Shell (Vector String)
+newtype Script =
+  Script
+    { unScript :: Text
+    }
   deriving (Eq, Show)
-
-data Executable
-  = ExecutableProgram (Path Rel File)
-  | ExecutableScript Shell Text
-  deriving (Eq, Show)
-
-newtype Command =
-  Command (Vector String)
-  deriving (Eq, Show, FromJSON)
 
 newtype Args =
   Args
     { unArgs :: Vector String
     }
   deriving (Eq, Show, Semigroup, Monoid, FromJSON)
+
+data Shell =
+  Shell (Path Rel File) Args
+  deriving (Eq, Show)
+
+data Executable
+  = ExecutableProgram (Path Rel File) Args
+  | ExecutableScript Shell Script
+  deriving (Eq, Show)
+
+newtype Command =
+  Command (Vector String)
+  deriving (Eq, Show, FromJSON)
 
 newtype Status =
   Status

@@ -17,7 +17,7 @@ type Filtering = ExceptT SmokeFilterError IO
 
 applyFilters :: FixtureType a => Filtered a -> Filtering a
 applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (FixtureFilter command)) =
+applyFilters (Filtered unfilteredValue command) =
   runFilter command unfilteredValue
 
 applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a

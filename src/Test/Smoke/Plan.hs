@@ -115,7 +115,7 @@ readFixtures ::
   -> Planning (Vector (Filtered a))
 readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
 
-includeFilter :: Maybe FixtureFilter -> a -> Filtered a
+includeFilter :: Maybe Command -> a -> Filtered a
 includeFilter maybeFilter contents =
   maybe (Unfiltered contents) (Filtered contents) maybeFilter
 

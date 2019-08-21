@@ -38,15 +38,12 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       workingDirectory
 
 convertCommandToExecutable :: Command -> IO Executable
-convertCommandToExecutable (CommandArgs command) = do
-  let executableName = Vector.head command
+convertCommandToExecutable (CommandArgs (CommandLine executableName commandArgs)) = do
   executablePath <- parseAbsOrRelFile executableName
-  let commandArgs = Vector.tail command
-  return $ ExecutableProgram executablePath (Args commandArgs)
+  return $ ExecutableProgram executablePath commandArgs
 convertCommandToExecutable (CommandScript Nothing script) = do
   shell <- defaultShell
   return $ ExecutableScript shell script
-convertCommandToExecutable (CommandScript (Just shell) script) = do
-  shellCommand <- parseAbsOrRelFile (Vector.head shell)
-  let shellArgs = Args $ Vector.tail shell
+convertCommandToExecutable (CommandScript (Just (CommandLine shellName shellArgs)) script) = do
+  shellCommand <- parseAbsOrRelFile shellName
   return $ ExecutableScript (Shell shellCommand shellArgs) script

@@ -9,7 +9,7 @@ import Data.Semigroup ((<>))
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 import Options.Applicative
-import Test.Smoke (Command(..), Options(..))
+import Test.Smoke (Args(..), Command(..), CommandLine(..), Options(..))
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell
@@ -49,10 +49,16 @@ optionParser isTTY foundDiffEngine = do
       }
 
 commandParser :: Parser (Maybe Command)
-commandParser =
-  optional
-    (CommandArgs . Vector.fromList . words <$>
-     strOption (long "command" <> help "Specify or override the command to run"))
+commandParser = do
+  commandString <-
+    optional $
+    strOption (long "command" <> help "Specify or override the command to run")
+  return $ constructCommand <$> commandString
+  where
+    constructCommand :: String -> Command
+    constructCommand commandString =
+      let (program:args) = words commandString
+       in CommandArgs (CommandLine program (Args (Vector.fromList args)))
 
 modeParser :: Parser Mode
 modeParser =

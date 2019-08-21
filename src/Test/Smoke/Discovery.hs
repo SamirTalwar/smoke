@@ -5,7 +5,6 @@ module Test.Smoke.Discovery
   ) where
 
 import Control.Monad (forM, unless)
-import Control.Monad.Catch.Pure (runCatchT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
 import qualified Data.List as List
@@ -85,11 +84,11 @@ parseRoot location = do
   unless (directoryExists || fileExists) $ throwE $ NoSuchLocation path
   parsedDir <-
     if directoryExists
-      then eitherToMaybe <$> runCatchT (parseAbsOrRelDir path)
+      then Just <$> parseAbsOrRelDir path
       else return Nothing
   parsedFile <-
     if fileExists
-      then eitherToMaybe <$> runCatchT (parseAbsOrRelFile path)
+      then Just <$> parseAbsOrRelFile path
       else return Nothing
   case (parsedDir, parsedFile, selectedTestName) of
     (Just dir, Nothing, Nothing) -> return $ DirectoryRoot dir
@@ -101,7 +100,3 @@ parseRoot location = do
 
 strip :: String -> String
 strip = Text.unpack . Text.strip . Text.pack
-
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe (Left _) = Nothing
-eitherToMaybe (Right value) = Just value

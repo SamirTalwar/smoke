@@ -1,22 +1,23 @@
 module Test.Smoke.Paths where
 
-import Control.Monad.Catch (MonadThrow)
+import Control.Monad.Fail (MonadFail)
 import Data.Text (Text)
 import qualified Data.Text.IO as TextIO
 import Path
 import System.Directory (doesPathExist, getCurrentDirectory)
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
+import Test.Smoke.Errors
 
 -- Parse
-parseAbsOrRelDir :: MonadThrow m => FilePath -> m (Path Rel Dir)
-parseAbsOrRelDir = parseRelDir . normalize
+parseAbsOrRelDir :: MonadFail m => FilePath -> m (Path Rel Dir)
+parseAbsOrRelDir = catchAndFail . parseRelDir . normalize
 
-parseAbsOrRelFile :: MonadThrow m => FilePath -> m (Path Rel File)
-parseAbsOrRelFile = parseRelFile . normalize
+parseAbsOrRelFile :: MonadFail m => FilePath -> m (Path Rel File)
+parseAbsOrRelFile = catchAndFail . parseRelFile . normalize
 
-(<//>) :: MonadThrow m => Path Abs Dir -> FilePath -> m (Path Abs Dir)
-a <//> b = parseAbsDir $ normalize $ toFilePath a FilePath.</> b
+(<//>) :: MonadFail m => Path Abs Dir -> FilePath -> m (Path Abs Dir)
+a <//> b = catchAndFail . parseAbsDir . normalize $ toFilePath a FilePath.</> b
 
 normalize :: FilePath -> FilePath
 normalize =

@@ -2,8 +2,6 @@
 
 module Test.Smoke.Types.Tests where
 
-import Control.Monad ((<=<))
-import Control.Monad.Catch.Pure (runCatchT)
 import Data.Aeson hiding (Options)
 import Data.Aeson.Types (Parser)
 import Data.Map.Strict (Map)
@@ -82,14 +80,11 @@ parseWorkingDirectory ::
      Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)
 parseWorkingDirectory _ Nothing = return Nothing
 parseWorkingDirectory location (Just filePath) =
-  either (fail . show) (return . Just . WorkingDirectory) $
-  location <//> filePath
+  Just . WorkingDirectory <$> (location <//> filePath)
 
 parseTestFile :: Value -> Parser (Path Rel File, Fixtures TestFileContents)
 parseTestFile =
   withObject "File" $ \v -> do
-    path <-
-      (either (fail . show) return <=< runCatchT . parseAbsOrRelFile) =<<
-      v .: "path"
+    path <- parseAbsOrRelFile =<< v .: "path"
     contents <- v .: "contents"
     return (path, contents)

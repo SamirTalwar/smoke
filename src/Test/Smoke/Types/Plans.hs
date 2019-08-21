@@ -5,6 +5,7 @@ import Data.Vector (Vector)
 import Path
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
+import Test.Smoke.Types.Executable
 import Test.Smoke.Types.Files
 import Test.Smoke.Types.Tests
 

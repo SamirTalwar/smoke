@@ -5,6 +5,7 @@ import Data.Text (Text)
 import Path
 import System.FilePath (FilePath)
 import Test.Smoke.Types.Base
+import Test.Smoke.Types.Executable
 
 data SmokeError
   = DiscoveryError SmokeDiscoveryError

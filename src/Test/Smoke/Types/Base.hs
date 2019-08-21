@@ -56,20 +56,11 @@ newtype Args =
     }
   deriving (Eq, Show, Semigroup, Monoid, FromJSON)
 
-data Shell =
-  Shell (Path Rel File) Args
-  deriving (Eq, Show)
-
 newtype Script =
   Script
     { unScript :: Text
     }
   deriving (Eq, Show, FromJSON)
-
-data Executable
-  = ExecutableProgram (Path Rel File) Args
-  | ExecutableScript Shell Script
-  deriving (Eq, Show)
 
 data CommandLine =
   CommandLine String Args
@@ -88,14 +79,9 @@ data Command
   deriving (Eq, Show)
 
 instance FromJSON Command where
-  parseJSON (Object v) = do
-    shell <- v .:? "shell"
-    script <- v .: "script"
-    return $ CommandScript shell script
+  parseJSON (Object v) = CommandScript <$> v .:? "shell" <*> v .: "script"
   parseJSON (String script) = return $ CommandScript Nothing (Script script)
-  parseJSON (Array args) = do
-    line <- parseJSON (Array args)
-    return $ CommandArgs line
+  parseJSON args@(Array _) = CommandArgs <$> parseJSON args
   parseJSON invalid = typeMismatch "command" invalid
 
 newtype Status =

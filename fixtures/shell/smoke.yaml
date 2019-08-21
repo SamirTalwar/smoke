@@ -1,5 +1,5 @@
 tests:
-  - name: write to STDERR with the default shell
+  - name: use a default shell
     command: |
       echo 'Something.' >&2
       false
@@ -8,7 +8,7 @@ tests:
       Something.
       Something else.
 
-  - name: write to STDERR with custom shell flags
+  - name: use custom shell flags
     command:
       shell:
         - sh
@@ -21,19 +21,19 @@ tests:
     stderr: |
       Something.
 
-  - name: write to STDERR with a custom shell
+  - name: use a custom shell
     command:
       shell:
-        - bash
+        - ruby
       script: |
-        echo 'Something.' >&2
-        false
-        echo 'Something else.' >&2
-    stderr: |
+        puts 'Something.'
+        $stderr.puts 'Something else.'
+    stdout: |
       Something.
+    stderr: |
       Something else.
 
-  - name: write the args to STDERR
+  - name: pass args to a shell command
     command: |
       echo $1 $2 $3
     args:
@@ -45,12 +45,12 @@ tests:
     stdout: |
       a b c
 
-  - name: write the args to STDERR with a custom shell
+  - name: pass args to a shell command with a custom shell
     command:
       shell:
-        - bash
+        - ruby
       script: |
-        echo $1 $2 $3
+        puts ARGV[0...3]
     args:
       - a
       - b
@@ -58,7 +58,9 @@ tests:
       - d
       - e
     stdout: |
-      a b c
+      a
+      b
+      c
 
   - name: write STDIN to STDERR
     command: |

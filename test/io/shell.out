@@ -1,12 +1,12 @@
-write to STDERR with the default shell
+use a default shell
   succeeded
-write to STDERR with custom shell flags
+use custom shell flags
   succeeded
-write to STDERR with a custom shell
+use a custom shell
   succeeded
-write the args to STDERR
+pass args to a shell command
   succeeded
-write the args to STDERR with a custom shell
+pass args to a shell command with a custom shell
   succeeded
 write STDIN to STDERR
   succeeded

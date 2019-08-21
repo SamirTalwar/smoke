@@ -12,7 +12,6 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
-import Test.Smoke.Shell
 import Test.Smoke.Types.Args
 import Test.Smoke.Types.Shell
 
@@ -65,21 +64,16 @@ data Executable
 
 data Command
   = CommandArgs (Vector String)
-  | CommandScript Shell Script
+  | CommandScript (Maybe (Vector String)) Script
   deriving (Eq, Show)
 
 instance FromJSON Command where
-  parseJSON (Object v) = do
-    specifiedShell <- v .:? "shell"
-    shell <- maybe defaultShell return specifiedShell
-    script <- v .: "script"
-    return $ CommandScript shell (Script script)
-  parseJSON (String script) = do
-    shell <- defaultShell
-    return $ CommandScript shell (Script script)
+  parseJSON (Object v) =
+    CommandScript <$> v .:? "shell" <*> (Script <$> v .: "script")
+  parseJSON (String script) = return $ CommandScript Nothing (Script script)
   parseJSON (Array args) =
     if Vector.null args
-      then typeMismatch "shell" (Array args)
+      then typeMismatch "command" (Array args)
       else CommandArgs <$> sequence (parseJSON <$> args)
   parseJSON invalid = typeMismatch "command" invalid
 

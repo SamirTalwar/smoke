@@ -10,6 +10,7 @@ import System.IO.Temp (withSystemTempFile)
 import System.Process (CreateProcess(..), proc)
 import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Paths
+import Test.Smoke.Shell
 import Test.Smoke.Types
 
 runExecutable ::
@@ -37,12 +38,15 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       workingDirectory
 
 convertCommandToExecutable :: Command -> IO Executable
-convertCommandToExecutable (CommandArgs command)
-  | Vector.null command = fail "No command."
-  | otherwise = do
-    let executableName = Vector.head command
-    executablePath <- parseAbsOrRelFile executableName
-    let commandArgs = Vector.tail command
-    return $ ExecutableProgram executablePath (Args commandArgs)
-convertCommandToExecutable (CommandScript shell script) =
+convertCommandToExecutable (CommandArgs command) = do
+  let executableName = Vector.head command
+  executablePath <- parseAbsOrRelFile executableName
+  let commandArgs = Vector.tail command
+  return $ ExecutableProgram executablePath (Args commandArgs)
+convertCommandToExecutable (CommandScript Nothing script) = do
+  shell <- defaultShell
   return $ ExecutableScript shell script
+convertCommandToExecutable (CommandScript (Just shell) script) = do
+  shellCommand <- parseAbsOrRelFile (Vector.head shell)
+  let shellArgs = Args $ Vector.tail shell
+  return $ ExecutableScript (Shell shellCommand shellArgs) script

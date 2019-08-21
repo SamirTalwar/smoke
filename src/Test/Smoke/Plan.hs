@@ -18,6 +18,7 @@ import Test.Smoke.Errors
 import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Paths
+import Test.Smoke.Shell
 import Test.Smoke.Types
 
 type Planning = ExceptT SmokePlanningError IO
@@ -25,26 +26,37 @@ type Planning = ExceptT SmokePlanningError IO
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
   currentWorkingDirectory <- WorkingDirectory <$> getCurrentWorkingDirectory
+  theDefaultShell <- defaultShell
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
         Left errorMessage -> return $ SuitePlanError suiteName errorMessage
-        Right (Suite location thisSuiteWorkingDirectory thisSuiteCommand tests) -> do
-          let defaultCommand = thisSuiteCommand <|> specificationCommand
-          let defaultWorkingDirectory =
+        Right (Suite location thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests) -> do
+          let fallbackCommand = thisSuiteCommand <|> specificationCommand
+          fallbackShell <-
+            maybe
+              (return theDefaultShell)
+              shellFromCommandLine
+              thisSuiteShellCommandLine
+          let fallbackWorkingDirectory =
                 fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
           testPlans <-
             forM tests $ \test ->
               runExceptT $
               withExceptT (TestPlanError test) $ do
-                validateTest defaultCommand test
-                readTest location defaultWorkingDirectory defaultCommand test
+                validateTest fallbackCommand test
+                readTest
+                  location
+                  fallbackWorkingDirectory
+                  fallbackShell
+                  fallbackCommand
+                  test
           return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
-validateTest defaultCommand test = do
-  when (isNothing (testCommand test <|> defaultCommand)) $ throwE NoCommand
+validateTest fallbackCommand test = do
+  when (isNothing (testCommand test <|> fallbackCommand)) $ throwE NoCommand
   when
     (isEmptyFixtures (testStdOut test) &&
      isEmptyFixtures (testStdErr test) && isEmptyFiles (testFiles test)) $
@@ -56,15 +68,16 @@ validateTest defaultCommand test = do
 readTest ::
      Path Abs Dir
   -> WorkingDirectory
+  -> Shell
   -> Maybe Command
   -> Test
   -> Planning TestPlan
-readTest location defaultWorkingDirectory defaultCommand test = do
+readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
   let workingDirectory =
-        fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
+        fromMaybe fallbackWorkingDirectory (testWorkingDirectory test)
   command <-
-    maybe (throwE NoCommand) return (testCommand test <|> defaultCommand)
-  executable <- liftIO $ convertCommandToExecutable command
+    maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
+  executable <- liftIO $ convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
   let executableName =
         case executable of
@@ -77,7 +90,8 @@ readTest location defaultWorkingDirectory defaultCommand test = do
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture location <$> testStdIn test)
-  stdIn <- withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
+  stdIn <-
+    withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
   status <- unfiltered <$> readFixture location (testStatus test)
   stdOut <- Vector.map unfiltered <$> readFixtures location (testStdOut test)
   stdErr <- Vector.map unfiltered <$> readFixtures location (testStdErr test)
@@ -88,6 +102,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
     TestPlan
       { planTest = test
       , planWorkingDirectory = workingDirectory
+      , planShell = fallbackShell
       , planExecutable = executable
       , planArgs = args
       , planStdIn = stdIn

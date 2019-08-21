@@ -56,7 +56,7 @@ runTest location testPlan =
   runExceptT (processOutput location testPlan =<< executeTest location testPlan)
 
 executeTest :: Path Abs Dir -> TestPlan -> Execution ActualOutputs
-executeTest location (TestPlan _ workingDirectory executable args processStdIn _ _ _ files revert) = do
+executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
@@ -101,18 +101,18 @@ revertingDirectory path execution = do
 
 processOutput ::
      Path Abs Dir -> TestPlan -> ActualOutputs -> Execution TestResult
-processOutput location testPlan@(TestPlan test _ _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
+processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $
-    applyFiltersFromFixture (testStatus test) actualStatus
+    applyFiltersFromFixture fallbackShell (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT ExecutionFilterError $
     ifEmpty actualStdOut <$>
-    applyFiltersFromFixtures (testStdOut test) actualStdOut
+    applyFiltersFromFixtures fallbackShell (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT ExecutionFilterError $
     ifEmpty actualStdErr <$>
-    applyFiltersFromFixtures (testStdErr test) actualStdErr
+    applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
         result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
@@ -125,6 +125,7 @@ processOutput location testPlan@(TestPlan test _ _ _ _ expectedStatus expectedSt
          withExceptT
            ExecutionFilterError
            (applyFiltersFromFixtures
+              fallbackShell
               (testFiles test ! relativePath)
               (actualFiles ! (location </> relativePath))))
       expectedFiles

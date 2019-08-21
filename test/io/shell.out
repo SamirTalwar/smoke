@@ -1,14 +1,18 @@
-use a default shell
+global/runs the command with a custom shell
   succeeded
-use custom shell flags
+global/runs the filter with a custom shell
   succeeded
-use a custom shell
+local/use a default shell
   succeeded
-pass args to a shell command
+local/use custom shell flags
   succeeded
-pass args to a shell command with a custom shell
+local/use a custom shell
   succeeded
-write STDIN to STDERR
+local/pass args to a shell command
+  succeeded
+local/pass args to a shell command with a custom shell
+  succeeded
+local/write STDIN to STDERR
   succeeded
 
-6 tests, 0 failures
+8 tests, 0 failures

@@ -29,6 +29,7 @@ data TestPlan =
   TestPlan
     { planTest :: Test
     , planWorkingDirectory :: WorkingDirectory
+    , planShell :: Shell
     , planExecutable :: Executable
     , planArgs :: Args
     , planStdIn :: StdIn

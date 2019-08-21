@@ -31,6 +31,7 @@ data Suite =
   Suite
     { suiteLocation :: Path Abs Dir
     , suiteWorkingDirectory :: Maybe WorkingDirectory
+    , suiteShell :: Maybe CommandLine
     , suiteCommand :: Maybe Command
     , suiteTests :: [Test]
     }
@@ -56,6 +57,7 @@ parseSuite location =
   withObject "Suite" $ \v ->
     Suite location <$>
     (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (v .:? "shell") <*>
     (v .:? "command") <*>
     (mapM (parseTest location) =<< (v .: "tests"))
 

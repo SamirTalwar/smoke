@@ -37,13 +37,12 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       stdIn
       workingDirectory
 
-convertCommandToExecutable :: Command -> IO Executable
-convertCommandToExecutable (CommandArgs (CommandLine executableName commandArgs)) = do
+convertCommandToExecutable :: Shell -> Command -> IO Executable
+convertCommandToExecutable _ (CommandArgs (CommandLine executableName commandArgs)) = do
   executablePath <- parseAbsOrRelFile executableName
   return $ ExecutableProgram executablePath commandArgs
-convertCommandToExecutable (CommandScript Nothing script) = do
-  shell <- defaultShell
+convertCommandToExecutable shell (CommandScript Nothing script) =
   return $ ExecutableScript shell script
-convertCommandToExecutable (CommandScript (Just (CommandLine shellName shellArgs)) script) = do
-  shellCommand <- parseAbsOrRelFile shellName
-  return $ ExecutableScript (Shell shellCommand shellArgs) script
+convertCommandToExecutable _ (CommandScript (Just commandLine) script) = do
+  shell <- shellFromCommandLine commandLine
+  return $ ExecutableScript shell script

@@ -22,9 +22,9 @@ tests:
         a b c
       filter:
         shell:
-          - bash
+          - ruby
         script: |
-          tr '[:lower:]' '[:upper:]'
+          $stdout.write $stdin.read.upcase
     stdout: |
       A B C
 
@@ -77,9 +77,9 @@ tests:
         A B C
       filter:
         shell:
-          - bash
+          - ruby
         script: |
-          tr '[:lower:]' '[:upper:]'
+          $stdout.write $stdin.read.upcase
 
   - name: STDOUT post-processing, with a script
     command:

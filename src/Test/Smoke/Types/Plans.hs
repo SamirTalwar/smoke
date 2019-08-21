@@ -3,7 +3,6 @@ module Test.Smoke.Types.Plans where
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import Path
-import Test.Smoke.Types.Args
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Files

@@ -12,8 +12,6 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
-import Test.Smoke.Types.Args
-import Test.Smoke.Types.Shell
 
 data Contents a
   = Inline a
@@ -50,6 +48,16 @@ newtype WorkingDirectory =
     { unWorkingDirectory :: Path Abs Dir
     }
   deriving (Eq, Show, FromJSON)
+
+newtype Args =
+  Args
+    { unArgs :: Vector String
+    }
+  deriving (Eq, Show, Semigroup, Monoid, FromJSON)
+
+data Shell =
+  Shell (Path Rel File) Args
+  deriving (Eq, Show)
 
 newtype Script =
   Script

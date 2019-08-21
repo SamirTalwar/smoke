@@ -4,7 +4,7 @@ import Control.Monad.Fail (MonadFail)
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 import Test.Smoke.Paths
-import Test.Smoke.Types.Shell
+import Test.Smoke.Types.Base
 
 defaultShell :: MonadFail m => m Shell
 defaultShell = do

@@ -2,6 +2,7 @@ tests:
   - name: shell
     args:
       - fixtures/shell
+    exit-status: 1
     stdout:
       - file: io/shell.out-unix
       - file: io/shell.out-windows

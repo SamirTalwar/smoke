@@ -78,3 +78,21 @@ tests:
         echo 'Something.'
     stdout: |
       Something.
+
+  - name: use a shell that doesn't exist
+    command:
+      shell:
+        - non_existent_application
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.
+
+  - name: use a shell that isn't executable
+    command:
+      shell:
+        - ./fixtures/non_executable_application
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.

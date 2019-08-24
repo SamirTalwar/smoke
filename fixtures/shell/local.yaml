@@ -1,5 +1,5 @@
 tests:
-  - name: use a default shell
+  - name: use the default shell
     command: |
       echo 'Something.' >&2
       false
@@ -7,6 +7,14 @@ tests:
     stderr: |
       Something.
       Something else.
+
+  - name: pipe STDIN to the script
+    command: |
+      cat >&2
+    stdin: |
+      Something.
+    stderr: |
+      Something.
 
   - name: use custom shell flags
     command:
@@ -61,11 +69,3 @@ tests:
       a
       b
       c
-
-  - name: write STDIN to STDERR
-    command: |
-      cat >&2
-    stdin: |
-      Something.
-    stderr: |
-      Something.

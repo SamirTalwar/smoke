@@ -1,6 +1,0 @@
-no-such-application
-  The application "fixtures/no_such_application" does not exist.
-non-executable-application
-  The application "fixtures/non_executable_application" is not executable.
-
-2 tests, 2 failures

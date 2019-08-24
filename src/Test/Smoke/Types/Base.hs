@@ -3,12 +3,15 @@
 
 module Test.Smoke.Types.Base where
 
+import Control.Monad (when)
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Default
 import Data.String (IsString)
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Path
 
 data Contents a
@@ -47,23 +50,39 @@ newtype WorkingDirectory =
     }
   deriving (Eq, Show, FromJSON)
 
-newtype Executable =
-  Executable
-    { unExecutable :: Path Rel File
-    }
-  deriving (Eq, Show, FromJSON)
-
-newtype Command =
-  Command
-    { unCommand :: [String]
-    }
-  deriving (Eq, Show, FromJSON)
-
 newtype Args =
   Args
-    { unArgs :: [String]
+    { unArgs :: Vector String
+    }
+  deriving (Eq, Show, Semigroup, Monoid, FromJSON)
+
+newtype Script =
+  Script
+    { unScript :: Text
     }
   deriving (Eq, Show, FromJSON)
+
+data CommandLine =
+  CommandLine String Args
+  deriving (Eq, Show)
+
+instance FromJSON CommandLine where
+  parseJSON =
+    withArray "command line" $ \v -> do
+      line <- mapM parseJSON v
+      when (Vector.null line) $ fail "empty command line"
+      return $ CommandLine (Vector.head line) (Args (Vector.tail line))
+
+data Command
+  = CommandArgs CommandLine
+  | CommandScript (Maybe CommandLine) Script
+  deriving (Eq, Show)
+
+instance FromJSON Command where
+  parseJSON (Object v) = CommandScript <$> v .:? "shell" <*> v .: "script"
+  parseJSON (String script) = return $ CommandScript Nothing (Script script)
+  parseJSON args@(Array _) = CommandArgs <$> parseJSON args
+  parseJSON invalid = typeMismatch "command" invalid
 
 newtype Status =
   Status

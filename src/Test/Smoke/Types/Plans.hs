@@ -5,6 +5,7 @@ import Data.Vector (Vector)
 import Path
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
+import Test.Smoke.Types.Executable
 import Test.Smoke.Types.Files
 import Test.Smoke.Types.Tests
 
@@ -13,9 +14,13 @@ newtype Plan =
   deriving (Eq, Show)
 
 data SuitePlan
-  = SuitePlanError
-      { suitePlanErrorName :: SuiteName
-      , suitePlanError :: SmokeDiscoveryError
+  = SuiteDiscoveryError
+      { suiteDiscoveryErrorName :: SuiteName
+      , suiteDiscoveryError :: SmokeDiscoveryError
+      }
+  | SuiteExecutableError
+      { suiteExecutableErrorName :: SuiteName
+      , suiteExecutableError :: SmokeExecutableError
       }
   | SuitePlan
       { suitePlanName :: SuiteName
@@ -28,6 +33,7 @@ data TestPlan =
   TestPlan
     { planTest :: Test
     , planWorkingDirectory :: WorkingDirectory
+    , planShell :: Maybe Shell
     , planExecutable :: Executable
     , planArgs :: Args
     , planStdIn :: StdIn

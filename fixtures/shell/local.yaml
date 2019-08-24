@@ -1,0 +1,98 @@
+tests:
+  - name: use the default shell
+    command: |
+      echo 'Something.' >&2
+      false
+      echo 'Something else.' >&2
+    stderr: |
+      Something.
+      Something else.
+
+  - name: pipe STDIN to the script
+    command: |
+      cat >&2
+    stdin: |
+      Something.
+    stderr: |
+      Something.
+
+  - name: use custom shell flags
+    command:
+      shell:
+        - sh
+        - -e
+      script: |
+        echo 'Something.' >&2
+        false
+        echo 'Something else.' >&2
+    exit-status: 1
+    stderr: |
+      Something.
+
+  - name: use a custom shell
+    command:
+      shell:
+        - ruby
+      script: |
+        puts 'Something.'
+        $stderr.puts 'Something else.'
+    stdout: |
+      Something.
+    stderr: |
+      Something else.
+
+  - name: pass args to a shell command
+    command: |
+      echo $1 $2 $3
+    args:
+      - a
+      - b
+      - c
+      - d
+      - e
+    stdout: |
+      a b c
+
+  - name: pass args to a shell command with a custom shell
+    command:
+      shell:
+        - ruby
+      script: |
+        puts ARGV[0...3]
+    args:
+      - a
+      - b
+      - c
+      - d
+      - e
+    stdout: |
+      a
+      b
+      c
+
+  - name: use a custom shell with an absolute path
+    command:
+      shell:
+        - /bin/sh
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.
+
+  - name: use a shell that doesn't exist
+    command:
+      shell:
+        - non_existent_application
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.
+
+  - name: use a shell that isn't executable
+    command:
+      shell:
+        - ./fixtures/non_executable_application
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.

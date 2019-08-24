@@ -5,45 +5,43 @@ module Test.Smoke.Filters
   ) where
 
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
-import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
-import Path
 import System.Exit (ExitCode(..))
-import System.IO.Error (isPermissionError, tryIOError)
-import System.Process.Text (readProcessWithExitCode)
+import System.IO.Error (tryIOError)
+import Test.Smoke.Executable
 import Test.Smoke.Types
 
 type Filtering = ExceptT SmokeFilterError IO
 
-applyFilters :: FixtureType a => Filtered a -> Filtering a
-applyFilters (Unfiltered value) = return value
-applyFilters (Filtered unfilteredValue (InlineFixtureFilter script)) = do
-  sh <- parseRelFile "sh"
-  runScript (Executable sh) (Args ["-c", Text.unpack script]) unfilteredValue
-applyFilters (Filtered unfilteredValue (CommandFixtureFilter scriptExecutable scriptArgs)) =
-  runScript scriptExecutable scriptArgs unfilteredValue
+applyFilters :: FixtureType a => Maybe Shell -> Filtered a -> Filtering a
+applyFilters _ (Unfiltered value) = return value
+applyFilters fallbackShell (Filtered unfilteredValue command) =
+  runFilter fallbackShell command unfilteredValue
 
-applyFiltersFromFixture :: FixtureType a => Fixture a -> a -> Filtering a
-applyFiltersFromFixture (Fixture _ Nothing) value = return value
-applyFiltersFromFixture (Fixture _ (Just fixtureFilter)) value =
-  applyFilters (Filtered value fixtureFilter)
+applyFiltersFromFixture ::
+     FixtureType a => Maybe Shell -> Fixture a -> a -> Filtering a
+applyFiltersFromFixture _ (Fixture _ Nothing) value = return value
+applyFiltersFromFixture fallbackShell (Fixture _ (Just fixtureFilter)) value =
+  applyFilters fallbackShell (Filtered value fixtureFilter)
 
 applyFiltersFromFixtures ::
-     FixtureType a => Fixtures a -> a -> Filtering (Vector a)
-applyFiltersFromFixtures (Fixtures fixtures) value =
-  Vector.mapM (`applyFiltersFromFixture` value) fixtures
+     FixtureType a => Maybe Shell -> Fixtures a -> a -> Filtering (Vector a)
+applyFiltersFromFixtures fallbackShell (Fixtures fixtures) value =
+  Vector.mapM
+    (\fixture -> applyFiltersFromFixture fallbackShell fixture value)
+    fixtures
 
-runScript :: FixtureType a => Executable -> Args -> a -> Filtering a
-runScript executable (Args args) value = do
+runFilter :: FixtureType a => Maybe Shell -> Command -> a -> Filtering a
+runFilter fallbackShell command value = do
+  executable <-
+    withExceptT FilterExecutableError $
+    convertCommandToExecutable fallbackShell command
   (exitCode, processStdOut, processStdErr) <-
-    withExceptT (handleExecutionError executable) $
+    withExceptT (CouldNotExecuteFilter executable) $
     ExceptT $
     tryIOError $
-    readProcessWithExitCode
-      (toFilePath (unExecutable executable))
-      args
-      (serializeFixture value)
+    runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
   case exitCode of
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->
@@ -53,9 +51,3 @@ runScript executable (Args args) value = do
         (Status code)
         (StdOut processStdOut)
         (StdErr processStdErr)
-
-handleExecutionError :: Executable -> IOError -> SmokeFilterError
-handleExecutionError executable e =
-  if isPermissionError e
-    then NonExecutableFilter executable
-    else CouldNotExecuteFilter executable e

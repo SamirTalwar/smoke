@@ -3,8 +3,7 @@ module Test.Smoke.Plan
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, unless, when)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad (forM, when)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
@@ -12,11 +11,11 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
-import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
-import Test.Smoke.Errors
+import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Paths
+import Test.Smoke.Shell
 import Test.Smoke.Types
 
 type Planning = ExceptT SmokePlanningError IO
@@ -27,25 +26,33 @@ planTests (TestSpecification specificationCommand suites) = do
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
-        Left errorMessage -> return $ SuitePlanError suiteName errorMessage
-        Right (Suite location thisSuiteWorkingDirectory thisSuiteCommand tests) -> do
-          let defaultCommand = thisSuiteCommand <|> specificationCommand
-          let defaultWorkingDirectory =
-                fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
-          testPlans <-
-            forM tests $ \test ->
-              runExceptT $
-              withExceptT (TestPlanError test) $ do
-                validateTest defaultCommand test
-                readTest location defaultWorkingDirectory defaultCommand test
-          return $ SuitePlan suiteName location testPlans
+        Left exception -> return $ SuiteDiscoveryError suiteName exception
+        Right (Suite location thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests) -> do
+          let fallbackCommand = thisSuiteCommand <|> specificationCommand
+          shell <-
+            runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
+          case shell of
+            Left exception -> return $ SuiteExecutableError suiteName exception
+            Right fallbackShell -> do
+              let fallbackWorkingDirectory =
+                    fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
+              testPlans <-
+                forM tests $ \test ->
+                  runExceptT $
+                  withExceptT (TestPlanError test) $ do
+                    validateTest fallbackCommand test
+                    readTest
+                      location
+                      fallbackWorkingDirectory
+                      fallbackShell
+                      fallbackCommand
+                      test
+              return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
-validateTest defaultCommand test = do
-  when (isNothing (testCommand test <|> defaultCommand)) $ throwE NoCommand
-  when (isNothing (testArgs test) && isNothing (testStdIn test)) $
-    throwE NoInput
+validateTest fallbackCommand test = do
+  when (isNothing (testCommand test <|> fallbackCommand)) $ throwE NoCommand
   when
     (isEmptyFixtures (testStdOut test) &&
      isEmptyFixtures (testStdErr test) && isEmptyFiles (testFiles test)) $
@@ -57,23 +64,24 @@ validateTest defaultCommand test = do
 readTest ::
      Path Abs Dir
   -> WorkingDirectory
+  -> Maybe Shell
   -> Maybe Command
   -> Test
   -> Planning TestPlan
-readTest location defaultWorkingDirectory defaultCommand test = do
+readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
   let workingDirectory =
-        fromMaybe defaultWorkingDirectory (testWorkingDirectory test)
-  (executable, args) <-
-    splitCommand (testCommand test <|> defaultCommand) (testArgs test)
-  let executableName = toFilePath $ unExecutable executable
-  executableExists <- liftIO (doesFileExist executableName)
-  unless executableExists $
-    onNothingThrow_ (NonExistentCommand executable) =<<
-    liftIO (findExecutable executableName)
+        fromMaybe fallbackWorkingDirectory (testWorkingDirectory test)
+  command <-
+    maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
+  executable <-
+    withExceptT PlanningExecutableError $
+    convertCommandToExecutable fallbackShell command
+  let args = fromMaybe mempty (testArgs test)
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture location <$> testStdIn test)
-  stdIn <- withExceptT PlanningFilterError $ applyFilters unfilteredStdIn
+  stdIn <-
+    withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
   status <- unfiltered <$> readFixture location (testStatus test)
   stdOut <- Vector.map unfiltered <$> readFixtures location (testStdOut test)
   stdErr <- Vector.map unfiltered <$> readFixtures location (testStdErr test)
@@ -84,6 +92,7 @@ readTest location defaultWorkingDirectory defaultCommand test = do
     TestPlan
       { planTest = test
       , planWorkingDirectory = workingDirectory
+      , planShell = fallbackShell
       , planExecutable = executable
       , planArgs = args
       , planStdIn = stdIn
@@ -93,14 +102,6 @@ readTest location defaultWorkingDirectory defaultCommand test = do
       , planFiles = files
       , planRevert = revert
       }
-
-splitCommand :: Maybe Command -> Maybe Args -> Planning (Executable, Args)
-splitCommand maybeCommand maybeArgs = do
-  (executableName:commandArgs) <-
-    onNothingThrow NoCommand (unCommand <$> maybeCommand)
-  executable <- Executable <$> parseAbsOrRelFile executableName
-  let args = Args $ commandArgs ++ maybe [] unArgs maybeArgs
-  return (executable, args)
 
 readFixture ::
      FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)
@@ -119,7 +120,7 @@ readFixtures ::
   -> Planning (Vector (Filtered a))
 readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
 
-includeFilter :: Maybe FixtureFilter -> a -> Filtered a
+includeFilter :: Maybe Command -> a -> Filtered a
 includeFilter maybeFilter contents =
   maybe (Unfiltered contents) (Filtered contents) maybeFilter
 

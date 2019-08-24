@@ -22,11 +22,10 @@ import System.Directory
   )
 import System.Exit (ExitCode(..))
 import System.IO (hClose)
-import System.IO.Error (isPermissionError, tryIOError)
+import System.IO.Error (tryIOError)
 import System.IO.Temp (withSystemTempFile)
-import System.Process.ListLike (cwd, proc)
-import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Errors
+import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Maps
 import Test.Smoke.Paths
@@ -41,13 +40,15 @@ type ActualFiles = Map (Path Abs File) TestFileContents
 runTests :: Plan -> IO Results
 runTests (Plan suites) =
   forM suites $ \case
-    SuitePlanError suiteName errorMessage ->
-      return $ SuiteResultError suiteName errorMessage
+    SuiteDiscoveryError suiteName exception ->
+      return $ SuiteResultDiscoveryError suiteName exception
+    SuiteExecutableError suiteName exception ->
+      return $ SuiteResultExecutableError suiteName exception
     SuitePlan suiteName location testPlans -> do
       testResults <-
         forM testPlans $ \case
-          Left (TestPlanError test errorMessage) ->
-            return $ TestResult test $ TestError $ PlanningError errorMessage
+          Left (TestPlanError test exception) ->
+            return $ TestResult test $ TestError $ PlanningError exception
           Right testPlan -> runTest location testPlan
       return $ SuiteResult suiteName location testResults
 
@@ -57,19 +58,16 @@ runTest location testPlan =
   runExceptT (processOutput location testPlan =<< executeTest location testPlan)
 
 executeTest :: Path Abs Dir -> TestPlan -> Execution ActualOutputs
-executeTest location (TestPlan _ workingDirectory executable (Args args) (StdIn processStdIn) _ _ _ files revert) = do
+executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
   unless workingDirectoryExists $
     throwE $ NonExistentWorkingDirectory workingDirectory
-  let executableName = toFilePath $ unExecutable executable
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
-      tryIO (handleExecutionError executable) $
-      readCreateProcessWithExitCode
-        ((proc executableName args) {cwd = Just workingDirectoryFilePath})
-        processStdIn
+      tryIO (CouldNotExecuteCommand executable) $
+      runExecutable executable args processStdIn (Just workingDirectory)
     actualFiles <-
       Map.map TestFileContents . Map.fromList <$>
       mapM readTestFile (Map.keys files)
@@ -105,18 +103,18 @@ revertingDirectory path execution = do
 
 processOutput ::
      Path Abs Dir -> TestPlan -> ActualOutputs -> Execution TestResult
-processOutput location testPlan@(TestPlan test _ _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
+processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $
-    applyFiltersFromFixture (testStatus test) actualStatus
+    applyFiltersFromFixture fallbackShell (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT ExecutionFilterError $
     ifEmpty actualStdOut <$>
-    applyFiltersFromFixtures (testStdOut test) actualStdOut
+    applyFiltersFromFixtures fallbackShell (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT ExecutionFilterError $
     ifEmpty actualStdErr <$>
-    applyFiltersFromFixtures (testStdErr test) actualStdErr
+    applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
         result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
@@ -129,6 +127,7 @@ processOutput location testPlan@(TestPlan test _ _ _ _ expectedStatus expectedSt
          withExceptT
            ExecutionFilterError
            (applyFiltersFromFixtures
+              fallbackShell
               (testFiles test ! relativePath)
               (actualFiles ! (location </> relativePath))))
       expectedFiles
@@ -154,12 +153,6 @@ processOutput location testPlan@(TestPlan test _ _ _ _ expectedStatus expectedSt
 
 tryIO :: (IOError -> SmokeExecutionError) -> IO a -> Execution a
 tryIO handleIOError = withExceptT handleIOError . ExceptT . tryIOError
-
-handleExecutionError :: Executable -> IOError -> SmokeExecutionError
-handleExecutionError executable e =
-  if isPermissionError e
-    then NonExecutableCommand executable
-    else CouldNotExecuteCommand executable e
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

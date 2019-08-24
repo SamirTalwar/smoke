@@ -1,12 +1,6 @@
 tests:
   - name: no-command
 
-  - name: no-inputs
-    command:
-      - echo
-    stdout: |
-      output
-
   - name: no-outputs
     command:
       - echo

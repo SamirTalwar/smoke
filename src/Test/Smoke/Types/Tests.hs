@@ -2,14 +2,13 @@
 
 module Test.Smoke.Types.Tests where
 
-import Control.Monad ((<=<))
-import Control.Monad.Catch.Pure (runCatchT)
 import Data.Aeson hiding (Options)
 import Data.Aeson.Types (Parser)
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
+import Test.Smoke.Errors
 import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
@@ -33,6 +32,7 @@ data Suite =
   Suite
     { suiteLocation :: Path Abs Dir
     , suiteWorkingDirectory :: Maybe WorkingDirectory
+    , suiteShell :: Maybe CommandLine
     , suiteCommand :: Maybe Command
     , suiteTests :: [Test]
     }
@@ -58,6 +58,7 @@ parseSuite location =
   withObject "Suite" $ \v ->
     Suite location <$>
     (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (v .:? "shell") <*>
     (v .:? "command") <*>
     (mapM (parseTest location) =<< (v .: "tests"))
 
@@ -81,14 +82,11 @@ parseWorkingDirectory ::
      Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)
 parseWorkingDirectory _ Nothing = return Nothing
 parseWorkingDirectory location (Just filePath) =
-  either (fail . show) (return . Just . WorkingDirectory) $
-  location <//> filePath
+  Just . WorkingDirectory <$> (location <//> filePath)
 
 parseTestFile :: Value -> Parser (Path Rel File, Fixtures TestFileContents)
 parseTestFile =
   withObject "File" $ \v -> do
-    path <-
-      (either (fail . show) return <=< runCatchT . parseAbsOrRelFile) =<<
-      v .: "path"
+    path <- catchAndFail . parseRelFile =<< v .: "path"
     contents <- v .: "contents"
     return (path, contents)

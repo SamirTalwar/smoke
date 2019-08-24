@@ -1,0 +1,18 @@
+shell:
+  - ruby
+
+tests:
+  - name: runs the command with a custom shell
+    command: |
+      puts 'Hi!'
+    stdout: |
+      Hi!
+
+  - name: runs the filter with a custom shell
+    command: |
+      puts 'Hello!'
+    stdout:
+      contents: |
+        HELLO!
+      filter: |
+        $stdout.write $stdin.read.upcase

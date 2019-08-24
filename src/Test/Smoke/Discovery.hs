@@ -5,7 +5,6 @@ module Test.Smoke.Discovery
   ) where
 
 import Control.Monad (forM, unless)
-import Control.Monad.Catch.Pure (runCatchT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
 import qualified Data.List as List
@@ -15,6 +14,7 @@ import Data.Yaml
 import Path
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath (dropExtension)
+import qualified System.FilePath.Glob as Glob
 import Test.Smoke.Errors
 import Test.Smoke.Paths
 import Test.Smoke.Types
@@ -66,9 +66,9 @@ splitSuitePath path =
 decodeSpecificationFile :: Path Rel Dir -> Path Rel File -> Discovery Suite
 decodeSpecificationFile directory path = do
   location <- liftIO $ resolvePath directory
-  filePath <- liftIO $ toFilePath <$> resolvePath path
+  resolvedPath <- liftIO $ resolvePath path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $ do
-    parsedValue <- ExceptT $ decodeFileEither filePath
+    parsedValue <- ExceptT $ decodeFileEither (toFilePath resolvedPath)
     withExceptT AesonException $
       ExceptT $ return $ parseEither (parseSuite location) parsedValue
 
@@ -85,11 +85,11 @@ parseRoot location = do
   unless (directoryExists || fileExists) $ throwE $ NoSuchLocation path
   parsedDir <-
     if directoryExists
-      then eitherToMaybe <$> runCatchT (parseAbsOrRelDir path)
+      then Just <$> parseRelDir path
       else return Nothing
   parsedFile <-
     if fileExists
-      then eitherToMaybe <$> runCatchT (parseAbsOrRelFile path)
+      then Just <$> parseRelFile path
       else return Nothing
   case (parsedDir, parsedFile, selectedTestName) of
     (Just dir, Nothing, Nothing) -> return $ DirectoryRoot dir
@@ -102,6 +102,5 @@ parseRoot location = do
 strip :: String -> String
 strip = Text.unpack . Text.strip . Text.pack
 
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe (Left _) = Nothing
-eitherToMaybe (Right value) = Just value
+yamlFiles :: Glob.Pattern
+yamlFiles = Glob.compile "*.yaml"

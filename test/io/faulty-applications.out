@@ -1,0 +1,6 @@
+no-such-application
+  The executable "fixtures/no_such_application" could not be found.
+non-executable-application
+  The file at "fixtures/non_executable_application" is not executable.
+
+2 tests, 2 failures

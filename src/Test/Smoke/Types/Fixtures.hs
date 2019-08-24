@@ -10,10 +10,9 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Types.Base
-import Test.Smoke.Types.Filters
 
 data Fixture a =
-  Fixture (Contents a) (Maybe FixtureFilter)
+  Fixture (Contents a) (Maybe Command)
   deriving (Eq, Show)
 
 newtype Fixtures a =

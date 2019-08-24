@@ -12,9 +12,13 @@ import Test.Smoke.Types.Tests
 type Results = [SuiteResult]
 
 data SuiteResult
-  = SuiteResultError
-      { suiteResultErrorSuiteName :: SuiteName
-      , suiteResultError :: SmokeDiscoveryError
+  = SuiteResultDiscoveryError
+      { suiteResultDiscoveryErrorSuiteName :: SuiteName
+      , suiteResultDiscoveryError :: SmokeDiscoveryError
+      }
+  | SuiteResultExecutableError
+      { suiteResultExecutableErrorSuiteName :: SuiteName
+      , suiteResultExecutableError :: SmokeExecutableError
       }
   | SuiteResult
       { suiteResultSuiteName :: SuiteName

@@ -1,0 +1,24 @@
+global/runs the command with a custom shell
+  succeeded
+global/runs the filter with a custom shell
+  succeeded
+local/use the default shell
+  succeeded
+local/pipe STDIN to the script
+  succeeded
+local/use custom shell flags
+  succeeded
+local/use a custom shell
+  succeeded
+local/pass args to a shell command
+  succeeded
+local/pass args to a shell command with a custom shell
+  succeeded
+local/use a custom shell with an absolute path
+  succeeded
+local/use a shell that doesn't exist
+  The executable "non_existent_application" could not be found.
+local/use a shell that isn't executable
+  The file at "./fixtures/non_executable_application" is not executable.
+
+11 tests, 2 failures

@@ -72,3 +72,8 @@ data SmokeExecutableError
   deriving (Eq, Show)
 
 instance Exception SmokeExecutableError
+
+data SuiteError
+  = SuiteDiscoveryError SmokeDiscoveryError
+  | SuiteExecutableError SmokeExecutableError
+  deriving (Eq, Show)

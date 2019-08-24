@@ -14,19 +14,8 @@ newtype Plan =
   deriving (Eq, Show)
 
 data SuitePlan
-  = SuiteDiscoveryError
-      { suiteDiscoveryErrorName :: SuiteName
-      , suiteDiscoveryError :: SmokeDiscoveryError
-      }
-  | SuiteExecutableError
-      { suiteExecutableErrorName :: SuiteName
-      , suiteExecutableError :: SmokeExecutableError
-      }
-  | SuitePlan
-      { suitePlanName :: SuiteName
-      , suitePlanLocation :: Path Abs Dir
-      , suitePlanTests :: [TestPlanOutcome]
-      }
+  = SuitePlanError SuiteName SuiteError
+  | SuitePlan SuiteName (Path Abs Dir) [TestPlanOutcome]
   deriving (Eq, Show)
 
 data TestPlanOutcome

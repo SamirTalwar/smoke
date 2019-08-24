@@ -39,14 +39,10 @@ run options = do
     else exitWith (ExitFailure 1)
 
 runSuite :: ShowSuiteNames -> SuitePlan -> Output SuiteResult
-runSuite showSuiteNames (SuiteDiscoveryError suiteName discoveryError) = do
+runSuite showSuiteNames (SuitePlanError suiteName suiteError) = do
   printTitle showSuiteNames suiteName Nothing
-  printDiscoveryError printError discoveryError
-  return $ SuiteResultDiscoveryError suiteName discoveryError
-runSuite showSuiteNames (SuiteExecutableError suiteName executableError) = do
-  printTitle showSuiteNames suiteName Nothing
-  printExecutableError executableError
-  return $ SuiteResultExecutableError suiteName executableError
+  printSuiteError suiteError
+  return $ SuiteResultError suiteName suiteError
 runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
   testResults <-
     forM testPlans $ \case

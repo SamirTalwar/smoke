@@ -26,13 +26,15 @@ planTests (TestSpecification specificationCommand suites) = do
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
-        Left exception -> return $ SuiteDiscoveryError suiteName exception
+        Left exception ->
+          return $ SuitePlanError suiteName $ SuiteDiscoveryError exception
         Right (Suite location thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests) -> do
           let fallbackCommand = thisSuiteCommand <|> specificationCommand
           shell <-
             runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
           case shell of
-            Left exception -> return $ SuiteExecutableError suiteName exception
+            Left exception ->
+              return $ SuitePlanError suiteName $ SuiteExecutableError exception
             Right fallbackShell -> do
               let fallbackWorkingDirectory =
                     fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory

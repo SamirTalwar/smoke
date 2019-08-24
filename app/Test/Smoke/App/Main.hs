@@ -30,14 +30,18 @@ type ShowSuiteNames = Bool
 main :: IO ()
 main = do
   options <- parseOptions
-  (do tests <- discoverTests (optionsExecution options)
-      plan <- planTests tests
-      results <- runTests plan
-      case optionsMode options of
-        Check -> outputResults options results
-        Bless -> outputResults options =<< blessResults results) `catch` \exception -> do
-    printDiscoveryError putError options exception
+  run options `catch` \discoveryError -> do
+    flip runReaderT options $ printDiscoveryError putError discoveryError
     exitWith (ExitFailure 2)
+
+run :: AppOptions -> IO ()
+run options = do
+  tests <- discoverTests (optionsExecution options)
+  plan <- planTests tests
+  results <- runTests plan
+  case optionsMode options of
+    Check -> outputResults options results
+    Bless -> outputResults options =<< blessResults results
 
 outputResults :: AppOptions -> Results -> IO ()
 outputResults options results = do
@@ -50,13 +54,12 @@ outputResults options results = do
 printResults :: Results -> Output ()
 printResults results =
   forM_ results $ \case
-    SuiteResultDiscoveryError suiteName exception -> do
+    SuiteResultDiscoveryError suiteName discoveryError -> do
       printTitle showSuiteNames suiteName Nothing
-      appOptions <- ask
-      liftIO $ printDiscoveryError printError appOptions exception
-    SuiteResultExecutableError suiteName exception -> do
+      printDiscoveryError printError discoveryError
+    SuiteResultExecutableError suiteName executableError -> do
       printTitle showSuiteNames suiteName Nothing
-      printExecutableError exception
+      printExecutableError executableError
     SuiteResult suiteName _ testResults ->
       forM_ testResults $ \testResult@(TestResult test _) -> do
         printTitle showSuiteNames suiteName (Just $ testName test)
@@ -89,9 +92,8 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
   printFailingFilesOutput fileResults
-printResult (TestResult _ (TestError (DiscoveryError discoveryError))) = do
-  options <- ask
-  liftIO $ printDiscoveryError printError options discoveryError
+printResult (TestResult _ (TestError (DiscoveryError discoveryError))) =
+  printDiscoveryError printError discoveryError
 printResult (TestResult _ (TestError (PlanningError NoCommand))) =
   printError "There is no command."
 printResult (TestResult _ (TestError (PlanningError NoInput))) =
@@ -104,10 +106,10 @@ printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path))))
 printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path exception)))) =
   printErrorWithException exception $
   "The fixture " <> showPath path <> " could not be read."
-printResult (TestResult _ (TestError (PlanningError (PlanningFilterError exception)))) =
-  printFilterError exception
-printResult (TestResult _ (TestError (PlanningError (PlanningExecutableError exception)))) =
-  printExecutableError exception
+printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
+  printFilterError filterError
+printResult (TestResult _ (TestError (PlanningError (PlanningExecutableError executableError)))) =
+  printExecutableError executableError
 printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
   printError $ "The working directory " <> showPath path <> " does not exist."
 printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand executable exception)))) =
@@ -140,34 +142,25 @@ printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValue
 printResult (TestResult _ (TestError (BlessError (BlessIOException exception)))) =
   printErrorWithException exception "Blessing failed."
 
-printDiscoveryError ::
-     (Text -> Output ()) -> AppOptions -> SmokeDiscoveryError -> IO ()
-printDiscoveryError printErrorMessage options exception =
-  flip runReaderT options $
-  printErrorMessage $
-  case exception of
-    NoSuchLocation path ->
+printDiscoveryError :: (Text -> Output ()) -> SmokeDiscoveryError -> Output ()
+printDiscoveryError printErrorMessage = printErrorMessage . printDiscoveryError'
+  where
+    printDiscoveryError' :: SmokeDiscoveryError -> Text
+    printDiscoveryError' (NoSuchLocation path) =
       "There is no such location \"" <> fromString path <> "\"."
-    NoSuchTest path (TestName selectedTestName) ->
+    printDiscoveryError' (NoSuchTest path (TestName selectedTestName)) =
       "There is no such test \"" <> fromString selectedTestName <> "\" in " <>
       showPath path <>
       "."
-    CannotSelectTestInDirectory path (TestName selectedTestName) ->
+    printDiscoveryError' (CannotSelectTestInDirectory path (TestName selectedTestName)) =
       "The test \"" <> fromString selectedTestName <>
       "\" cannot be selected from the directory " <>
       showPath path <>
       ".\n" <>
       "Tests must be selected from a single specification file."
-    InvalidSpecification path message ->
+    printDiscoveryError' (InvalidSpecification path message) =
       "The test specification " <> showPath path <> " is invalid:\n" <>
       indentedAll messageIndentation (fromString message)
-
-printExecutableError :: SmokeExecutableError -> Output ()
-printExecutableError (CouldNotFindExecutable path) =
-  printError $
-  "The executable \"" <> fromString path <> "\" could not be found."
-printExecutableError (FileIsNotExecutable path) =
-  printError $ "The file at \"" <> fromString path <> "\" is not executable."
 
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError MissingFilterScript =
@@ -184,8 +177,15 @@ printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (St
   indentedAll messageIndentation stdOut <>
   "\nSTDERR:\n" <>
   indentedAll messageIndentation stdErr
-printFilterError (FilterExecutableError exception) =
-  printExecutableError exception
+printFilterError (FilterExecutableError executableError) =
+  printExecutableError executableError
+
+printExecutableError :: SmokeExecutableError -> Output ()
+printExecutableError (CouldNotFindExecutable path) =
+  printError $
+  "The executable \"" <> fromString path <> "\" could not be found."
+printExecutableError (FileIsNotExecutable path) =
+  printError $ "The file at \"" <> fromString path <> "\" is not executable."
 
 printFailingInput :: Foldable f => String -> f Text -> Output ()
 printFailingInput name value =

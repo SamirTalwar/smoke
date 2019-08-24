@@ -2,6 +2,7 @@ module Test.Smoke.App.OptionTypes
   ( AppOptions(..)
   , ColorOutput(..)
   , Mode(..)
+  , ShowSuiteNames
   ) where
 
 import Test.Smoke (Options(..))
@@ -19,3 +20,5 @@ data AppOptions =
 data Mode
   = Check
   | Bless
+
+type ShowSuiteNames = Bool

@@ -20,6 +20,12 @@ import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
 
 type Output a = ReaderT AppOptions IO a
 
+outputIndentation :: Int
+outputIndentation = 10
+
+messageIndentation :: Int
+messageIndentation = 2
+
 showText :: Show a => a -> Text
 showText = fromString . show
 

@@ -12,8 +12,7 @@ data SummaryResult
 summarizeResults :: Results -> Summary
 summarizeResults results = Summary successes failures
   where
-    summarizeSuiteResult (SuiteResultDiscoveryError _ _) = [Failure]
-    summarizeSuiteResult (SuiteResultExecutableError _ _) = [Failure]
+    summarizeSuiteResult (SuiteResultError _ _) = [Failure]
     summarizeSuiteResult (SuiteResult _ _ testResults) =
       map summarizeResult testResults
     allResults = concatMap summarizeSuiteResult results

@@ -12,22 +12,13 @@ import Test.Smoke.Types.Tests
 type Results = [SuiteResult]
 
 data SuiteResult
-  = SuiteResultDiscoveryError
-      { suiteResultDiscoveryErrorSuiteName :: SuiteName
-      , suiteResultDiscoveryError :: SmokeDiscoveryError
-      }
-  | SuiteResultExecutableError
-      { suiteResultExecutableErrorSuiteName :: SuiteName
-      , suiteResultExecutableError :: SmokeExecutableError
-      }
-  | SuiteResult
-      { suiteResultSuiteName :: SuiteName
-      , suiteResultLocation :: Path Abs Dir
-      , suiteResultTestResults :: [TestResult]
-      }
+  = SuiteResultError SuiteName SuiteError
+  | SuiteResult SuiteName (Path Abs Dir) [TestResult]
+  deriving (Eq, Show)
 
 data TestResult =
   TestResult Test TestOutcome
+  deriving (Eq, Show)
 
 data TestOutcome
   = TestSuccess

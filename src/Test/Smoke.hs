@@ -1,17 +1,17 @@
 module Test.Smoke
-  ( module Test.Smoke.Shell
+  ( module Test.Smoke.Bless
+  , module Test.Smoke.Discovery
+  , module Test.Smoke.Execution
+  , module Test.Smoke.Plan
+  , module Test.Smoke.Shell
+  , module Test.Smoke.Summary
   , module Test.Smoke.Types
-  , blessResults
-  , discoverTests
-  , planTests
-  , runTests
-  , summarizeResults
   ) where
 
-import Test.Smoke.Bless (blessResults)
-import Test.Smoke.Discovery (discoverTests)
-import Test.Smoke.Execution (runTests)
-import Test.Smoke.Plan (planTests)
+import Test.Smoke.Bless
+import Test.Smoke.Discovery
+import Test.Smoke.Execution
+import Test.Smoke.Plan
 import Test.Smoke.Shell
-import Test.Smoke.Summary (summarizeResults)
+import Test.Smoke.Summary
 import Test.Smoke.Types

@@ -16,13 +16,6 @@ import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Files
 import Test.Smoke.Types.Fixtures
 
-data Options =
-  Options
-    { optionsCommand :: Maybe Command
-    , optionsTestLocations :: Vector String
-    }
-  deriving (Eq, Show)
-
 data TestSpecification =
   TestSpecification (Maybe Command) Suites
 

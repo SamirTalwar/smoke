@@ -9,7 +9,13 @@ import Data.Semigroup ((<>))
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 import Options.Applicative
-import Test.Smoke (Args(..), Command(..), CommandLine(..), Options(..))
+import Test.Smoke
+  ( Args(..)
+  , Command(..)
+  , CommandLine(..)
+  , Mode(..)
+  , Options(..)
+  )
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell

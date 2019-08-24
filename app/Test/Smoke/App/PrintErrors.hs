@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.App.PrintErrors
-  ( printTestError
+  ( printError
   , printDiscoveryError
   , printExecutableError
-  , printError
+  , printSuiteError
+  , printTestError
   ) where
 
 import Control.Exception (displayException)
@@ -12,6 +13,12 @@ import Data.String (fromString)
 import Data.Text (Text)
 import Test.Smoke
 import Test.Smoke.App.Print
+
+printSuiteError :: SuiteError -> Output ()
+printSuiteError (SuiteDiscoveryError discoveryError) =
+  printDiscoveryError printError discoveryError
+printSuiteError (SuiteExecutableError executableError) =
+  printExecutableError executableError
 
 printTestError :: SmokeError -> Output ()
 printTestError (DiscoveryError discoveryError) =

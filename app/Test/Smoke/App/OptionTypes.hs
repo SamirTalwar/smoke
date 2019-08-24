@@ -1,11 +1,10 @@
 module Test.Smoke.App.OptionTypes
   ( AppOptions(..)
   , ColorOutput(..)
-  , Mode(..)
   , ShowSuiteNames
   ) where
 
-import Test.Smoke (Options(..))
+import Test.Smoke (Mode, Options)
 import Test.Smoke.App.Diff.Types
 import Test.Smoke.App.OptionColorOutput
 
@@ -16,9 +15,5 @@ data AppOptions =
     , optionsMode :: Mode
     , optionsDiffEngine :: DiffEngine
     }
-
-data Mode
-  = Check
-  | Bless
 
 type ShowSuiteNames = Bool

@@ -50,12 +50,12 @@ runSuite showSuiteNames (SuiteExecutableError suiteName executableError) = do
 runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
   testResults <-
     forM testPlans $ \case
-      Left (TestPlanError test planningError) -> do
+      TestPlanError test planningError -> do
         printTitle showSuiteNames suiteName (Just (testName test))
         let testError = PlanningError planningError
         printTestError testError
         return $ TestResult test $ TestError testError
-      Right testPlan@TestPlan {planTest = test} -> do
+      TestPlanSuccess testPlan@TestPlan {planTest = test} -> do
         printTitle showSuiteNames suiteName (Just (testName test))
         runTestPlan location testPlan
   return $ SuiteResult suiteName location testResults

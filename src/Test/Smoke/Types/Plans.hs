@@ -25,8 +25,13 @@ data SuitePlan
   | SuitePlan
       { suitePlanName :: SuiteName
       , suitePlanLocation :: Path Abs Dir
-      , suitePlanTests :: [Either TestPlanError TestPlan]
+      , suitePlanTests :: [TestPlanOutcome]
       }
+  deriving (Eq, Show)
+
+data TestPlanOutcome
+  = TestPlanError Test SmokePlanningError
+  | TestPlanSuccess TestPlan
   deriving (Eq, Show)
 
 data TestPlan =
@@ -43,8 +48,4 @@ data TestPlan =
     , planFiles :: Map (Path Rel File) (Vector TestFileContents)
     , planRevert :: Vector (Path Abs Dir)
     }
-  deriving (Eq, Show)
-
-data TestPlanError =
-  TestPlanError Test SmokePlanningError
   deriving (Eq, Show)

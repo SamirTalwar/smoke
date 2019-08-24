@@ -38,15 +38,15 @@ planTests (TestSpecification specificationCommand suites) = do
                     fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
               testPlans <-
                 forM tests $ \test ->
-                  runExceptT $
-                  withExceptT (TestPlanError test) $ do
-                    validateTest fallbackCommand test
-                    readTest
-                      location
-                      fallbackWorkingDirectory
-                      fallbackShell
-                      fallbackCommand
-                      test
+                  either (TestPlanError test) TestPlanSuccess <$>
+                  runExceptT
+                    (do validateTest fallbackCommand test
+                        readTest
+                          location
+                          fallbackWorkingDirectory
+                          fallbackShell
+                          fallbackCommand
+                          test)
               return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 

@@ -1,6 +1,6 @@
-{-# LANGUAGE LambdaCase #-}
-
-module Main where
+module Main
+  ( main
+  ) where
 
 import Control.Exception (catch)
 import Control.Monad (forM)
@@ -45,16 +45,23 @@ runSuite showSuiteNames (SuitePlanError suiteName suiteError) = do
   return $ SuiteResultError suiteName suiteError
 runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
   testResults <-
-    forM testPlans $ \case
-      TestPlanError test planningError -> do
-        printTitle showSuiteNames suiteName (Just (testName test))
-        let testError = PlanningError planningError
-        printTestError testError
-        return $ TestResult test $ TestError testError
-      TestPlanSuccess testPlan@TestPlan {planTest = test} -> do
-        printTitle showSuiteNames suiteName (Just (testName test))
-        runTestPlan location testPlan
+    forM testPlans $ runTestPlanOutcome showSuiteNames suiteName location
   return $ SuiteResult suiteName location testResults
+
+runTestPlanOutcome ::
+     ShowSuiteNames
+  -> SuiteName
+  -> Path Abs Dir
+  -> TestPlanOutcome
+  -> Output TestResult
+runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError) = do
+  printTitle showSuiteNames suiteName (Just (testName test))
+  let testError = PlanningError planningError
+  printTestError testError
+  return $ TestResult test $ TestError testError
+runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@TestPlan {planTest = test}) = do
+  printTitle showSuiteNames suiteName (Just (testName test))
+  runTestPlan location testPlan
 
 runTestPlan :: Path Abs Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do

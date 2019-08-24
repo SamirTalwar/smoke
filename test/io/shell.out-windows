@@ -1,0 +1,20 @@
+global/runs the command with a custom shell
+  succeeded
+global/runs the filter with a custom shell
+  succeeded
+local/use the default shell
+  succeeded
+local/pipe STDIN to the script
+  succeeded
+local/use custom shell flags
+  succeeded
+local/use a custom shell
+  succeeded
+local/pass args to a shell command
+  succeeded
+local/pass args to a shell command with a custom shell
+  succeeded
+local/use a custom shell with an absolute path
+  The executable "/bin/sh" could not be found.
+
+9 tests, 1 failure

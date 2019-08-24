@@ -3,4 +3,5 @@ tests:
     args:
       - fixtures/shell
     stdout:
-      file: io/shell.out
+      - file: io/shell.out-unix
+      - file: io/shell.out-windows

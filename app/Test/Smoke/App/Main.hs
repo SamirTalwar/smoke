@@ -92,54 +92,56 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
   printFailingFilesOutput fileResults
-printResult (TestResult _ (TestError (DiscoveryError discoveryError))) =
+printResult (TestResult _ (TestError testError)) = printTestError testError
+
+printTestError :: SmokeError -> Output ()
+printTestError (DiscoveryError discoveryError) =
   printDiscoveryError printError discoveryError
-printResult (TestResult _ (TestError (PlanningError NoCommand))) =
-  printError "There is no command."
-printResult (TestResult _ (TestError (PlanningError NoInput))) =
+printTestError (PlanningError NoCommand) = printError "There is no command."
+printTestError (PlanningError NoInput) =
   printError "There are no args or STDIN values in the specification."
-printResult (TestResult _ (TestError (PlanningError NoOutput))) =
+printTestError (PlanningError NoOutput) =
   printError
     "There are no STDOUT or STDERR values, or files, in the specification."
-printResult (TestResult _ (TestError (PlanningError (NonExistentFixture path)))) =
+printTestError (PlanningError (NonExistentFixture path)) =
   printError $ "The fixture " <> showPath path <> " does not exist."
-printResult (TestResult _ (TestError (PlanningError (CouldNotReadFixture path exception)))) =
+printTestError (PlanningError (CouldNotReadFixture path exception)) =
   printErrorWithException exception $
   "The fixture " <> showPath path <> " could not be read."
-printResult (TestResult _ (TestError (PlanningError (PlanningFilterError filterError)))) =
+printTestError (PlanningError (PlanningFilterError filterError)) =
   printFilterError filterError
-printResult (TestResult _ (TestError (PlanningError (PlanningExecutableError executableError)))) =
+printTestError (PlanningError (PlanningExecutableError executableError)) =
   printExecutableError executableError
-printResult (TestResult _ (TestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))))) =
+printTestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))) =
   printError $ "The working directory " <> showPath path <> " does not exist."
-printResult (TestResult _ (TestError (ExecutionError (CouldNotExecuteCommand executable exception)))) =
+printTestError (ExecutionError (CouldNotExecuteCommand executable exception)) =
   printErrorWithException exception $
   showExecutable executable <> " could not be executed."
-printResult (TestResult _ (TestError (ExecutionError (CouldNotReadFile path exception)))) =
+printTestError (ExecutionError (CouldNotReadFile path exception)) =
   printErrorWithException exception $
   "The output file " <> showPath path <> " does not exist."
-printResult (TestResult _ (TestError (ExecutionError (CouldNotStoreDirectory path exception)))) =
+printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
   printErrorWithException exception $
   "The directory " <> showPath path <> " could not be stored."
-printResult (TestResult _ (TestError (ExecutionError (CouldNotRevertDirectory path exception)))) =
+printTestError (ExecutionError (CouldNotRevertDirectory path exception)) =
   printErrorWithException exception $
   "The directory " <> showPath path <> " could not be reverted."
-printResult (TestResult _ (TestError (ExecutionError (ExecutionFilterError filterError)))) =
+printTestError (ExecutionError (ExecutionFilterError filterError)) =
   printFilterError filterError
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)))) =
+printTestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)) =
   printError $
   "The fixture \"" <> showText fixtureName' <>
   "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessAMissingValue fixtureName')))) =
+printTestError (BlessError (CouldNotBlessAMissingValue fixtureName')) =
   printError $
   "There are no expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
-printResult (TestResult _ (TestError (BlessError (CouldNotBlessWithMultipleValues fixtureName')))) =
+printTestError (BlessError (CouldNotBlessWithMultipleValues fixtureName')) =
   printError $
   "There are multiple expected \"" <> showText fixtureName' <>
   "\" values, so the result cannot be blessed.\n"
-printResult (TestResult _ (TestError (BlessError (BlessIOException exception)))) =
+printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 
 printDiscoveryError :: (Text -> Output ()) -> SmokeDiscoveryError -> Output ()

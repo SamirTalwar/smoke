@@ -1,13 +1,11 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Smoke.Bless
-  ( blessResults
+  ( blessResult
   ) where
 
 import Control.Exception (catch, throwIO)
-import Control.Monad (forM)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector as Vector
@@ -15,15 +13,6 @@ import Path
 import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
-
-blessResults :: Results -> IO Results
-blessResults results =
-  forM results $ \case
-    result@SuiteResultDiscoveryError {} -> return result
-    result@SuiteResultExecutableError {} -> return result
-    SuiteResult suiteName location testResults -> do
-      blessedResults <- forM testResults (blessResult location)
-      return $ SuiteResult suiteName location blessedResults
 
 blessResult :: Path Abs Dir -> TestResult -> IO TestResult
 blessResult location (TestResult test (TestFailure _ status stdOut stdErr files))

@@ -1,17 +1,14 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.App.PrintResults
-  ( outputResults
+  ( printResult
   ) where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask)
-import qualified Data.List as List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import qualified Data.Maybe as Maybe
 import Data.String (fromString)
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -23,42 +20,6 @@ import Test.Smoke.App.OptionTypes
 import Test.Smoke.App.Print
 import Test.Smoke.App.PrintErrors
 import Text.Printf (printf)
-
-outputResults :: Results -> Output Summary
-outputResults results = do
-  let summary = summarizeResults results
-  printResults results
-  printSummary summary
-  return summary
-
-printResults :: Results -> Output ()
-printResults results =
-  forM_ results $ \case
-    SuiteResultDiscoveryError suiteName discoveryError -> do
-      printTitle showSuiteNames suiteName Nothing
-      printDiscoveryError printError discoveryError
-    SuiteResultExecutableError suiteName executableError -> do
-      printTitle showSuiteNames suiteName Nothing
-      printExecutableError executableError
-    SuiteResult suiteName _ testResults ->
-      forM_ testResults $ \testResult@(TestResult test _) -> do
-        printTitle showSuiteNames suiteName (Just $ testName test)
-        printResult testResult
-  where
-    uniqueSuiteNames = List.nub $ map suiteResultSuiteName results
-    showSuiteNames = length uniqueSuiteNames > 1
-
-printTitle :: ShowSuiteNames -> SuiteName -> Maybe TestName -> Output ()
-printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
-  where
-    suiteNameForPrinting =
-      if showSuiteNames || Maybe.isNothing thisTestName
-        then Just thisSuiteName
-        else Nothing
-    name =
-      List.intercalate "/" $
-      Maybe.catMaybes
-        [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]
 
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
@@ -119,25 +80,6 @@ printDiff left right = do
              } <- ask
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
-
-printSummary :: Summary -> Output ()
-printSummary summary = do
-  putEmptyLn
-  let testCount = summaryTotal summary
-  let failureCount = summaryFailures summary
-  let testWord = pluralize testCount "test" "tests"
-  let failureWord = pluralize failureCount "failure" "failures"
-  let printSummaryLine =
-        if failureCount == 0
-          then putGreenLn
-          else putRedLn
-  printSummaryLine $
-    showInt testCount <> " " <> testWord <> ", " <> showInt failureCount <> " " <>
-    failureWord
-  where
-    pluralize :: Int -> Text -> Text -> Text
-    pluralize 1 singular _ = singular
-    pluralize _ _ plural = plural
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")

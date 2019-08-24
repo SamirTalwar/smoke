@@ -1,11 +1,9 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Test.Smoke.Execution
-  ( runTests
+  ( runTest
   ) where
 
 import qualified Codec.Archive.Tar as Tar
-import Control.Monad (forM, unless)
+import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import Data.Default
@@ -37,25 +35,16 @@ type ActualOutputs = (Status, StdOut, StdErr, ActualFiles)
 
 type ActualFiles = Map (Path Abs File) TestFileContents
 
-runTests :: Plan -> IO Results
-runTests (Plan suites) =
-  forM suites $ \case
-    SuiteDiscoveryError suiteName exception ->
-      return $ SuiteResultDiscoveryError suiteName exception
-    SuiteExecutableError suiteName exception ->
-      return $ SuiteResultExecutableError suiteName exception
-    SuitePlan suiteName location testPlans -> do
-      testResults <-
-        forM testPlans $ \case
-          Left (TestPlanError test exception) ->
-            return $ TestResult test $ TestError $ PlanningError exception
-          Right testPlan -> runTest location testPlan
-      return $ SuiteResult suiteName location testResults
-
 runTest :: Path Abs Dir -> TestPlan -> IO TestResult
-runTest location testPlan =
-  handleError (TestResult (planTest testPlan) . TestError . ExecutionError) <$>
-  runExceptT (processOutput location testPlan =<< executeTest location testPlan)
+runTest location testPlan = do
+  testResult <-
+    runExceptT $ do
+      actualOutputs <- executeTest location testPlan
+      processOutput location testPlan actualOutputs
+  return $
+    handleError
+      (TestResult (planTest testPlan) . TestError . ExecutionError)
+      testResult
 
 executeTest :: Path Abs Dir -> TestPlan -> Execution ActualOutputs
 executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do

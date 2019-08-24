@@ -44,6 +44,9 @@ $(BIN_RELEASE): clean
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
 
+default.nix: dependencies
+	stack exec -- cabal2nix --shell . > $@
+
 .PHONY: clean
 clean:
 	stack clean
@@ -59,14 +62,19 @@ bless: build
 
 .PHONY: lint
 lint: dependencies
-	stack exec -- hlint .
-	stack exec -- hindent --validate $(SRC)
-	@ (set -ex; \
+	@ echo >&2 '> hlint'
+	@ stack exec -- hlint .
+	@ echo >&2 '> hindent'
+	@ stack exec -- hindent --validate $(SRC)
+	@ echo >&2 '> cabal2nix'
+	@ ( \
+		set -e; \
 		NIX_FILE="$$(mktemp)"; \
+		trap 'rm -r $$NIX_FILE' EXIT; \
 		stack exec -- cabal2nix --shell . > "$$NIX_FILE"; \
-		git diff --no-index --exit-code default.nix "$$NIX_FILE" && SUCCESS=true || SUCCESS=false; \
-		rm "$$NIX_FILE"; \
-		$$SUCCESS)
+		git diff --no-index --exit-code default.nix "$$NIX_FILE" \
+	)
+	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check
 check: test lint
@@ -78,6 +86,3 @@ reformat: dependencies
 .PHONY: dependencies
 dependencies:
 	stack install --only-dependencies
-
-default.nix: build
-	stack exec -- cabal2nix --shell . > default.nix

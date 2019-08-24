@@ -1,5 +1,6 @@
 module Test.Smoke.Executable where
 
+import Control.Monad.Trans.Except (ExceptT)
 import Data.Text (Text)
 import qualified Data.Text.IO as Text.IO
 import qualified Data.Vector as Vector
@@ -37,11 +38,15 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       stdIn
       workingDirectory
 
-convertCommandToExecutable :: Shell -> Command -> IO Executable
+convertCommandToExecutable ::
+     Maybe Shell -> Command -> ExceptT SmokeExecutableError IO Executable
 convertCommandToExecutable _ (CommandArgs (CommandLine executableName commandArgs)) = do
-  executablePath <- parseAbsOrRelFile executableName
+  executablePath <- findExecutable executableName
   return $ ExecutableProgram executablePath commandArgs
-convertCommandToExecutable shell (CommandScript Nothing script) =
+convertCommandToExecutable Nothing (CommandScript Nothing script) = do
+  shell <- defaultShell
+  return $ ExecutableScript shell script
+convertCommandToExecutable (Just shell) (CommandScript Nothing script) =
   return $ ExecutableScript shell script
 convertCommandToExecutable _ (CommandScript (Just commandLine) script) = do
   shell <- shellFromCommandLine commandLine

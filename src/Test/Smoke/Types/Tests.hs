@@ -8,6 +8,7 @@ import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
+import Test.Smoke.Errors
 import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
@@ -86,6 +87,6 @@ parseWorkingDirectory location (Just filePath) =
 parseTestFile :: Value -> Parser (Path Rel File, Fixtures TestFileContents)
 parseTestFile =
   withObject "File" $ \v -> do
-    path <- parseAbsOrRelFile =<< v .: "path"
+    path <- catchAndFail . parseRelFile =<< v .: "path"
     contents <- v .: "contents"
     return (path, contents)

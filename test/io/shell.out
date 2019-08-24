@@ -2,7 +2,9 @@ global/runs the command with a custom shell
   succeeded
 global/runs the filter with a custom shell
   succeeded
-local/use a default shell
+local/use the default shell
+  succeeded
+local/pipe STDIN to the script
   succeeded
 local/use custom shell flags
   succeeded
@@ -12,7 +14,7 @@ local/pass args to a shell command
   succeeded
 local/pass args to a shell command with a custom shell
   succeeded
-local/write STDIN to STDERR
+local/use a custom shell with an absolute path
   succeeded
 
-8 tests, 0 failures
+9 tests, 0 failures

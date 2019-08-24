@@ -84,11 +84,11 @@ parseRoot location = do
   unless (directoryExists || fileExists) $ throwE $ NoSuchLocation path
   parsedDir <-
     if directoryExists
-      then Just <$> parseAbsOrRelDir path
+      then Just <$> parseRelDir path
       else return Nothing
   parsedFile <-
     if fileExists
-      then Just <$> parseAbsOrRelFile path
+      then Just <$> parseRelFile path
       else return Nothing
   case (parsedDir, parsedFile, selectedTestName) of
     (Just dir, Nothing, Nothing) -> return $ DirectoryRoot dir

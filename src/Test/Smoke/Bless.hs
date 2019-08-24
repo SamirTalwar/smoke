@@ -19,7 +19,8 @@ import Test.Smoke.Types
 blessResults :: Results -> IO Results
 blessResults results =
   forM results $ \case
-    result@SuiteResultError {} -> return result
+    result@SuiteResultDiscoveryError {} -> return result
+    result@SuiteResultExecutableError {} -> return result
     SuiteResult suiteName location testResults -> do
       blessedResults <- forM testResults (blessResult location)
       return $ SuiteResult suiteName location blessedResults

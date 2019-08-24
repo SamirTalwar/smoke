@@ -22,7 +22,7 @@ import System.Directory
   )
 import System.Exit (ExitCode(..))
 import System.IO (hClose)
-import System.IO.Error (isPermissionError, tryIOError)
+import System.IO.Error (tryIOError)
 import System.IO.Temp (withSystemTempFile)
 import Test.Smoke.Errors
 import Test.Smoke.Executable
@@ -40,13 +40,15 @@ type ActualFiles = Map (Path Abs File) TestFileContents
 runTests :: Plan -> IO Results
 runTests (Plan suites) =
   forM suites $ \case
-    SuitePlanError suiteName errorMessage ->
-      return $ SuiteResultError suiteName errorMessage
+    SuiteDiscoveryError suiteName exception ->
+      return $ SuiteResultDiscoveryError suiteName exception
+    SuiteExecutableError suiteName exception ->
+      return $ SuiteResultExecutableError suiteName exception
     SuitePlan suiteName location testPlans -> do
       testResults <-
         forM testPlans $ \case
-          Left (TestPlanError test errorMessage) ->
-            return $ TestResult test $ TestError $ PlanningError errorMessage
+          Left (TestPlanError test exception) ->
+            return $ TestResult test $ TestError $ PlanningError exception
           Right testPlan -> runTest location testPlan
       return $ SuiteResult suiteName location testResults
 
@@ -64,7 +66,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
     throwE $ NonExistentWorkingDirectory workingDirectory
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
-      tryIO (handleExecutionError executable) $
+      tryIO (CouldNotExecuteCommand executable) $
       runExecutable executable args processStdIn (Just workingDirectory)
     actualFiles <-
       Map.map TestFileContents . Map.fromList <$>
@@ -151,12 +153,6 @@ processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSta
 
 tryIO :: (IOError -> SmokeExecutionError) -> IO a -> Execution a
 tryIO handleIOError = withExceptT handleIOError . ExceptT . tryIOError
-
-handleExecutionError :: Executable -> IOError -> SmokeExecutionError
-handleExecutionError executable e =
-  if isPermissionError e
-    then NonExecutableCommand executable
-    else CouldNotExecuteCommand executable e
 
 convertExitCode :: ExitCode -> Status
 convertExitCode ExitSuccess = Status 0

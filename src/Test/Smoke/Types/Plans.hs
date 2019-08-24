@@ -14,9 +14,13 @@ newtype Plan =
   deriving (Eq, Show)
 
 data SuitePlan
-  = SuitePlanError
-      { suitePlanErrorName :: SuiteName
-      , suitePlanError :: SmokeDiscoveryError
+  = SuiteDiscoveryError
+      { suiteDiscoveryErrorName :: SuiteName
+      , suiteDiscoveryError :: SmokeDiscoveryError
+      }
+  | SuiteExecutableError
+      { suiteExecutableErrorName :: SuiteName
+      , suiteExecutableError :: SmokeExecutableError
       }
   | SuitePlan
       { suitePlanName :: SuiteName
@@ -29,7 +33,7 @@ data TestPlan =
   TestPlan
     { planTest :: Test
     , planWorkingDirectory :: WorkingDirectory
-    , planShell :: Shell
+    , planShell :: Maybe Shell
     , planExecutable :: Executable
     , planArgs :: Args
     , planStdIn :: StdIn

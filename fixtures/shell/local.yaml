@@ -69,3 +69,12 @@ tests:
       a
       b
       c
+
+  - name: use a custom shell with an absolute path
+    command:
+      shell:
+        - /bin/sh
+      script: |
+        echo 'Something.'
+    stdout: |
+      Something.

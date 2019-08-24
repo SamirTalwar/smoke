@@ -3,8 +3,7 @@ module Test.Smoke.Plan
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM, unless, when)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad (forM, when)
 import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
@@ -12,9 +11,7 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Path
-import System.Directory (doesFileExist, findExecutable)
 import System.IO.Error (isDoesNotExistError, tryIOError)
-import Test.Smoke.Errors
 import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Paths
@@ -26,32 +23,31 @@ type Planning = ExceptT SmokePlanningError IO
 planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
   currentWorkingDirectory <- WorkingDirectory <$> getCurrentWorkingDirectory
-  theDefaultShell <- defaultShell
   suitePlans <-
     forM suites $ \(suiteName, suite) ->
       case suite of
-        Left errorMessage -> return $ SuitePlanError suiteName errorMessage
+        Left exception -> return $ SuiteDiscoveryError suiteName exception
         Right (Suite location thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests) -> do
           let fallbackCommand = thisSuiteCommand <|> specificationCommand
-          fallbackShell <-
-            maybe
-              (return theDefaultShell)
-              shellFromCommandLine
-              thisSuiteShellCommandLine
-          let fallbackWorkingDirectory =
-                fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
-          testPlans <-
-            forM tests $ \test ->
-              runExceptT $
-              withExceptT (TestPlanError test) $ do
-                validateTest fallbackCommand test
-                readTest
-                  location
-                  fallbackWorkingDirectory
-                  fallbackShell
-                  fallbackCommand
-                  test
-          return $ SuitePlan suiteName location testPlans
+          shell <-
+            runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
+          case shell of
+            Left exception -> return $ SuiteExecutableError suiteName exception
+            Right fallbackShell -> do
+              let fallbackWorkingDirectory =
+                    fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
+              testPlans <-
+                forM tests $ \test ->
+                  runExceptT $
+                  withExceptT (TestPlanError test) $ do
+                    validateTest fallbackCommand test
+                    readTest
+                      location
+                      fallbackWorkingDirectory
+                      fallbackShell
+                      fallbackCommand
+                      test
+              return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
@@ -68,7 +64,7 @@ validateTest fallbackCommand test = do
 readTest ::
      Path Abs Dir
   -> WorkingDirectory
-  -> Shell
+  -> Maybe Shell
   -> Maybe Command
   -> Test
   -> Planning TestPlan
@@ -77,16 +73,10 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         fromMaybe fallbackWorkingDirectory (testWorkingDirectory test)
   command <-
     maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
-  executable <- liftIO $ convertCommandToExecutable fallbackShell command
+  executable <-
+    withExceptT PlanningExecutableError $
+    convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
-  let executableName =
-        case executable of
-          ExecutableProgram executablePath _ -> toFilePath executablePath
-          ExecutableScript (Shell shellPath _) _ -> toFilePath shellPath
-  executableExists <- liftIO (doesFileExist executableName)
-  unless executableExists $ do
-    foundExecutable <- liftIO (findExecutable executableName)
-    onNothingThrow_ (NonExistentCommand executable) foundExecutable
   unfilteredStdIn <-
     fromMaybe (Unfiltered (StdIn Text.empty)) <$>
     sequence (readFixture location <$> testStdIn test)

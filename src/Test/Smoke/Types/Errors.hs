@@ -31,7 +31,7 @@ data SmokePlanningError
   | NoOutput
   | NonExistentFixture (Path Rel File)
   | CouldNotReadFixture (Path Rel File) IOError
-  | NonExistentCommand Executable
+  | PlanningExecutableError SmokeExecutableError
   | PlanningFilterError SmokeFilterError
   deriving (Eq, Show)
 
@@ -39,7 +39,6 @@ instance Exception SmokePlanningError
 
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
-  | NonExecutableCommand Executable
   | CouldNotExecuteCommand Executable IOError
   | CouldNotReadFile (Path Rel File) IOError
   | CouldNotStoreDirectory (Path Abs Dir) IOError
@@ -60,9 +59,16 @@ instance Exception SmokeBlessError
 
 data SmokeFilterError
   = MissingFilterScript
-  | NonExecutableFilter Executable
   | CouldNotExecuteFilter Executable IOError
   | ExecutionFailed Executable Status StdOut StdErr
+  | FilterExecutableError SmokeExecutableError
   deriving (Eq, Show)
 
 instance Exception SmokeFilterError
+
+data SmokeExecutableError
+  = CouldNotFindExecutable FilePath
+  | FileIsNotExecutable FilePath
+  deriving (Eq, Show)
+
+instance Exception SmokeExecutableError

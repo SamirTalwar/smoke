@@ -14,6 +14,7 @@ import Data.Yaml
 import Path
 import System.Directory (doesDirectoryExist, doesFileExist)
 import System.FilePath (dropExtension)
+import qualified System.FilePath.Glob as Glob
 import Test.Smoke.Errors
 import Test.Smoke.Paths
 import Test.Smoke.Types
@@ -65,9 +66,9 @@ splitSuitePath path =
 decodeSpecificationFile :: Path Rel Dir -> Path Rel File -> Discovery Suite
 decodeSpecificationFile directory path = do
   location <- liftIO $ resolvePath directory
-  filePath <- liftIO $ toFilePath <$> resolvePath path
+  resolvedPath <- liftIO $ resolvePath path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $ do
-    parsedValue <- ExceptT $ decodeFileEither filePath
+    parsedValue <- ExceptT $ decodeFileEither (toFilePath resolvedPath)
     withExceptT AesonException $
       ExceptT $ return $ parseEither (parseSuite location) parsedValue
 
@@ -100,3 +101,6 @@ parseRoot location = do
 
 strip :: String -> String
 strip = Text.unpack . Text.strip . Text.pack
+
+yamlFiles :: Glob.Pattern
+yamlFiles = Glob.compile "*.yaml"

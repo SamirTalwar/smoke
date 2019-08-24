@@ -30,9 +30,6 @@ normalize =
         else x : interpretParentAccess (y : rest)
 
 -- Query
-pathExists :: Path b t -> IO Bool
-pathExists path = Directory.doesPathExist $ toFilePath path
-
 findExecutable :: FilePath -> ExceptT SmokeExecutableError IO (Path Abs File)
 findExecutable filePath = do
   exists <- liftIO $ Directory.doesFileExist filePath
@@ -73,9 +70,6 @@ resolveWith parse filePath = do
 findFilesInPath :: Glob.Pattern -> Path Rel Dir -> IO [Path Rel File]
 findFilesInPath filePattern path =
   mapM parseRelFile =<< Glob.globDir1 filePattern (toFilePath path)
-
-yamlFiles :: Glob.Pattern
-yamlFiles = Glob.compile "*.yaml"
 
 -- I/O
 readFromPath :: Path Abs File -> IO Text

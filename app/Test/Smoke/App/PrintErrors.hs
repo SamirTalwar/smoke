@@ -54,19 +54,19 @@ printTestError (ExecutionError (CouldNotRevertDirectory path exception)) =
   "The directory " <> showPath path <> " could not be reverted."
 printTestError (ExecutionError (ExecutionFilterError filterError)) =
   printFilterError filterError
-printTestError (BlessError (CouldNotBlessInlineFixture fixtureName' propertyValue)) =
+printTestError (BlessError (CouldNotBlessInlineFixture (FixtureName fixtureName') propertyValue)) =
   printError $
-  "The fixture \"" <> showText fixtureName' <>
-  "\" is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
+  "The fixture " <> quoteString fixtureName' <>
+  " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
-printTestError (BlessError (CouldNotBlessAMissingValue fixtureName')) =
+printTestError (BlessError (CouldNotBlessAMissingValue (FixtureName fixtureName'))) =
   printError $
-  "There are no expected \"" <> showText fixtureName' <>
-  "\" values, so the result cannot be blessed.\n"
-printTestError (BlessError (CouldNotBlessWithMultipleValues fixtureName')) =
+  "There are no expected " <> quoteString fixtureName' <>
+  " values, so the result cannot be blessed.\n"
+printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixtureName'))) =
   printError $
-  "There are multiple expected \"" <> showText fixtureName' <>
-  "\" values, so the result cannot be blessed.\n"
+  "There are multiple expected " <> quoteString fixtureName' <>
+  " values, so the result cannot be blessed.\n"
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 
@@ -75,14 +75,14 @@ printDiscoveryError printErrorMessage = printErrorMessage . printDiscoveryError'
   where
     printDiscoveryError' :: SmokeDiscoveryError -> Text
     printDiscoveryError' (NoSuchLocation path) =
-      "There is no such location \"" <> fromString path <> "\"."
+      "There is no such location " <> quoteString path <> "."
     printDiscoveryError' (NoSuchTest path (TestName selectedTestName)) =
-      "There is no such test \"" <> fromString selectedTestName <> "\" in " <>
+      "There is no such test " <> quoteString selectedTestName <> " in " <>
       showPath path <>
       "."
     printDiscoveryError' (CannotSelectTestInDirectory path (TestName selectedTestName)) =
-      "The test \"" <> fromString selectedTestName <>
-      "\" cannot be selected from the directory " <>
+      "The test " <> quoteString selectedTestName <>
+      " cannot be selected from the directory " <>
       showPath path <>
       ".\n" <>
       "Tests must be selected from a single specification file."
@@ -99,7 +99,7 @@ printFilterError (CouldNotExecuteFilter executable exception) =
 printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
   showExecutable executable <> " failed with an exit status of " <>
-  showText status <>
+  showInt status <>
   "." <>
   "\nSTDOUT:\n" <>
   indentedAll messageIndentation stdOut <>

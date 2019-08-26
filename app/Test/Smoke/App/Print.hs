@@ -26,11 +26,8 @@ outputIndentation = 10
 messageIndentation :: Int
 messageIndentation = 2
 
-showText :: Show a => a -> Text
-showText = fromString . show
-
 showInt :: Int -> Text
-showInt = showText
+showInt = fromString . show
 
 showPath :: Path p t => p t -> Text
 showPath = quote . Text.pack . toFilePath
@@ -43,6 +40,9 @@ showExecutable (ExecutableScript (Shell shellPath _) _) =
 
 quote :: Text -> Text
 quote text = "\"" <> text <> "\""
+
+quoteString :: String -> Text
+quoteString = quote . fromString
 
 hasEsc :: Text -> Bool
 hasEsc = Maybe.isJust . Text.find (== '\ESC')

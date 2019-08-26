@@ -6,8 +6,8 @@ tests:
   - name: word
     stdin: |
       word
-    stdout: |
-      xpse
+    stdout:
+      file: io/word.out
 
   - name: lines
     stdin: |
@@ -15,11 +15,8 @@ tests:
       two
       three
       four
-    stdout: |
-      pof
-      uxp
-      uisff
-      gpvs
+    stdout:
+      file: io/lines.out
 
   - name: color
     stdin:

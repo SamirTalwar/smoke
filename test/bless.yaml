@@ -1,0 +1,20 @@
+tests:
+  - name: encrypter
+    args:
+      - --bless
+      - fixtures/encrypter
+    exit-status: 0
+    stdout:
+      file: io/encrypter-bless-success.out
+    revert:
+      - ../fixtures/encrypter
+
+  - name: calculator
+    args:
+      - --bless
+      - fixtures/calculator
+    exit-status: 1
+    stdout:
+      file: io/calculator-bless-failure.out
+    revert:
+      - ../fixtures/calculator

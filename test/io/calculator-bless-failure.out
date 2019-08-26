@@ -1,0 +1,24 @@
+addition
+  succeeded
+subtraction
+  succeeded
+multiplication
+  succeeded
+division
+  succeeded
+three-numbers
+  The fixture "stdout" is embedded in the test specification, so the result cannot be blessed.
+  Attempted to write:
+    12
+parentheses
+  The fixture "stdout" is embedded in the test specification, so the result cannot be blessed.
+  Attempted to write:
+    3
+complex
+  The fixture "stdout" is embedded in the test specification, so the result cannot be blessed.
+  Attempted to write:
+    2
+infix-words-error
+  succeeded
+
+8 tests, 3 failures

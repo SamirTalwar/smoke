@@ -24,7 +24,7 @@ module Test.Smoke.Paths
 import Data.Aeson
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
+import qualified Data.Text.IO as Text.IO
 import qualified System.Directory as Directory
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
@@ -124,7 +124,7 @@ findFilesInPath filePattern path =
 
 -- I/O
 readFromPath :: ResolvedPath File -> IO Text
-readFromPath = TextIO.readFile . toFilePath
+readFromPath = Text.IO.readFile . toFilePath
 
 writeToPath :: ResolvedPath File -> Text -> IO ()
-writeToPath = TextIO.writeFile . toFilePath
+writeToPath = Text.IO.writeFile . toFilePath

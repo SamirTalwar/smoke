@@ -11,7 +11,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (isJust)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
+import qualified Data.Text.IO as Text.IO
 import System.Directory (findExecutable)
 import System.Exit (ExitCode(..))
 import System.IO (hClose)
@@ -28,8 +28,8 @@ render :: Command -> RenderDiff
 render command@(executable :| args) left right =
   withSystemTempFile "smoke-left-" $ \leftFilePath leftFile ->
     withSystemTempFile "smoke-right-" $ \rightFilePath rightFile -> do
-      TextIO.hPutStr leftFile left
-      TextIO.hPutStr rightFile right
+      Text.IO.hPutStr leftFile left
+      Text.IO.hPutStr rightFile right
       hClose leftFile
       hClose rightFile
       (exitCode, stdout, stderr) <-

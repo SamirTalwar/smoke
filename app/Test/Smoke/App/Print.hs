@@ -11,7 +11,7 @@ import qualified Data.Maybe as Maybe
 import Data.String (IsString(..))
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TextIO
+import qualified Data.Text.IO as Text.IO
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
 import Test.Smoke (Executable(..), Shell(..))
@@ -69,7 +69,7 @@ putEmptyLn :: Output ()
 putEmptyLn = liftIO $ putStrLn ""
 
 putPlain :: Text -> Output ()
-putPlain = liftIO . TextIO.putStr
+putPlain = liftIO . Text.IO.putStr
 
 putPlainLn :: Text -> Output ()
 putPlainLn = hPutStrWithLn stdout
@@ -94,9 +94,9 @@ putError = withColor Red $ hPutStrWithLn stderr
 
 hPutStrWithLn :: Handle -> Text -> Output ()
 hPutStrWithLn handle contents = do
-  liftIO $ TextIO.hPutStr handle contents
+  liftIO $ Text.IO.hPutStr handle contents
   unless (newline `Text.isSuffixOf` contents) $
-    liftIO $ TextIO.hPutStrLn handle ""
+    liftIO $ Text.IO.hPutStrLn handle ""
 
 withColor :: Color -> (Text -> Output ()) -> Text -> Output ()
 withColor color act contents = do

@@ -10,12 +10,10 @@ import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Path
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import Test.Smoke.Executable
 import Test.Smoke.Filters
 import Test.Smoke.Paths
-import Test.Smoke.Shell
 import Test.Smoke.Types
 
 type Planning = ExceptT SmokePlanningError IO
@@ -64,7 +62,7 @@ validateTest fallbackCommand test = do
     isEmptyFiles = Map.null
 
 readTest ::
-     Path Abs Dir
+     ResolvedPath Dir
   -> WorkingDirectory
   -> Maybe Shell
   -> Maybe Command
@@ -106,7 +104,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
       }
 
 readFixture ::
-     FixtureType a => Path Abs Dir -> Fixture a -> Planning (Filtered a)
+     FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
 readFixture _ (Fixture (Inline contents) maybeFilter) =
   return $ includeFilter maybeFilter contents
 readFixture location (Fixture (FileLocation path) maybeFilter) =
@@ -117,7 +115,7 @@ readFixture location (Fixture (FileLocation path) maybeFilter) =
 
 readFixtures ::
      FixtureType a
-  => Path Abs Dir
+  => ResolvedPath Dir
   -> Fixtures a
   -> Planning (Vector (Filtered a))
 readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
@@ -126,7 +124,7 @@ includeFilter :: Maybe Command -> a -> Filtered a
 includeFilter maybeFilter contents =
   maybe (Unfiltered contents) (Filtered contents) maybeFilter
 
-handleMissingFileError :: Path Rel File -> IOError -> SmokePlanningError
+handleMissingFileError :: RelativePath File -> IOError -> SmokePlanningError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then NonExistentFixture path

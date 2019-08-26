@@ -1,27 +1,111 @@
-module Test.Smoke.Paths where
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
-import Control.Monad (unless)
-import Control.Monad.Fail (MonadFail)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT, throwE)
+module Test.Smoke.Paths
+  ( File
+  , Dir
+  , Path
+  , RelativePath
+  , ResolvedPath
+  , (</>)
+  , findFilesInPath
+  , getCurrentWorkingDirectory
+  , parent
+  , parseDir
+  , parseFile
+  , readFromPath
+  , resolve
+  , toFilePath
+  , writeToPath
+  ) where
+
+import Data.Aeson
 import Data.Text (Text)
+import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
-import Path
 import qualified System.Directory as Directory
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
-import Test.Smoke.Errors
-import Test.Smoke.Types.Errors
 
--- Parse
-(<//>) :: MonadFail m => Path Abs Dir -> FilePath -> m (Path Abs Dir)
-a <//> b = catchAndFail . parseAbsDir . normalize $ toFilePath a FilePath.</> b
+data Dir
 
-normalize :: FilePath -> FilePath
-normalize =
+data File
+
+newtype RelativePath t =
+  RelativePath FilePath
+  deriving (Eq, Ord, Show)
+
+newtype ResolvedPath t =
+  ResolvedPath FilePath
+  deriving (Eq, Ord, Show)
+
+class Path p t where
+  fromFilePath :: FilePath -> p t
+  toFilePath :: p t -> FilePath
+
+instance Path RelativePath Dir where
+  fromFilePath = RelativePath . normalizeFilePath
+  toFilePath (RelativePath filePath) = filePath ++ pure FilePath.pathSeparator
+
+instance Path RelativePath File where
+  fromFilePath = RelativePath . normalizeFilePath
+  toFilePath (RelativePath filePath) = filePath
+
+instance Path ResolvedPath Dir where
+  fromFilePath = ResolvedPath . normalizeFilePath
+  toFilePath (ResolvedPath filePath) = filePath ++ pure FilePath.pathSeparator
+
+instance Path ResolvedPath File where
+  fromFilePath = ResolvedPath . normalizeFilePath
+  toFilePath (ResolvedPath filePath) = filePath
+
+instance FromJSON (RelativePath Dir) where
+  parseJSON = withText "path" (return . parseDir . Text.unpack)
+
+instance FromJSON (RelativePath File) where
+  parseJSON = withText "path" (return . parseFile . Text.unpack)
+
+parseDir :: FilePath -> RelativePath Dir
+parseDir = fromFilePath
+
+parseFile :: FilePath -> RelativePath File
+parseFile = fromFilePath
+
+-- Query
+parent :: (Path p t, Path q Dir, p ~ q) => p t -> q Dir
+parent = fromFilePath . FilePath.dropFileName . toFilePath
+
+-- Resolve
+(</>) ::
+     (Path RelativePath t, Path ResolvedPath t)
+  => ResolvedPath Dir
+  -> RelativePath t
+  -> ResolvedPath t
+ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
+
+resolve ::
+     (Path RelativePath t, Path ResolvedPath t)
+  => RelativePath t
+  -> IO (ResolvedPath t)
+resolve path = do
+  currentWorkingDirectory <- getCurrentWorkingDirectory
+  return $ currentWorkingDirectory </> path
+
+normalizeFilePath :: FilePath -> FilePath
+normalizeFilePath =
   FilePath.joinPath .
-  interpretParentAccess . FilePath.splitPath . FilePath.normalise
+  interpretParentAccess .
+  removeExtraSeparators . FilePath.splitPath . FilePath.normalise
   where
+    removeExtraSeparators :: [FilePath] -> [FilePath]
+    removeExtraSeparators = map removeExtraSeparator
+    removeExtraSeparator :: FilePath -> FilePath
+    removeExtraSeparator segment =
+      let (name, separators) = span (`notElem` FilePath.pathSeparators) segment
+       in name ++ take 1 separators
+    interpretParentAccess :: [FilePath] -> [FilePath]
     interpretParentAccess [] = []
     interpretParentAccess [x] = [x]
     interpretParentAccess (x:y:rest) =
@@ -29,51 +113,18 @@ normalize =
         then interpretParentAccess rest
         else x : interpretParentAccess (y : rest)
 
--- Query
-findExecutable :: FilePath -> ExceptT SmokeExecutableError IO (Path Abs File)
-findExecutable filePath = do
-  exists <- liftIO $ Directory.doesFileExist filePath
-  if exists
-    then do
-      permissions <- liftIO $ Directory.getPermissions filePath
-      unless (Directory.executable permissions) $
-        throwE $ FileIsNotExecutable filePath
-      currentWorkingDirectory <- liftIO Directory.getCurrentDirectory
-      parseAbsFile $ currentWorkingDirectory FilePath.</> filePath
-    else do
-      executable <- liftIO $ Directory.findExecutable filePath
-      maybe
-        (throwE $ CouldNotFindExecutable filePath)
-        (liftIO . parseAbsFile)
-        executable
-
 -- Search
-getCurrentWorkingDirectory :: IO (Path Abs Dir)
-getCurrentWorkingDirectory = parseAbsDir =<< Directory.getCurrentDirectory
+getCurrentWorkingDirectory :: IO (ResolvedPath Dir)
+getCurrentWorkingDirectory = ResolvedPath <$> Directory.getCurrentDirectory
 
-resolvePath :: Path Rel t -> IO (Path Abs t)
-resolvePath path = do
-  currentWorkingDirectory <- getCurrentWorkingDirectory
-  return $ currentWorkingDirectory </> path
-
-resolveDir :: FilePath -> IO (Path Abs Dir)
-resolveDir = resolveWith parseAbsDir
-
-resolveFile :: FilePath -> IO (Path Abs File)
-resolveFile = resolveWith parseAbsFile
-
-resolveWith :: (FilePath -> IO (Path Abs t)) -> FilePath -> IO (Path Abs t)
-resolveWith parse filePath = do
-  currentWorkingDirectory <- Directory.getCurrentDirectory
-  parse $ currentWorkingDirectory FilePath.</> filePath
-
-findFilesInPath :: Glob.Pattern -> Path Rel Dir -> IO [Path Rel File]
+findFilesInPath ::
+     (Path p Dir, Path q File, p ~ q) => Glob.Pattern -> p Dir -> IO [q File]
 findFilesInPath filePattern path =
-  mapM parseRelFile =<< Glob.globDir1 filePattern (toFilePath path)
+  map fromFilePath <$> Glob.globDir1 filePattern (toFilePath path)
 
 -- I/O
-readFromPath :: Path Abs File -> IO Text
+readFromPath :: ResolvedPath File -> IO Text
 readFromPath = TextIO.readFile . toFilePath
 
-writeToPath :: Path Abs File -> Text -> IO ()
+writeToPath :: ResolvedPath File -> Text -> IO ()
 writeToPath = TextIO.writeFile . toFilePath

@@ -110,10 +110,9 @@ printFilterError (FilterExecutableError executableError) =
 
 printExecutableError :: SmokeExecutableError -> Output ()
 printExecutableError (CouldNotFindExecutable path) =
-  printError $
-  "The executable \"" <> fromString path <> "\" could not be found."
+  printError $ "The executable " <> showPath path <> " could not be found."
 printExecutableError (FileIsNotExecutable path) =
-  printError $ "The file at \"" <> fromString path <> "\" is not executable."
+  printError $ "The file at " <> showPath path <> " is not executable."
 
 printError :: Text -> Output ()
 printError = putRedLn . indentedAll messageIndentation

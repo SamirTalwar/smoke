@@ -1,13 +1,13 @@
 module Test.Smoke.Types.Executable where
 
-import Path
+import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 
 data Shell =
-  Shell (Path Abs File) Args
+  Shell (ResolvedPath File) Args
   deriving (Eq, Show)
 
 data Executable
-  = ExecutableProgram (Path Abs File) Args
+  = ExecutableProgram (ResolvedPath File) Args
   | ExecutableScript Shell Script
   deriving (Eq, Show)

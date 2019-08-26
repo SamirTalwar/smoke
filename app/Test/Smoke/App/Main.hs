@@ -7,7 +7,6 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import qualified Data.Set as Set
-import Path
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.OptionTypes
@@ -17,6 +16,7 @@ import Test.Smoke.App.PrintErrors
 import Test.Smoke.App.PrintResults
 import Test.Smoke.App.PrintSummary
 import Test.Smoke.App.PrintTitle
+import Test.Smoke.Paths
 
 main :: IO ()
 main = do
@@ -51,7 +51,7 @@ runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
 runTestPlanOutcome ::
      ShowSuiteNames
   -> SuiteName
-  -> Path Abs Dir
+  -> ResolvedPath Dir
   -> TestPlanOutcome
   -> Output TestResult
 runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError) = do
@@ -63,7 +63,7 @@ runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@T
   printTitle showSuiteNames suiteName (Just (testName test))
   runTestPlan location testPlan
 
-runTestPlan :: Path Abs Dir -> TestPlan -> Output TestResult
+runTestPlan :: ResolvedPath Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do
   AppOptions {optionsMode = mode} <- ask
   testResult <- liftIO $ runTest location testPlan

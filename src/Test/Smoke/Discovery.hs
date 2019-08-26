@@ -11,9 +11,8 @@ import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import Data.Yaml
-import Path
 import System.Directory (doesDirectoryExist, doesFileExist)
-import System.FilePath (dropExtension)
+import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
 import Test.Smoke.Errors
 import Test.Smoke.Paths
@@ -22,9 +21,9 @@ import Test.Smoke.Types
 type Discovery = ExceptT SmokeDiscoveryError IO
 
 data Root
-  = DirectoryRoot (Path Rel Dir)
-  | FileRoot (Path Rel File)
-  | SingleRoot (Path Rel File) TestName
+  = DirectoryRoot (RelativePath Dir)
+  | FileRoot (RelativePath File)
+  | SingleRoot (RelativePath File) TestName
 
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =
@@ -53,20 +52,23 @@ discoverTestsInLocations locations = do
   return $ List.sortOn fst $ concat testsBySuite
 
 discoverTestsInSpecificationFile ::
-     Path Rel File -> Discovery (SuiteName, Either SmokeDiscoveryError Suite)
+     RelativePath File
+  -> Discovery (SuiteName, Either SmokeDiscoveryError Suite)
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   suite <- decodeSpecificationFile directory path
   return (suiteName, Right suite)
 
-splitSuitePath :: Path Rel File -> (Path Rel Dir, SuiteName)
+splitSuitePath :: RelativePath File -> (RelativePath Dir, SuiteName)
 splitSuitePath path =
-  (parent path, SuiteName $ dropExtension $ toFilePath $ filename path)
+  ( parent path
+  , SuiteName $ FilePath.dropExtension $ FilePath.takeFileName $ toFilePath path)
 
-decodeSpecificationFile :: Path Rel Dir -> Path Rel File -> Discovery Suite
+decodeSpecificationFile ::
+     RelativePath Dir -> RelativePath File -> Discovery Suite
 decodeSpecificationFile directory path = do
-  location <- liftIO $ resolvePath directory
-  resolvedPath <- liftIO $ resolvePath path
+  location <- liftIO $ resolve directory
+  resolvedPath <- liftIO $ resolve path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $ do
     parsedValue <- ExceptT $ decodeFileEither (toFilePath resolvedPath)
     withExceptT AesonException $
@@ -83,14 +85,14 @@ parseRoot location = do
   directoryExists <- liftIO $ doesDirectoryExist path
   fileExists <- liftIO $ doesFileExist path
   unless (directoryExists || fileExists) $ throwE $ NoSuchLocation path
-  parsedDir <-
-    if directoryExists
-      then Just <$> parseRelDir path
-      else return Nothing
-  parsedFile <-
-    if fileExists
-      then Just <$> parseRelFile path
-      else return Nothing
+  let parsedDir =
+        if directoryExists
+          then Just $ parseDir path
+          else Nothing
+  let parsedFile =
+        if fileExists
+          then Just $ parseFile path
+          else Nothing
   case (parsedDir, parsedFile, selectedTestName) of
     (Just dir, Nothing, Nothing) -> return $ DirectoryRoot dir
     (Just dir, Nothing, Just selected) ->

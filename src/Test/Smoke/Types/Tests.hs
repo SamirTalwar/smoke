@@ -7,8 +7,6 @@ import Data.Aeson.Types (Parser)
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Path
-import Test.Smoke.Errors
 import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
@@ -23,7 +21,7 @@ type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
 data Suite =
   Suite
-    { suiteLocation :: Path Abs Dir
+    { suiteLocation :: ResolvedPath Dir
     , suiteWorkingDirectory :: Maybe WorkingDirectory
     , suiteShell :: Maybe CommandLine
     , suiteCommand :: Maybe Command
@@ -41,25 +39,25 @@ data Test =
     , testStdOut :: Fixtures StdOut
     , testStdErr :: Fixtures StdErr
     , testStatus :: Fixture Status
-    , testFiles :: Map (Path Rel File) (Fixtures TestFileContents)
-    , testRevert :: Vector (Path Rel Dir)
+    , testFiles :: Map (RelativePath File) (Fixtures TestFileContents)
+    , testRevert :: Vector (RelativePath Dir)
     }
   deriving (Eq, Show)
 
-parseSuite :: Path Abs Dir -> Value -> Parser Suite
+parseSuite :: ResolvedPath Dir -> Value -> Parser Suite
 parseSuite location =
   withObject "Suite" $ \v ->
     Suite location <$>
-    (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (toWorkingDirectory location <$> (v .:? "working-directory")) <*>
     (v .:? "shell") <*>
     (v .:? "command") <*>
     (mapM (parseTest location) =<< (v .: "tests"))
 
-parseTest :: Path Abs Dir -> Value -> Parser Test
+parseTest :: ResolvedPath Dir -> Value -> Parser Test
 parseTest location =
   withObject "Test" $ \v ->
     Test <$> (TestName <$> v .: "name") <*>
-    (parseWorkingDirectory location =<< (v .:? "working-directory")) <*>
+    (toWorkingDirectory location <$> (v .:? "working-directory")) <*>
     (v .:? "command") <*>
     (v .:? "args") <*>
     (v .:? "stdin") <*>
@@ -71,15 +69,13 @@ parseTest location =
      (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))) <*>
     (v .:? "revert" .!= Vector.empty)
 
-parseWorkingDirectory ::
-     Path Abs Dir -> Maybe FilePath -> Parser (Maybe WorkingDirectory)
-parseWorkingDirectory _ Nothing = return Nothing
-parseWorkingDirectory location (Just filePath) =
-  Just . WorkingDirectory <$> (location <//> filePath)
+toWorkingDirectory ::
+     ResolvedPath Dir -> Maybe (RelativePath Dir) -> Maybe WorkingDirectory
+toWorkingDirectory location path = WorkingDirectory . (location </>) <$> path
 
-parseTestFile :: Value -> Parser (Path Rel File, Fixtures TestFileContents)
+parseTestFile :: Value -> Parser (RelativePath File, Fixtures TestFileContents)
 parseTestFile =
   withObject "File" $ \v -> do
-    path <- catchAndFail . parseRelFile =<< v .: "path"
+    path <- parseFile <$> v .: "path"
     contents <- v .: "contents"
     return (path, contents)

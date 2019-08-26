@@ -12,7 +12,6 @@ import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Path
 import System.Directory
   ( createDirectory
   , doesDirectoryExist
@@ -33,9 +32,9 @@ type Execution = ExceptT SmokeExecutionError IO
 
 type ActualOutputs = (Status, StdOut, StdErr, ActualFiles)
 
-type ActualFiles = Map (Path Abs File) TestFileContents
+type ActualFiles = Map (ResolvedPath File) TestFileContents
 
-runTest :: Path Abs Dir -> TestPlan -> IO TestResult
+runTest :: ResolvedPath Dir -> TestPlan -> IO TestResult
 runTest location testPlan = do
   testResult <-
     runExceptT $ do
@@ -46,7 +45,7 @@ runTest location testPlan = do
       (TestResult (planTest testPlan) . TestError . ExecutionError)
       testResult
 
-executeTest :: Path Abs Dir -> TestPlan -> Execution ActualOutputs
+executeTest :: ResolvedPath Dir -> TestPlan -> Execution ActualOutputs
 executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
@@ -66,17 +65,17 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
       , StdErr processStdErr
       , actualFiles)
   where
-    readTestFile :: Path Rel File -> Execution (Path Abs File, Text)
+    readTestFile :: RelativePath File -> Execution (ResolvedPath File, Text)
     readTestFile path = do
       let absolutePath = location </> path
       contents <- tryIO (CouldNotReadFile path) $ readFromPath absolutePath
       return (absolutePath, contents)
 
-revertingDirectories :: Vector (Path Abs Dir) -> Execution a -> Execution a
+revertingDirectories :: Vector (ResolvedPath Dir) -> Execution a -> Execution a
 revertingDirectories paths execution =
   Vector.foldr revertingDirectory execution paths
 
-revertingDirectory :: Path Abs Dir -> Execution a -> Execution a
+revertingDirectory :: ResolvedPath Dir -> Execution a -> Execution a
 revertingDirectory path execution = do
   let filePath = toFilePath path
   withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do
@@ -91,7 +90,7 @@ revertingDirectory path execution = do
     return result
 
 processOutput ::
-     Path Abs Dir -> TestPlan -> ActualOutputs -> Execution TestResult
+     ResolvedPath Dir -> TestPlan -> ActualOutputs -> Execution TestResult
 processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $

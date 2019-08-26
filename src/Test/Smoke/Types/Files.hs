@@ -6,12 +6,12 @@ module Test.Smoke.Types.Files where
 import Data.Aeson
 import Data.Text (Text)
 import Data.Vector (Vector)
-import Path
+import Test.Smoke.Paths
 import Test.Smoke.Types.Fixtures
 
 data TestFile =
   TestFile
-    { testFilePath :: Path Rel File
+    { testFilePath :: RelativePath File
     , testFileContents :: Fixtures TestFileContents
     }
   deriving (Eq, Show)
@@ -34,6 +34,6 @@ instance FromJSON TestFile where
 
 newtype Reversions =
   Reversions
-    { unReversions :: Vector (Path Rel Dir)
+    { unReversions :: Vector (RelativePath Dir)
     }
   deriving (Eq, Show, FromJSON)

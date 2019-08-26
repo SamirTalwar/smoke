@@ -12,11 +12,11 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Path
+import Test.Smoke.Paths
 
 data Contents a
   = Inline a
-  | FileLocation (Path Rel File)
+  | FileLocation (RelativePath File)
   deriving (Eq, Show)
 
 parseContents :: (Text -> a) -> Value -> Parser (Contents a)
@@ -46,9 +46,9 @@ newtype TestName =
 
 newtype WorkingDirectory =
   WorkingDirectory
-    { unWorkingDirectory :: Path Abs Dir
+    { unWorkingDirectory :: ResolvedPath Dir
     }
-  deriving (Eq, Show, FromJSON)
+  deriving (Eq, Show)
 
 newtype Args =
   Args
@@ -63,7 +63,7 @@ newtype Script =
   deriving (Eq, Show, FromJSON)
 
 data CommandLine =
-  CommandLine String Args
+  CommandLine (RelativePath File) Args
   deriving (Eq, Show)
 
 instance FromJSON CommandLine where
@@ -71,7 +71,8 @@ instance FromJSON CommandLine where
     withArray "command line" $ \v -> do
       line <- mapM parseJSON v
       when (Vector.null line) $ fail "empty command line"
-      return $ CommandLine (Vector.head line) (Args (Vector.tail line))
+      return $
+        CommandLine (parseFile (Vector.head line)) (Args (Vector.tail line))
 
 data Command
   = CommandArgs CommandLine

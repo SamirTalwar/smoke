@@ -2,7 +2,7 @@ module Test.Smoke.Types.Results where
 
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
-import Path
+import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Files
@@ -13,7 +13,7 @@ type Results = [SuiteResult]
 
 data SuiteResult
   = SuiteResultError SuiteName SuiteError
-  | SuiteResult SuiteName (Path Abs Dir) [TestResult]
+  | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
   deriving (Eq, Show)
 
 data TestResult =
@@ -27,7 +27,7 @@ data TestOutcome
       (PartResult Status)
       (PartResult StdOut)
       (PartResult StdErr)
-      (Map (Path Rel File) (PartResult TestFileContents))
+      (Map (RelativePath File) (PartResult TestFileContents))
   | TestError SmokeError
   deriving (Eq, Show)
 

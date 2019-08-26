@@ -2,8 +2,8 @@ module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
 import Data.Text (Text)
-import Path
 import System.FilePath (FilePath)
+import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Executable
 
@@ -18,9 +18,9 @@ instance Exception SmokeError
 
 data SmokeDiscoveryError
   = NoSuchLocation FilePath
-  | NoSuchTest (Path Rel File) TestName
-  | CannotSelectTestInDirectory (Path Rel Dir) TestName
-  | InvalidSpecification (Path Rel File) String
+  | NoSuchTest (RelativePath File) TestName
+  | CannotSelectTestInDirectory (RelativePath Dir) TestName
+  | InvalidSpecification (RelativePath File) String
   deriving (Eq, Show)
 
 instance Exception SmokeDiscoveryError
@@ -29,8 +29,8 @@ data SmokePlanningError
   = NoCommand
   | NoInput
   | NoOutput
-  | NonExistentFixture (Path Rel File)
-  | CouldNotReadFixture (Path Rel File) IOError
+  | NonExistentFixture (RelativePath File)
+  | CouldNotReadFixture (RelativePath File) IOError
   | PlanningExecutableError SmokeExecutableError
   | PlanningFilterError SmokeFilterError
   deriving (Eq, Show)
@@ -40,9 +40,9 @@ instance Exception SmokePlanningError
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | CouldNotExecuteCommand Executable IOError
-  | CouldNotReadFile (Path Rel File) IOError
-  | CouldNotStoreDirectory (Path Abs Dir) IOError
-  | CouldNotRevertDirectory (Path Abs Dir) IOError
+  | CouldNotReadFile (RelativePath File) IOError
+  | CouldNotStoreDirectory (ResolvedPath Dir) IOError
+  | CouldNotRevertDirectory (ResolvedPath Dir) IOError
   | ExecutionFilterError SmokeFilterError
   deriving (Eq, Show)
 
@@ -67,8 +67,8 @@ data SmokeFilterError
 instance Exception SmokeFilterError
 
 data SmokeExecutableError
-  = CouldNotFindExecutable FilePath
-  | FileIsNotExecutable FilePath
+  = CouldNotFindExecutable (RelativePath File)
+  | FileIsNotExecutable (RelativePath File)
   deriving (Eq, Show)
 
 instance Exception SmokeExecutableError

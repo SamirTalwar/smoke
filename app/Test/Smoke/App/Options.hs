@@ -19,6 +19,7 @@ import Test.Smoke
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
 import qualified Test.Smoke.App.Shell as Shell
+import Test.Smoke.Paths (parseFile)
 
 type IsTTY = Bool
 
@@ -64,7 +65,8 @@ commandParser = do
     constructCommand :: String -> Command
     constructCommand commandString =
       let (program:args) = words commandString
-       in CommandArgs (CommandLine program (Args (Vector.fromList args)))
+       in CommandArgs
+            (CommandLine (parseFile program) (Args (Vector.fromList args)))
 
 modeParser :: Parser Mode
 modeParser =

@@ -6,9 +6,9 @@ let
 
   f = { mkDerivation, aeson, ansi-terminal, base, cabal2nix
       , containers, data-default, Diff, directory, exceptions, filepath
-      , Glob, hindent, hlint, hpack, mtl, optparse-applicative, path
-      , process, process-extras, stdenv, tar, temporary, text
-      , transformers, unix, vector, yaml
+      , Glob, hindent, hlint, hpack, mtl, optparse-applicative, process
+      , process-extras, stdenv, tar, temporary, text, transformers, unix
+      , vector, yaml
       }:
       mkDerivation {
         pname = "smoke";
@@ -18,13 +18,13 @@ let
         isExecutable = true;
         libraryHaskellDepends = [
           aeson base containers data-default directory exceptions filepath
-          Glob path process process-extras tar temporary text transformers
-          vector yaml
+          Glob process process-extras tar temporary text transformers vector
+          yaml
         ];
         libraryToolDepends = [ cabal2nix hindent hlint hpack ];
         executableHaskellDepends = [
           aeson ansi-terminal base containers data-default Diff directory
-          exceptions filepath Glob mtl optparse-applicative path process
+          exceptions filepath Glob mtl optparse-applicative process
           process-extras tar temporary text transformers unix vector yaml
         ];
         executableToolDepends = [ cabal2nix hindent hlint ];

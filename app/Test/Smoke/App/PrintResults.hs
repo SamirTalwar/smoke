@@ -13,12 +13,12 @@ import Data.String (fromString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
-import Path
 import Test.Smoke
 import Test.Smoke.App.Diff
 import Test.Smoke.App.OptionTypes
 import Test.Smoke.App.Print
 import Test.Smoke.App.PrintErrors
+import Test.Smoke.Paths
 import Text.Printf (printf)
 
 printResult :: TestResult -> Output ()
@@ -51,7 +51,7 @@ printFailingOutput name (PartFailure comparisons) = do
     printDiff expected actual
 
 printFailingFilesOutput ::
-     Map (Path Rel File) (PartResult TestFileContents) -> Output ()
+     Map (RelativePath File) (PartResult TestFileContents) -> Output ()
 printFailingFilesOutput fileResults =
   if all isSuccess (Map.elems fileResults)
     then return ()
@@ -63,7 +63,7 @@ printFailingFilesOutput fileResults =
     isSuccess PartSuccess = True
     isSuccess (PartFailure _) = False
 
-printFailingFileOutput :: Path Rel File -> PartResult Text -> Output ()
+printFailingFileOutput :: RelativePath File -> PartResult Text -> Output ()
 printFailingFileOutput _ PartSuccess = return ()
 printFailingFileOutput path (PartFailure comparisons) = do
   putRedLn $ fromString ("    " ++ toFilePath path ++ ":")

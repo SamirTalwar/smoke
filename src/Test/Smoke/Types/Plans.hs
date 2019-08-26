@@ -2,7 +2,7 @@ module Test.Smoke.Types.Plans where
 
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
-import Path
+import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Executable
@@ -15,7 +15,7 @@ newtype Plan =
 
 data SuitePlan
   = SuitePlanError SuiteName SuiteError
-  | SuitePlan SuiteName (Path Abs Dir) [TestPlanOutcome]
+  | SuitePlan SuiteName (ResolvedPath Dir) [TestPlanOutcome]
   deriving (Eq, Show)
 
 data TestPlanOutcome
@@ -34,7 +34,7 @@ data TestPlan =
     , planStatus :: Status
     , planStdOut :: Vector StdOut
     , planStdErr :: Vector StdErr
-    , planFiles :: Map (Path Rel File) (Vector TestFileContents)
-    , planRevert :: Vector (Path Abs Dir)
+    , planFiles :: Map (RelativePath File) (Vector TestFileContents)
+    , planRevert :: Vector (ResolvedPath Dir)
     }
   deriving (Eq, Show)

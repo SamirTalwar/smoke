@@ -9,12 +9,11 @@ import Control.Exception (catch, throwIO)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector as Vector
-import Path
 import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
-blessResult :: Path Abs Dir -> TestResult -> IO TestResult
+blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
 blessResult location (TestResult test (TestFailure _ status stdOut stdErr files))
   | isFailureWithMultipleExpectedValues status =
     return $
@@ -72,7 +71,7 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr files)
     isFailureWithMultipleExpectedValues _ = False
 blessResult _ result = return result
 
-writeFixture :: FixtureType a => Path Abs Dir -> Fixture a -> a -> IO ()
+writeFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> a -> IO ()
 writeFixture _ (Fixture contents@(Inline _) _) value =
   throwIO $
   CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
@@ -81,7 +80,7 @@ writeFixture location (Fixture (FileLocation path) _) value =
 
 writeFixtures ::
      forall a. FixtureType a
-  => Path Abs Dir
+  => ResolvedPath Dir
   -> Fixtures a
   -> a
   -> IO ()

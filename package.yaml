@@ -22,7 +22,6 @@ dependencies:
   - exceptions
   - filepath
   - Glob
-  - path
   - process
   - process-extras
   - tar
@@ -37,6 +36,7 @@ library:
     - src
   exposed-modules:
     - Test.Smoke
+    - Test.Smoke.Paths
   ghc-options:
     - -Wall
     - -Werror

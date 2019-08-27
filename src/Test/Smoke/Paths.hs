@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -74,7 +73,7 @@ parseFile :: FilePath -> RelativePath File
 parseFile = fromFilePath
 
 -- Query
-parent :: (Path p t, Path q Dir, p ~ q) => p t -> q Dir
+parent :: (Path p t, Path p Dir) => p t -> p Dir
 parent = fromFilePath . FilePath.dropFileName . toFilePath
 
 -- Resolve
@@ -118,7 +117,7 @@ getCurrentWorkingDirectory :: IO (ResolvedPath Dir)
 getCurrentWorkingDirectory = ResolvedPath <$> Directory.getCurrentDirectory
 
 findFilesInPath ::
-     (Path p Dir, Path q File, p ~ q) => Glob.Pattern -> p Dir -> IO [q File]
+     (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
 findFilesInPath filePattern path =
   map fromFilePath <$> Glob.globDir1 filePattern (toFilePath path)
 

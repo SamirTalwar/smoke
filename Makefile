@@ -53,12 +53,15 @@ clean:
 	rm -rf $(OUT_BUILD)
 
 .PHONY: test
-test: build
-	$(BIN_DEBUG) --command=$(BIN_DEBUG) test
+test: spec
+
+.PHONY: spec
+spec: build
+	$(BIN_DEBUG) --command=$(BIN_DEBUG) spec
 
 .PHONY: bless
 bless: build
-	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless test
+	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless spec
 
 .PHONY: lint
 lint: dependencies

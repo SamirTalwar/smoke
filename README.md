@@ -222,7 +222,7 @@ Before committing, these four commands should be run, and any failures should be
 ```sh
 make reformat  # Reformats the code using hindent.
 make build     # Builds the application using Stack.
-make test      # Tests the application using itself, with the tests in the "test" directory.
+make test      # Tests the application using itself, with the tests in the "spec" directory.
 make lint      # Lints the code using HLint.
 ```
 
@@ -233,7 +233,7 @@ On Windows, Makefiles don't work very well, so run the commands directly:
 ```powershell
 stack exec -- hindent <changed files>
 stack install --local-bin-path=out\build
-.\out\build\smoke.exe --command=.\out\build\smoke.exe test
+.\out\build\smoke.exe --command=.\out\build\smoke.exe spec
 stack exec -- hlint .
 ```
 

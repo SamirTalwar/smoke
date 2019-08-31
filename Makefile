@@ -14,7 +14,7 @@ else
 endif
 
 CONF = package.yaml stack.yaml
-SRC = $(shell find app src -name '*.hs')
+SRC = $(shell find app src test -name '*.hs')
 OUT := out
 OUT_BUILD = $(OUT)/build
 OUT_DEBUG := $(OUT_BUILD)/debug
@@ -53,7 +53,11 @@ clean:
 	rm -rf $(OUT_BUILD)
 
 .PHONY: test
-test: spec
+test: unit-test spec
+
+.PHONY: unit-test
+unit-test: build
+	stack test
 
 .PHONY: spec
 spec: build

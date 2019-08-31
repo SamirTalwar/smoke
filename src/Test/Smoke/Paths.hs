@@ -77,14 +77,21 @@ normalizeFilePath :: FilePath -> FilePath
 normalizeFilePath =
   FilePath.joinPath .
   interpretParentAccess .
+  removeTrailingSeparator .
   removeExtraSeparators . FilePath.splitPath . FilePath.normalise
   where
     removeExtraSeparators :: [FilePath] -> [FilePath]
     removeExtraSeparators = map removeExtraSeparator
     removeExtraSeparator :: FilePath -> FilePath
     removeExtraSeparator segment =
-      let (name, separators) = span (`notElem` FilePath.pathSeparators) segment
+      let (name, separators) = span isNotSeparator segment
        in name ++ take 1 separators
+    removeTrailingSeparator :: [FilePath] -> [FilePath]
+    removeTrailingSeparator segments =
+      init segments ++ [removeTrailingSeparator' $ last segments]
+    removeTrailingSeparator' :: FilePath -> FilePath
+    removeTrailingSeparator' "/" = "/"
+    removeTrailingSeparator' segment = takeWhile isNotSeparator segment
     interpretParentAccess :: [FilePath] -> [FilePath]
     interpretParentAccess [] = []
     interpretParentAccess [x] = [x]
@@ -92,6 +99,8 @@ normalizeFilePath =
       if FilePath.normalise y == ".."
         then interpretParentAccess rest
         else x : interpretParentAccess (y : rest)
+    isNotSeparator :: Char -> Bool
+    isNotSeparator = flip notElem FilePath.pathSeparators
 
 -- Manipulate
 (</>) ::

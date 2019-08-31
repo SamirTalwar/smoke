@@ -66,31 +66,12 @@ instance FromJSON (RelativePath Dir) where
 instance FromJSON (RelativePath File) where
   parseJSON = withText "path" (return . parseFile . Text.unpack)
 
+-- Construct
 parseDir :: FilePath -> RelativePath Dir
 parseDir = fromFilePath
 
 parseFile :: FilePath -> RelativePath File
 parseFile = fromFilePath
-
--- Query
-parent :: (Path p t, Path p Dir) => p t -> p Dir
-parent = fromFilePath . FilePath.dropFileName . toFilePath
-
--- Resolve
-(</>) ::
-     (Path RelativePath t, Path ResolvedPath t)
-  => ResolvedPath Dir
-  -> RelativePath t
-  -> ResolvedPath t
-ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
-
-resolve ::
-     (Path RelativePath t, Path ResolvedPath t)
-  => RelativePath t
-  -> IO (ResolvedPath t)
-resolve path = do
-  currentWorkingDirectory <- getCurrentWorkingDirectory
-  return $ currentWorkingDirectory </> path
 
 normalizeFilePath :: FilePath -> FilePath
 normalizeFilePath =
@@ -112,10 +93,30 @@ normalizeFilePath =
         then interpretParentAccess rest
         else x : interpretParentAccess (y : rest)
 
--- Search
+-- Manipulate
+(</>) ::
+     (Path RelativePath t, Path ResolvedPath t)
+  => ResolvedPath Dir
+  -> RelativePath t
+  -> ResolvedPath t
+ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
+
+parent :: (Path p t, Path p Dir) => p t -> p Dir
+parent = fromFilePath . FilePath.dropFileName . toFilePath
+
+-- Resolve
+resolve ::
+     (Path RelativePath t, Path ResolvedPath t)
+  => RelativePath t
+  -> IO (ResolvedPath t)
+resolve path = do
+  currentWorkingDirectory <- getCurrentWorkingDirectory
+  return $ currentWorkingDirectory </> path
+
 getCurrentWorkingDirectory :: IO (ResolvedPath Dir)
 getCurrentWorkingDirectory = ResolvedPath <$> Directory.getCurrentDirectory
 
+-- Search
 findFilesInPath ::
      (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
 findFilesInPath filePattern path =

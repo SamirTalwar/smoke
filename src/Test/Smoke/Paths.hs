@@ -94,6 +94,8 @@ normalizeFilePath filePath =
     interpretParentAccess = reverse . interpretParentAccess' []
     interpretParentAccess' :: [FilePath] -> [FilePath] -> [FilePath]
     interpretParentAccess' before [] = before
+    interpretParentAccess' ("..":before) ("..":after) =
+      interpretParentAccess' ("..":"..":before) after
     interpretParentAccess' (_:before) ("..":after) =
       interpretParentAccess' before after
     interpretParentAccess' before (x:xs) =

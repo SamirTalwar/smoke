@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Test.Smoke.PathsSpec where
@@ -101,4 +102,12 @@ genRelativeFilePath segmentRange = do
   return $ dropWhile (== FilePath.pathSeparator) joined
 
 genAbsoluteFilePath :: Range Int -> Gen FilePath
-genAbsoluteFilePath segmentRange = ("/" ++) <$> genRelativeFilePath segmentRange
+genAbsoluteFilePath segmentRange =
+  FilePath.joinDrive rootDirectory <$> genRelativeFilePath segmentRange
+
+rootDirectory :: FilePath
+#if defined(mingw32_HOST_OS) || defined(__MINGW32__)
+rootDirectory = "C:\\"
+#else
+rootDirectory = "/"
+#endif

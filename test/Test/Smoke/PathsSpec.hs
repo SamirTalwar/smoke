@@ -28,10 +28,10 @@ spec =
       require $
       property $ do
         filePath <- forAll $ genRelativeFilePath (Range.linear 1 10)
+        absoluteFilePath <- liftIO $ Directory.makeAbsolute filePath
+        let expected = parseFile absoluteFilePath
         let path = parseFile filePath
         actual <- liftIO $ resolve path
-        workingDirectory <- liftIO Directory.getCurrentDirectory
-        let expected = parseFile $ workingDirectory FilePath.</> filePath
         toFilePath actual === toFilePath expected
     it "resolves an absolute path" $
       require $
@@ -46,11 +46,46 @@ spec =
       property $ do
         parentDir <- forAll $ genRelativeDir (Range.linear 1 10)
         resolvedParentDir <- liftIO $ resolve parentDir
-        child <- forAll $ genNotCurrentDir $ genRelativeFile (Range.singleton 1)
+        child <- parseFile <$> forAll genNamedSegment
         let path = resolvedParentDir </> child
         let actual = parent path
         let expected = resolvedParentDir
         actual === expected
+
+data FilePathSegment
+  = Current
+  | Parent
+  | Named String
+
+segmentString :: FilePathSegment -> String
+segmentString Current = "."
+segmentString Parent = ".."
+segmentString (Named value) = value
+
+genNamedSegment :: Gen FilePath
+genNamedSegment = Gen.string (Range.linear 1 100) Gen.alphaNum
+
+genSegment :: Gen FilePathSegment
+genSegment =
+  Gen.frequency
+    [ (2, Gen.constant Current)
+    , (1, Gen.constant Parent)
+    , (5, Named <$> genNamedSegment)
+    ]
+
+segmentsAreAdditive :: [FilePathSegment] -> Bool
+segmentsAreAdditive = (> 0) . countSegments
+
+segmentsAreNotSubtractive :: [FilePathSegment] -> Bool
+segmentsAreNotSubtractive = (>= 0) . countSegments
+
+countSegment :: FilePathSegment -> Int
+countSegment Current = 0
+countSegment Parent = -1
+countSegment (Named _) = 1
+
+countSegments :: [FilePathSegment] -> Int
+countSegments = sum . map countSegment
 
 genRelativeDir :: Range Int -> Gen (RelativePath Dir)
 genRelativeDir segmentRange = parseDir <$> genRelativeFilePath segmentRange
@@ -61,17 +96,10 @@ genRelativeFile segmentRange = parseFile <$> genRelativeFilePath segmentRange
 genRelativeFilePath :: Range Int -> Gen FilePath
 genRelativeFilePath segmentRange = do
   segments <-
-    Gen.list segmentRange (Gen.string (Range.linear 0 100) Gen.alphaNum)
-  let joined = List.intercalate [FilePath.pathSeparator] segments
-  return $ List.dropWhile (== FilePath.pathSeparator) joined
+    Gen.filter segmentsAreNotSubtractive $ Gen.list segmentRange genSegment
+  let joined =
+        List.intercalate [FilePath.pathSeparator] $ map segmentString segments
+  return $ dropWhile (== FilePath.pathSeparator) joined
 
 genAbsoluteFilePath :: Range Int -> Gen FilePath
 genAbsoluteFilePath segmentRange = ("/" ++) <$> genRelativeFilePath segmentRange
-
-genNotCurrentDir :: Path p t => Gen (p t) -> Gen (p t)
-genNotCurrentDir =
-  Gen.filter
-    (flip
-       notElem
-       ("." : map (\separator -> ['.', separator]) FilePath.pathSeparators) .
-     toFilePath)

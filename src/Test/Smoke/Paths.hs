@@ -74,31 +74,32 @@ parseFile :: FilePath -> RelativePath File
 parseFile = fromFilePath
 
 normalizeFilePath :: FilePath -> FilePath
-normalizeFilePath =
-  FilePath.joinPath .
-  interpretParentAccess .
-  removeTrailingSeparator .
-  removeExtraSeparators . FilePath.splitPath . FilePath.normalise
+normalizeFilePath filePath =
+  let (drive, path) = FilePath.splitDrive filePath
+   in FilePath.joinDrive drive (normalizePath path)
   where
-    removeExtraSeparators :: [FilePath] -> [FilePath]
-    removeExtraSeparators = map removeExtraSeparator
-    removeExtraSeparator :: FilePath -> FilePath
-    removeExtraSeparator segment =
-      let (name, separators) = span isNotSeparator segment
-       in name ++ take 1 separators
-    removeTrailingSeparator :: [FilePath] -> [FilePath]
-    removeTrailingSeparator segments =
-      init segments ++ [removeTrailingSeparator' $ last segments]
-    removeTrailingSeparator' :: FilePath -> FilePath
-    removeTrailingSeparator' "/" = "/"
-    removeTrailingSeparator' segment = takeWhile isNotSeparator segment
+    normalizePath :: FilePath -> FilePath
+    normalizePath =
+      FilePath.normalise .
+      FilePath.joinPath .
+      interpretParentAccess .
+      removeTrailingSeparators . FilePath.splitPath . FilePath.normalise
+    removeTrailingSeparators :: [FilePath] -> [FilePath]
+    removeTrailingSeparators = map removeTrailingSeparator
+    removeTrailingSeparator :: FilePath -> FilePath
+    removeTrailingSeparator segment
+      | isRoot segment = segment
+      | otherwise = takeWhile isNotSeparator segment
     interpretParentAccess :: [FilePath] -> [FilePath]
-    interpretParentAccess [] = []
-    interpretParentAccess [x] = [x]
-    interpretParentAccess (x:y:rest) =
-      if FilePath.normalise y == ".."
-        then interpretParentAccess rest
-        else x : interpretParentAccess (y : rest)
+    interpretParentAccess = reverse . interpretParentAccess' []
+    interpretParentAccess' :: [FilePath] -> [FilePath] -> [FilePath]
+    interpretParentAccess' before [] = before
+    interpretParentAccess' (_:before) ("..":after) =
+      interpretParentAccess' before after
+    interpretParentAccess' before (x:xs) =
+      interpretParentAccess' (x : before) xs
+    isRoot :: FilePath -> Bool
+    isRoot path = length path == 1 && head path == FilePath.pathSeparator
     isNotSeparator :: Char -> Bool
     isNotSeparator = flip notElem FilePath.pathSeparators
 

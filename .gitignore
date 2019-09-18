@@ -1,5 +1,6 @@
 out
 
+.dir-locals.el
 .envrc
 
 .stack-work

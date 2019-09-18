@@ -17,6 +17,7 @@ build_script:
   - if /i %APPVEYOR_REPO_TAG% equ true copy .\out\build\smoke.exe .\out\publish\smoke-%APPVEYOR_REPO_TAG_NAME%-windows-x64.exe
 
 test_script:
+  - stack --no-terminal test
   - '.\out\build\smoke --command=.\out\build\smoke spec'
 
 artifacts:

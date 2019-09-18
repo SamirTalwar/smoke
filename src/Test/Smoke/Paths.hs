@@ -66,17 +66,44 @@ instance FromJSON (RelativePath Dir) where
 instance FromJSON (RelativePath File) where
   parseJSON = withText "path" (return . parseFile . Text.unpack)
 
+-- Construct
 parseDir :: FilePath -> RelativePath Dir
 parseDir = fromFilePath
 
 parseFile :: FilePath -> RelativePath File
 parseFile = fromFilePath
 
--- Query
-parent :: (Path p t, Path p Dir) => p t -> p Dir
-parent = fromFilePath . FilePath.dropFileName . toFilePath
+normalizeFilePath :: FilePath -> FilePath
+normalizeFilePath filePath =
+  let (drive, path) = FilePath.splitDrive filePath
+   in FilePath.joinDrive drive (normalizePath path)
+  where
+    normalizePath :: FilePath -> FilePath
+    normalizePath =
+      FilePath.normalise .
+      FilePath.joinPath .
+      interpretParentAccess .
+      removeTrailingSeparators . FilePath.splitPath . FilePath.normalise
+    removeTrailingSeparators :: [FilePath] -> [FilePath]
+    removeTrailingSeparators = map removeTrailingSeparator
+    removeTrailingSeparator :: FilePath -> FilePath
+    removeTrailingSeparator segment
+      | FilePath.isDrive segment = segment
+      | otherwise = takeWhile isNotSeparator segment
+    interpretParentAccess :: [FilePath] -> [FilePath]
+    interpretParentAccess = reverse . interpretParentAccess' []
+    interpretParentAccess' :: [FilePath] -> [FilePath] -> [FilePath]
+    interpretParentAccess' before [] = before
+    interpretParentAccess' ("..":before) ("..":after) =
+      interpretParentAccess' (".." : ".." : before) after
+    interpretParentAccess' (_:before) ("..":after) =
+      interpretParentAccess' before after
+    interpretParentAccess' before (x:xs) =
+      interpretParentAccess' (x : before) xs
+    isNotSeparator :: Char -> Bool
+    isNotSeparator = flip notElem FilePath.pathSeparators
 
--- Resolve
+-- Manipulate
 (</>) ::
      (Path RelativePath t, Path ResolvedPath t)
   => ResolvedPath Dir
@@ -84,6 +111,10 @@ parent = fromFilePath . FilePath.dropFileName . toFilePath
   -> ResolvedPath t
 ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
 
+parent :: (Path p t, Path p Dir) => p t -> p Dir
+parent = fromFilePath . FilePath.dropFileName . toFilePath
+
+-- Resolve
 resolve ::
      (Path RelativePath t, Path ResolvedPath t)
   => RelativePath t
@@ -92,30 +123,10 @@ resolve path = do
   currentWorkingDirectory <- getCurrentWorkingDirectory
   return $ currentWorkingDirectory </> path
 
-normalizeFilePath :: FilePath -> FilePath
-normalizeFilePath =
-  FilePath.joinPath .
-  interpretParentAccess .
-  removeExtraSeparators . FilePath.splitPath . FilePath.normalise
-  where
-    removeExtraSeparators :: [FilePath] -> [FilePath]
-    removeExtraSeparators = map removeExtraSeparator
-    removeExtraSeparator :: FilePath -> FilePath
-    removeExtraSeparator segment =
-      let (name, separators) = span (`notElem` FilePath.pathSeparators) segment
-       in name ++ take 1 separators
-    interpretParentAccess :: [FilePath] -> [FilePath]
-    interpretParentAccess [] = []
-    interpretParentAccess [x] = [x]
-    interpretParentAccess (x:y:rest) =
-      if FilePath.normalise y == ".."
-        then interpretParentAccess rest
-        else x : interpretParentAccess (y : rest)
-
--- Search
 getCurrentWorkingDirectory :: IO (ResolvedPath Dir)
 getCurrentWorkingDirectory = ResolvedPath <$> Directory.getCurrentDirectory
 
+-- Search
 findFilesInPath ::
      (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
 findFilesInPath filePattern path =

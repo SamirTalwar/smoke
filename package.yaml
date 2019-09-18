@@ -70,6 +70,20 @@ executables:
         dependencies:
           - unix
 
+tests:
+  smoke-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - smoke
+      - hedgehog
+      - hspec
+      - hw-hspec-hedgehog
+
 build-tools:
   - hindent
   - hlint

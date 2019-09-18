@@ -15,7 +15,6 @@ import Test.Smoke.Paths
 
 spec :: Spec
 spec =
-  parallel $
   describe "path processing" $ do
     it "normalizes" $
       require $

@@ -63,7 +63,11 @@ segmentString Parent = ".."
 segmentString (Named value) = value
 
 genNamedSegment :: Gen FilePath
-genNamedSegment = Gen.string (Range.linear 1 100) Gen.alphaNum
+genNamedSegment = do
+  name <- Gen.string (Range.linear 1 100) Gen.alphaNum
+  trailingSeparators <-
+    Gen.string (Range.linear 0 3) $ Gen.constant FilePath.pathSeparator
+  return $ name <> trailingSeparators
 
 genSegment :: Gen FilePathSegment
 genSegment =

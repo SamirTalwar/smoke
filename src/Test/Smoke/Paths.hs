@@ -90,6 +90,8 @@ normalizeFilePath filePath =
     removeTrailingSeparator segment
       | FilePath.isDrive segment = segment
       | otherwise = takeWhile isNotSeparator segment
+    isNotSeparator :: Char -> Bool
+    isNotSeparator = flip notElem FilePath.pathSeparators
     interpretParentAccess :: [FilePath] -> [FilePath]
     interpretParentAccess = reverse . interpretParentAccess' []
     interpretParentAccess' :: [FilePath] -> [FilePath] -> [FilePath]
@@ -100,8 +102,6 @@ normalizeFilePath filePath =
       interpretParentAccess' before after
     interpretParentAccess' before (x:xs) =
       interpretParentAccess' (x : before) xs
-    isNotSeparator :: Char -> Bool
-    isNotSeparator = flip notElem FilePath.pathSeparators
 
 -- Manipulate
 (</>) ::

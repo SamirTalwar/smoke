@@ -1,9 +1,9 @@
 tests:
-  - name: use the default shell
+  - name: use the default shell, on Unix or Windows
     command: |
-      echo 'Something.' >&2
+      echo Something.>&2
       false
-      echo 'Something else.' >&2
+      echo Something else.>&2
     stderr: |
       Something.
       Something else.
@@ -41,7 +41,7 @@ tests:
     stderr: |
       Something else.
 
-  - name: pass args to a shell command
+  - name: pass args to the default shell command
     command: |
       echo $1 $2 $3
     args:
@@ -53,7 +53,7 @@ tests:
     stdout: |
       a b c
 
-  - name: pass args to a shell command with a custom shell
+  - name: pass args to a custom shell command
     command:
       shell:
         - ruby

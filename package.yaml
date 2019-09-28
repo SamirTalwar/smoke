@@ -40,6 +40,14 @@ library:
   ghc-options:
     - -Wall
     - -Werror
+  when:
+    condition: os(windows)
+    then:
+      source-dirs:
+        - src/windows
+    else:
+      source-dirs:
+        - src/unix
 
 executables:
   smoke:

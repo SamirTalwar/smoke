@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Smoke.Executable where
 
 import Control.Monad.Trans.Except (ExceptT)
@@ -12,17 +10,8 @@ import System.IO.Temp (withSystemTempFile)
 import System.Process (CreateProcess(..), proc)
 import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Paths
+import Test.Smoke.Shell
 import Test.Smoke.Types
-
-defaultShell :: ExceptT PathError IO Shell
-defaultShell = do
-  sh <- findExecutable $ parseFile "sh"
-  return $ Shell sh mempty
-
-shellFromCommandLine :: CommandLine -> ExceptT PathError IO Shell
-shellFromCommandLine (CommandLine shellName shellArgs) = do
-  shellCommand <- findExecutable shellName
-  return $ Shell shellCommand shellArgs
 
 runExecutable ::
      Executable
@@ -38,7 +27,7 @@ runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdI
        {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
     stdIn
 runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) args stdIn workingDirectory =
-  withSystemTempFile "smoke.sh" $ \scriptPath scriptHandle -> do
+  withSystemTempFile defaultShellScriptName $ \scriptPath scriptHandle -> do
     Text.IO.hPutStr scriptHandle script
     hClose scriptHandle
     let executableArgs = shellArgs <> Args (Vector.singleton scriptPath)
@@ -61,3 +50,8 @@ convertCommandToExecutable (Just shell) (CommandScript Nothing script) =
 convertCommandToExecutable _ (CommandScript (Just commandLine) script) = do
   shell <- shellFromCommandLine commandLine
   return $ ExecutableScript shell script
+
+shellFromCommandLine :: CommandLine -> ExceptT PathError IO Shell
+shellFromCommandLine (CommandLine shellName shellArgs) = do
+  shellCommand <- findExecutable shellName
+  return $ Shell shellCommand shellArgs

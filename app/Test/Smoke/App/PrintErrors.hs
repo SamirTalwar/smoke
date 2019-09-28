@@ -3,7 +3,7 @@
 module Test.Smoke.App.PrintErrors
   ( printError
   , printDiscoveryError
-  , printExecutableError
+  , printPathError
   , printSuiteError
   , printTestError
   ) where
@@ -13,12 +13,12 @@ import Data.String (fromString)
 import Data.Text (Text)
 import Test.Smoke
 import Test.Smoke.App.Print
+import Test.Smoke.Paths
 
 printSuiteError :: SuiteError -> Output ()
 printSuiteError (SuiteDiscoveryError discoveryError) =
   printDiscoveryError printError discoveryError
-printSuiteError (SuiteExecutableError executableError) =
-  printExecutableError executableError
+printSuiteError (SuitePathError pathError) = printPathError pathError
 
 printTestError :: SmokeError -> Output ()
 printTestError (DiscoveryError discoveryError) =
@@ -36,8 +36,8 @@ printTestError (PlanningError (CouldNotReadFixture path exception)) =
   "The fixture " <> showPath path <> " could not be read."
 printTestError (PlanningError (PlanningFilterError filterError)) =
   printFilterError filterError
-printTestError (PlanningError (PlanningExecutableError executableError)) =
-  printExecutableError executableError
+printTestError (PlanningError (PlanningPathError pathError)) =
+  printPathError pathError
 printTestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory path))) =
   printError $ "The working directory " <> showPath path <> " does not exist."
 printTestError (ExecutionError (CouldNotExecuteCommand executable exception)) =
@@ -105,13 +105,12 @@ printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (St
   indentedAll messageIndentation stdOut <>
   "\nSTDERR:\n" <>
   indentedAll messageIndentation stdErr
-printFilterError (FilterExecutableError executableError) =
-  printExecutableError executableError
+printFilterError (FilterPathError pathError) = printPathError pathError
 
-printExecutableError :: SmokeExecutableError -> Output ()
-printExecutableError (CouldNotFindExecutable path) =
+printPathError :: PathError -> Output ()
+printPathError (CouldNotFindExecutable path) =
   printError $ "The executable " <> showPath path <> " could not be found."
-printExecutableError (FileIsNotExecutable path) =
+printPathError (FileIsNotExecutable path) =
   printError $ "The file at " <> showPath path <> " is not executable."
 
 printError :: Text -> Output ()

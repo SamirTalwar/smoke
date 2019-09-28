@@ -32,7 +32,7 @@ planTests (TestSpecification specificationCommand suites) = do
             runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
           case shell of
             Left exception ->
-              return $ SuitePlanError suiteName $ SuiteExecutableError exception
+              return $ SuitePlanError suiteName $ SuitePathError exception
             Right fallbackShell -> do
               let fallbackWorkingDirectory =
                     fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
@@ -74,7 +74,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
   command <-
     maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
   executable <-
-    withExceptT PlanningExecutableError $
+    withExceptT PlanningPathError $
     convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
   unfilteredStdIn <-

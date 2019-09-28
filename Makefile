@@ -38,11 +38,11 @@ $(OUT)/smoke-$(OS): $(BIN_RELEASE)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
 $(BIN_RELEASE): clean
-	stack build
+	stack build 
 	stack install --local-bin-path=$(OUT_RELEASE)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
-	$(STACK) install --fast --local-bin-path=$(OUT_DEBUG)
+	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
 
 default.nix: dependencies
 	stack exec -- cabal2nix --shell . > $@

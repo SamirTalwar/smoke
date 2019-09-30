@@ -31,7 +31,7 @@ data SmokePlanningError
   | NoOutput
   | NonExistentFixture (RelativePath File)
   | CouldNotReadFixture (RelativePath File) IOError
-  | PlanningExecutableError SmokeExecutableError
+  | PlanningPathError PathError
   | PlanningFilterError SmokeFilterError
   deriving (Eq, Show)
 
@@ -61,19 +61,12 @@ data SmokeFilterError
   = MissingFilterScript
   | CouldNotExecuteFilter Executable IOError
   | ExecutionFailed Executable Status StdOut StdErr
-  | FilterExecutableError SmokeExecutableError
+  | FilterPathError PathError
   deriving (Eq, Show)
 
 instance Exception SmokeFilterError
 
-data SmokeExecutableError
-  = CouldNotFindExecutable (RelativePath File)
-  | FileIsNotExecutable (RelativePath File)
-  deriving (Eq, Show)
-
-instance Exception SmokeExecutableError
-
 data SuiteError
   = SuiteDiscoveryError SmokeDiscoveryError
-  | SuiteExecutableError SmokeExecutableError
+  | SuitePathError PathError
   deriving (Eq, Show)

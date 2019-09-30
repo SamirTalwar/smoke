@@ -35,7 +35,7 @@ applyFiltersFromFixtures fallbackShell (Fixtures fixtures) value =
 runFilter :: FixtureType a => Maybe Shell -> Command -> a -> Filtering a
 runFilter fallbackShell command value = do
   executable <-
-    withExceptT FilterExecutableError $
+    withExceptT FilterPathError $
     convertCommandToExecutable fallbackShell command
   (exitCode, processStdOut, processStdErr) <-
     withExceptT (CouldNotExecuteFilter executable) $

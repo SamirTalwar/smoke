@@ -2,14 +2,12 @@ tests:
   - name: no-command
 
   - name: no-outputs
-    command:
-      - echo
+    command: echo
     args:
       - input
 
   - name: missing-input-file
-    command:
-      - echo
+    command: echo
     args:
       - something
     stdin:
@@ -18,16 +16,14 @@ tests:
       output
 
   - name: missing-output-file
-    command:
-      - echo
+    command: echo
     args:
       - something
     stdout:
       file: io/missing.out
 
   - name: missing-error-file
-    command:
-      - echo
+    command: echo
     args:
       - something
     stderr:

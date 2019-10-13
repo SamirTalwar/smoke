@@ -5,3 +5,7 @@ extra-deps:
   - hindent-5.3.1
 ghc-options:
   $locals: -Wall -Werror
+nix:
+  packages:
+    - libiconv
+    - openssl

@@ -56,17 +56,18 @@ printTestError (ExecutionError (ExecutionFilterError filterError)) =
   printFilterError filterError
 printTestError (BlessError (CouldNotBlessInlineFixture (FixtureName fixtureName') propertyValue)) =
   printError $
-  "The fixture " <> quoteString fixtureName' <>
+  "The fixture " <>
+  quoteString fixtureName' <>
   " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
   indentedAll messageIndentation propertyValue
 printTestError (BlessError (CouldNotBlessAMissingValue (FixtureName fixtureName'))) =
   printError $
-  "There are no expected " <> quoteString fixtureName' <>
-  " values, so the result cannot be blessed.\n"
+  "There are no expected " <>
+  quoteString fixtureName' <> " values, so the result cannot be blessed.\n"
 printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixtureName'))) =
   printError $
-  "There are multiple expected " <> quoteString fixtureName' <>
-  " values, so the result cannot be blessed.\n"
+  "There are multiple expected " <>
+  quoteString fixtureName' <> " values, so the result cannot be blessed.\n"
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 
@@ -77,18 +78,18 @@ printDiscoveryError printErrorMessage = printErrorMessage . printDiscoveryError'
     printDiscoveryError' (NoSuchLocation path) =
       "There is no such location " <> quoteString path <> "."
     printDiscoveryError' (NoSuchTest path (TestName selectedTestName)) =
-      "There is no such test " <> quoteString selectedTestName <> " in " <>
-      showPath path <>
-      "."
+      "There is no such test " <>
+      quoteString selectedTestName <> " in " <> showPath path <> "."
     printDiscoveryError' (CannotSelectTestInDirectory path (TestName selectedTestName)) =
-      "The test " <> quoteString selectedTestName <>
+      "The test " <>
+      quoteString selectedTestName <>
       " cannot be selected from the directory " <>
       showPath path <>
-      ".\n" <>
-      "Tests must be selected from a single specification file."
+      ".\n" <> "Tests must be selected from a single specification file."
     printDiscoveryError' (InvalidSpecification path message) =
-      "The test specification " <> showPath path <> " is invalid:\n" <>
-      indentedAll messageIndentation (fromString message)
+      "The test specification " <>
+      showPath path <>
+      " is invalid:\n" <> indentedAll messageIndentation (fromString message)
 
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError MissingFilterScript =
@@ -98,13 +99,13 @@ printFilterError (CouldNotExecuteFilter executable exception) =
   showExecutable executable <> " could not be executed."
 printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  showExecutable executable <> " failed with an exit status of " <>
+  showExecutable executable <>
+  " failed with an exit status of " <>
   showInt status <>
   "." <>
   "\nSTDOUT:\n" <>
   indentedAll messageIndentation stdOut <>
-  "\nSTDERR:\n" <>
-  indentedAll messageIndentation stdErr
+  "\nSTDERR:\n" <> indentedAll messageIndentation stdErr
 printFilterError (FilterPathError pathError) = printPathError pathError
 
 printPathError :: PathError -> Output ()

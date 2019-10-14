@@ -20,8 +20,8 @@ printSummary summary = do
           then putGreenLn
           else putRedLn
   printSummaryLine $
-    showInt testCount <> " " <> testWord <> ", " <> showInt failureCount <> " " <>
-    failureWord
+    showInt testCount <>
+    " " <> testWord <> ", " <> showInt failureCount <> " " <> failureWord
 
 pluralize :: Int -> Text -> Text -> Text
 pluralize 1 singular _ = singular

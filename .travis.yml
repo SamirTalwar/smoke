@@ -34,7 +34,7 @@ before_install:
     fi
 
 install:
-  - stack --no-terminal install --only-dependencies
+  - stack --no-terminal install --only-dependencies --test --no-run-tests
 
 script:
   - make test

@@ -13,7 +13,7 @@ packages:
     hackage: hindent-5.3.1
 snapshots:
 - completed:
-    size: 498365
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/18.yaml
-    sha256: c813b03544da8a9053b722f00f3f9a0aade23443130ac7160fefa89e01f5fb17
-  original: lts-13.18
+    size: 524789
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/9.yaml
+    sha256: 8af5eb80734f02621d37e82cc0cde614af2ddc9c320610acb0b1b6d9ac162930
+  original: lts-14.9

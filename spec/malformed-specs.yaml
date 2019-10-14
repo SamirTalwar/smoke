@@ -7,11 +7,11 @@ tests:
       - |
         The test specification "fixtures/malformed-specs/empty.yaml" is invalid:
           Aeson exception:
-          Error in $: expected Suite, encountered Null
+          Error in $: parsing Suite failed, expected Object, but encountered Null
       - |
         The test specification "fixtures\malformed-specs\empty.yaml" is invalid:
           Aeson exception:
-          Error in $: expected Suite, encountered Null
+          Error in $: parsing Suite failed, expected Object, but encountered Null
 
   - name: invalid-yaml
     args:
@@ -37,8 +37,8 @@ tests:
       - |
         The test specification "fixtures/malformed-specs/test-as-dict.yaml" is invalid:
           Aeson exception:
-          Error in $.tests: expected [a], encountered Object
+          Error in $.tests: parsing [] failed, expected Array, but encountered Object
       - |
         The test specification "fixtures\malformed-specs\test-as-dict.yaml" is invalid:
           Aeson exception:
-          Error in $.tests: expected [a], encountered Object
+          Error in $.tests: parsing [] failed, expected Array, but encountered Object

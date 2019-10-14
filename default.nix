@@ -34,7 +34,7 @@ let
           temporary text transformers vector yaml
         ];
         testToolDepends = [ cabal2nix hindent hlint ];
-        preConfigure = "hpack";
+        prePatch = "hpack";
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";
         license = stdenv.lib.licenses.mit;

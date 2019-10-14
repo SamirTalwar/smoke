@@ -1,4 +1,4 @@
-resolver: lts-14.7
+resolver: lts-14.9
 packages:
   - .
 extra-deps:
@@ -9,3 +9,4 @@ nix:
   packages:
     - libiconv
     - openssl
+    - zlib

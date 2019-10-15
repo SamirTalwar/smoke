@@ -1,4 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/SamirTalwar/Smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/Smoke) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/9m04ffr3h65cviht/branch/master?svg=true)](https://ci.appveyor.com/project/SamirTalwar/smoke)
+[![Travis Build Status](https://travis-ci.org/SamirTalwar/smoke.svg?branch=master)](https://travis-ci.org/SamirTalwar/smoke) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/9m04ffr3h65cviht/branch/master?svg=true)](https://ci.appveyor.com/project/SamirTalwar/smoke)
 
 # Smoke
 
@@ -31,7 +31,7 @@ If you are using [Nix][] you can build Smoke via `nix-build`.
 
 Smoke is distributed under [the MIT license][mit license].
 
-[releases]: https://github.com/SamirTalwar/Smoke/releases
+[releases]: https://github.com/SamirTalwar/smoke/releases
 [stack]: https://docs.haskellstack.org/en/stable/README/
 [nix]: https://nixos.org/nix
 [mit license]: http://samirtalwar.mit-license.org/

@@ -91,6 +91,14 @@ tests:
       - hedgehog
       - hspec
       - hw-hspec-hedgehog
+    when:
+      condition: os(windows)
+      then:
+        source-dirs:
+          - test/windows
+      else:
+        source-dirs:
+          - test/unix
 
 build-tools:
   - hindent

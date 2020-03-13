@@ -46,6 +46,7 @@ $(BIN_DEBUG): $(CONF) $(SRC)
 
 default.nix: dependencies
 	stack exec -- cabal2nix --shell . > $@
+	nixpkgs-fmt $@
 
 .PHONY: clean
 clean:
@@ -79,6 +80,7 @@ lint: dependencies
 		NIX_FILE="$$(mktemp)"; \
 		trap 'rm -r $$NIX_FILE' EXIT; \
 		stack exec -- cabal2nix --shell . > "$$NIX_FILE"; \
+		nixpkgs-fmt "$$NIX_FILE"; \
 		git diff --no-index --exit-code default.nix "$$NIX_FILE" \
 	)
 	@ echo >&2 'Linting succeeded.'
@@ -89,6 +91,7 @@ check: test lint
 .PHONY: reformat
 reformat: dependencies
 	ormolu --mode=inplace $(SRC)
+	nixpkgs-fmt *.nix
 
 .PHONY: dependencies
 dependencies:

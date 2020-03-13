@@ -3,10 +3,10 @@
 with pkgs;
 mkShell {
   buildInputs = [
-    stack
-    nix
     git
+    nixpkgs-fmt
     ormolu
     ruby
+    stack
   ];
 }

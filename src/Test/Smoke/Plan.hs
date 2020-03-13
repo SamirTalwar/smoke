@@ -1,10 +1,11 @@
 module Test.Smoke.Plan
-  ( planTests
-  ) where
+  ( planTests,
+  )
+where
 
 import Control.Applicative ((<|>))
 import Control.Monad (forM, when)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
+import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
@@ -38,15 +39,17 @@ planTests (TestSpecification specificationCommand suites) = do
                     fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
               testPlans <-
                 forM tests $ \test ->
-                  either (TestPlanError test) TestPlanSuccess <$>
-                  runExceptT
-                    (do validateTest fallbackCommand test
-                        readTest
-                          location
-                          fallbackWorkingDirectory
-                          fallbackShell
-                          fallbackCommand
-                          test)
+                  either (TestPlanError test) TestPlanSuccess
+                    <$> runExceptT
+                      ( do
+                          validateTest fallbackCommand test
+                          readTest
+                            location
+                            fallbackWorkingDirectory
+                            fallbackShell
+                            fallbackCommand
+                            test
+                      )
               return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
@@ -54,20 +57,22 @@ validateTest :: Maybe Command -> Test -> Planning ()
 validateTest fallbackCommand test = do
   when (isNothing (testCommand test <|> fallbackCommand)) $ throwE NoCommand
   when
-    (isEmptyFixtures (testStdOut test) &&
-     isEmptyFixtures (testStdErr test) && isEmptyFiles (testFiles test)) $
-    throwE NoOutput
+    ( isEmptyFixtures (testStdOut test)
+        && isEmptyFixtures (testStdErr test)
+        && isEmptyFiles (testFiles test)
+    )
+    $ throwE NoOutput
   where
     isEmptyFixtures (Fixtures fixtures) = Vector.null fixtures
     isEmptyFiles = Map.null
 
 readTest ::
-     ResolvedPath Dir
-  -> WorkingDirectory
-  -> Maybe Shell
-  -> Maybe Command
-  -> Test
-  -> Planning TestPlan
+  ResolvedPath Dir ->
+  WorkingDirectory ->
+  Maybe Shell ->
+  Maybe Command ->
+  Test ->
+  Planning TestPlan
 readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
   let workingDirectory =
         fromMaybe fallbackWorkingDirectory (testWorkingDirectory test)
@@ -75,11 +80,11 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
     maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
   executable <-
     withExceptT PlanningPathError $
-    convertCommandToExecutable fallbackShell command
+      convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
   unfilteredStdIn <-
-    fromMaybe (Unfiltered (StdIn Text.empty)) <$>
-    sequence (readFixture location <$> testStdIn test)
+    fromMaybe (Unfiltered (StdIn Text.empty))
+      <$> sequence (readFixture location <$> testStdIn test)
   stdIn <-
     withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
   status <- unfiltered <$> readFixture location (testStatus test)
@@ -90,34 +95,34 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
   let revert = Vector.map (location </>) (testRevert test)
   return $
     TestPlan
-      { planTest = test
-      , planWorkingDirectory = workingDirectory
-      , planShell = fallbackShell
-      , planExecutable = executable
-      , planArgs = args
-      , planStdIn = stdIn
-      , planStatus = status
-      , planStdOut = stdOut
-      , planStdErr = stdErr
-      , planFiles = files
-      , planRevert = revert
+      { planTest = test,
+        planWorkingDirectory = workingDirectory,
+        planShell = fallbackShell,
+        planExecutable = executable,
+        planArgs = args,
+        planStdIn = stdIn,
+        planStatus = status,
+        planStdOut = stdOut,
+        planStdErr = stdErr,
+        planFiles = files,
+        planRevert = revert
       }
 
 readFixture ::
-     FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
+  FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
 readFixture _ (Fixture (Inline contents) maybeFilter) =
   return $ includeFilter maybeFilter contents
 readFixture location (Fixture (FileLocation path) maybeFilter) =
-  includeFilter maybeFilter . deserializeFixture <$>
-  withExceptT
-    (handleMissingFileError path)
-    (ExceptT $ tryIOError $ readFromPath (location </> path))
+  includeFilter maybeFilter . deserializeFixture
+    <$> withExceptT
+      (handleMissingFileError path)
+      (ExceptT $ tryIOError $ readFromPath (location </> path))
 
 readFixtures ::
-     FixtureType a
-  => ResolvedPath Dir
-  -> Fixtures a
-  -> Planning (Vector (Filtered a))
+  FixtureType a =>
+  ResolvedPath Dir ->
+  Fixtures a ->
+  Planning (Vector (Filtered a))
 readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
 
 includeFilter :: Maybe Command -> a -> Filtered a

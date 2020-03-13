@@ -1,6 +1,7 @@
 module Main
-  ( main
-  ) where
+  ( main,
+  )
+where
 
 import Control.Exception (catch)
 import Control.Monad (forM)
@@ -49,11 +50,11 @@ runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
   return $ SuiteResult suiteName location testResults
 
 runTestPlanOutcome ::
-     ShowSuiteNames
-  -> SuiteName
-  -> ResolvedPath Dir
-  -> TestPlanOutcome
-  -> Output TestResult
+  ShowSuiteNames ->
+  SuiteName ->
+  ResolvedPath Dir ->
+  TestPlanOutcome ->
+  Output TestResult
 runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError) = do
   printTitle showSuiteNames suiteName (Just (testName test))
   let testError = PlanningError planningError

@@ -1,23 +1,24 @@
 module Test.Smoke.Execution
-  ( runTest
-  ) where
+  ( runTest,
+  )
+where
 
 import qualified Codec.Archive.Tar as Tar
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT(..), runExceptT, throwE, withExceptT)
+import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
 import Data.Default
-import Data.Map.Strict (Map, (!))
+import Data.Map.Strict ((!), Map)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Directory
-  ( createDirectory
-  , doesDirectoryExist
-  , removeDirectoryRecursive
+  ( createDirectory,
+    doesDirectoryExist,
+    removeDirectoryRecursive,
   )
-import System.Exit (ExitCode(..))
+import System.Exit (ExitCode (..))
 import System.IO (hClose)
 import System.IO.Error (tryIOError)
 import System.IO.Temp (withSystemTempFile)
@@ -50,20 +51,22 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
-  unless workingDirectoryExists $
-    throwE $ NonExistentWorkingDirectory workingDirectory
+  unless workingDirectoryExists
+    $ throwE
+    $ NonExistentWorkingDirectory workingDirectory
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
       tryIO (CouldNotExecuteCommand executable) $
-      runExecutable executable args processStdIn (Just workingDirectory)
+        runExecutable executable args processStdIn (Just workingDirectory)
     actualFiles <-
-      Map.map TestFileContents . Map.fromList <$>
-      mapM readTestFile (Map.keys files)
+      Map.map TestFileContents . Map.fromList
+        <$> mapM readTestFile (Map.keys files)
     return
-      ( convertExitCode exitCode
-      , StdOut processStdOut
-      , StdErr processStdErr
-      , actualFiles)
+      ( convertExitCode exitCode,
+        StdOut processStdOut,
+        StdErr processStdErr,
+        actualFiles
+      )
   where
     readTestFile :: RelativePath File -> Execution (ResolvedPath File, Text)
     readTestFile path = do
@@ -90,19 +93,19 @@ revertingDirectory path execution = do
     return result
 
 processOutput ::
-     ResolvedPath Dir -> TestPlan -> ActualOutputs -> Execution TestResult
+  ResolvedPath Dir -> TestPlan -> ActualOutputs -> Execution TestResult
 processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $
-    applyFiltersFromFixture fallbackShell (testStatus test) actualStatus
+      applyFiltersFromFixture fallbackShell (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT ExecutionFilterError $
-    ifEmpty actualStdOut <$>
-    applyFiltersFromFixtures fallbackShell (testStdOut test) actualStdOut
+      ifEmpty actualStdOut
+        <$> applyFiltersFromFixtures fallbackShell (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT ExecutionFilterError $
-    ifEmpty actualStdErr <$>
-    applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
+      ifEmpty actualStdErr
+        <$> applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
   let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
         result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
@@ -110,28 +113,31 @@ processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSta
         result $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
   fileResults <-
     mapWithKeyM
-      (\relativePath contents ->
-         result . Vector.zip contents <$>
-         withExceptT
-           ExecutionFilterError
-           (applyFiltersFromFixtures
-              fallbackShell
-              (testFiles test ! relativePath)
-              (actualFiles ! (location </> relativePath))))
+      ( \relativePath contents ->
+          result . Vector.zip contents
+            <$> withExceptT
+              ExecutionFilterError
+              ( applyFiltersFromFixtures
+                  fallbackShell
+                  (testFiles test ! relativePath)
+                  (actualFiles ! (location </> relativePath))
+              )
+      )
       expectedFiles
-  return $
-    TestResult test $
-    if statusResult == PartSuccess &&
-       stdOutResult == PartSuccess &&
-       stdErrResult == PartSuccess &&
-       all (== PartSuccess) (Map.elems fileResults)
+  return
+    $ TestResult test
+    $ if statusResult == PartSuccess
+      && stdOutResult == PartSuccess
+      && stdErrResult == PartSuccess
+      && all (== PartSuccess) (Map.elems fileResults)
       then TestSuccess
-      else TestFailure
-             testPlan
-             statusResult
-             stdOutResult
-             stdErrResult
-             fileResults
+      else
+        TestFailure
+          testPlan
+          statusResult
+          stdOutResult
+          stdErrResult
+          fileResults
   where
     result :: Eq a => Vector (a, a) -> PartResult a
     result comparison =

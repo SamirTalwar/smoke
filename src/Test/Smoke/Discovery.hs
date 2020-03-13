@@ -1,12 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Test.Smoke.Discovery
-  ( discoverTests
-  ) where
+  ( discoverTests,
+  )
+where
 
 import Control.Monad (forM, unless)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
+import Control.Monad.Trans.Except (ExceptT (..), throwE, withExceptT)
 import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
@@ -28,8 +29,8 @@ data Root
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =
   runExceptTIO $
-  TestSpecification (optionsCommand options) <$>
-  discoverTestsInLocations (optionsTestLocations options)
+    TestSpecification (optionsCommand options)
+      <$> discoverTestsInLocations (optionsTestLocations options)
 
 discoverTestsInLocations :: Vector String -> Discovery Suites
 discoverTestsInLocations locations = do
@@ -43,17 +44,18 @@ discoverTestsInLocations locations = do
       SingleRoot path selectedTestName -> do
         let (directory, suiteName) = splitSuitePath path
         suite <-
-          do suite <- decodeSpecificationFile directory path
-             selectedTest <-
-               onNothingThrow (NoSuchTest path selectedTestName) $
-               List.find ((== selectedTestName) . testName) (suiteTests suite)
-             return $ suite {suiteTests = [selectedTest]}
+          do
+            suite <- decodeSpecificationFile directory path
+            selectedTest <-
+              onNothingThrow (NoSuchTest path selectedTestName) $
+                List.find ((== selectedTestName) . testName) (suiteTests suite)
+            return $ suite {suiteTests = [selectedTest]}
         return [(suiteName, Right suite)]
   return $ List.sortOn fst $ concat testsBySuite
 
 discoverTestsInSpecificationFile ::
-     RelativePath File
-  -> Discovery (SuiteName, Either SmokeDiscoveryError Suite)
+  RelativePath File ->
+  Discovery (SuiteName, Either SmokeDiscoveryError Suite)
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   suite <- decodeSpecificationFile directory path
@@ -61,18 +63,21 @@ discoverTestsInSpecificationFile path = do
 
 splitSuitePath :: RelativePath File -> (RelativePath Dir, SuiteName)
 splitSuitePath path =
-  ( parent path
-  , SuiteName $ FilePath.dropExtension $ FilePath.takeFileName $ toFilePath path)
+  ( parent path,
+    SuiteName $ FilePath.dropExtension $ FilePath.takeFileName $ toFilePath path
+  )
 
 decodeSpecificationFile ::
-     RelativePath Dir -> RelativePath File -> Discovery Suite
+  RelativePath Dir -> RelativePath File -> Discovery Suite
 decodeSpecificationFile directory path = do
   location <- liftIO $ resolve directory
   resolvedPath <- liftIO $ resolve path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $ do
     parsedValue <- ExceptT $ decodeFileEither (toFilePath resolvedPath)
-    withExceptT AesonException $
-      ExceptT $ return $ parseEither (parseSuite location) parsedValue
+    withExceptT AesonException
+      $ ExceptT
+      $ return
+      $ parseEither (parseSuite location) parsedValue
 
 parseRoot :: String -> Discovery Root
 parseRoot location = do

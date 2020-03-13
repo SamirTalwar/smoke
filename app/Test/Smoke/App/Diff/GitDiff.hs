@@ -1,6 +1,7 @@
 module Test.Smoke.App.Diff.GitDiff
-  ( engine
-  ) where
+  ( engine,
+  )
+where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
@@ -12,10 +13,9 @@ import Test.Smoke.App.OptionColorOutput
 engine :: DiffEngine
 engine =
   DiffEngine
-    { engineName = name
-    , engineEnabled = enabled executable
-    , engineRender =
-        \color left right -> dropHeader <$> render (command color) left right
+    { engineName = name,
+      engineEnabled = enabled executable,
+      engineRender = \color left right -> dropHeader <$> render (command color) left right
     }
 
 name :: String

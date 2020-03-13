@@ -1,16 +1,17 @@
 module Test.Smoke.Types
-  ( module Test.Smoke.Types.Base
-  , module Test.Smoke.Types.Errors
-  , module Test.Smoke.Types.Executable
-  , module Test.Smoke.Types.Files
-  , module Test.Smoke.Types.Filters
-  , module Test.Smoke.Types.Fixtures
-  , module Test.Smoke.Types.Plans
-  , module Test.Smoke.Types.Results
-  , module Test.Smoke.Types.Run
-  , module Test.Smoke.Types.Summary
-  , module Test.Smoke.Types.Tests
-  ) where
+  ( module Test.Smoke.Types.Base,
+    module Test.Smoke.Types.Errors,
+    module Test.Smoke.Types.Executable,
+    module Test.Smoke.Types.Files,
+    module Test.Smoke.Types.Filters,
+    module Test.Smoke.Types.Fixtures,
+    module Test.Smoke.Types.Plans,
+    module Test.Smoke.Types.Results,
+    module Test.Smoke.Types.Run,
+    module Test.Smoke.Types.Summary,
+    module Test.Smoke.Types.Tests,
+  )
+where
 
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors

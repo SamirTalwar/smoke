@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.App.PrintErrors
-  ( printError
-  , printDiscoveryError
-  , printPathError
-  , printSuiteError
-  , printTestError
-  ) where
+  ( printError,
+    printDiscoveryError,
+    printPathError,
+    printSuiteError,
+    printTestError,
+  )
+where
 
 import Control.Exception (displayException)
 import Data.String (fromString)
@@ -33,7 +34,7 @@ printTestError (PlanningError (NonExistentFixture path)) =
   printError $ "The fixture " <> showPath path <> " does not exist."
 printTestError (PlanningError (CouldNotReadFixture path exception)) =
   printErrorWithException exception $
-  "The fixture " <> showPath path <> " could not be read."
+    "The fixture " <> showPath path <> " could not be read."
 printTestError (PlanningError (PlanningFilterError filterError)) =
   printFilterError filterError
 printTestError (PlanningError (PlanningPathError pathError)) =
@@ -42,32 +43,34 @@ printTestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory pa
   printError $ "The working directory " <> showPath path <> " does not exist."
 printTestError (ExecutionError (CouldNotExecuteCommand executable exception)) =
   printErrorWithException exception $
-  showExecutable executable <> " could not be executed."
+    showExecutable executable <> " could not be executed."
 printTestError (ExecutionError (CouldNotReadFile path exception)) =
   printErrorWithException exception $
-  "The output file " <> showPath path <> " does not exist."
+    "The output file " <> showPath path <> " does not exist."
 printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
   printErrorWithException exception $
-  "The directory " <> showPath path <> " could not be stored."
+    "The directory " <> showPath path <> " could not be stored."
 printTestError (ExecutionError (CouldNotRevertDirectory path exception)) =
   printErrorWithException exception $
-  "The directory " <> showPath path <> " could not be reverted."
+    "The directory " <> showPath path <> " could not be reverted."
 printTestError (ExecutionError (ExecutionFilterError filterError)) =
   printFilterError filterError
 printTestError (BlessError (CouldNotBlessInlineFixture (FixtureName fixtureName') propertyValue)) =
   printError $
-  "The fixture " <>
-  quoteString fixtureName' <>
-  " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n" <>
-  indentedAll messageIndentation propertyValue
+    "The fixture "
+      <> quoteString fixtureName'
+      <> " is embedded in the test specification, so the result cannot be blessed.\nAttempted to write:\n"
+      <> indentedAll messageIndentation propertyValue
 printTestError (BlessError (CouldNotBlessAMissingValue (FixtureName fixtureName'))) =
   printError $
-  "There are no expected " <>
-  quoteString fixtureName' <> " values, so the result cannot be blessed.\n"
+    "There are no expected "
+      <> quoteString fixtureName'
+      <> " values, so the result cannot be blessed.\n"
 printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixtureName'))) =
   printError $
-  "There are multiple expected " <>
-  quoteString fixtureName' <> " values, so the result cannot be blessed.\n"
+    "There are multiple expected "
+      <> quoteString fixtureName'
+      <> " values, so the result cannot be blessed.\n"
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 
@@ -78,34 +81,40 @@ printDiscoveryError printErrorMessage = printErrorMessage . printDiscoveryError'
     printDiscoveryError' (NoSuchLocation path) =
       "There is no such location " <> quoteString path <> "."
     printDiscoveryError' (NoSuchTest path (TestName selectedTestName)) =
-      "There is no such test " <>
-      quoteString selectedTestName <> " in " <> showPath path <> "."
+      "There is no such test "
+        <> quoteString selectedTestName
+        <> " in "
+        <> showPath path
+        <> "."
     printDiscoveryError' (CannotSelectTestInDirectory path (TestName selectedTestName)) =
-      "The test " <>
-      quoteString selectedTestName <>
-      " cannot be selected from the directory " <>
-      showPath path <>
-      ".\n" <> "Tests must be selected from a single specification file."
+      "The test "
+        <> quoteString selectedTestName
+        <> " cannot be selected from the directory "
+        <> showPath path
+        <> ".\n"
+        <> "Tests must be selected from a single specification file."
     printDiscoveryError' (InvalidSpecification path message) =
-      "The test specification " <>
-      showPath path <>
-      " is invalid:\n" <> indentedAll messageIndentation (fromString message)
+      "The test specification "
+        <> showPath path
+        <> " is invalid:\n"
+        <> indentedAll messageIndentation (fromString message)
 
 printFilterError :: SmokeFilterError -> Output ()
 printFilterError MissingFilterScript =
   printError "The filter script is missing."
 printFilterError (CouldNotExecuteFilter executable exception) =
   printErrorWithException exception $
-  showExecutable executable <> " could not be executed."
+    showExecutable executable <> " could not be executed."
 printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
-  showExecutable executable <>
-  " failed with an exit status of " <>
-  showInt status <>
-  "." <>
-  "\nSTDOUT:\n" <>
-  indentedAll messageIndentation stdOut <>
-  "\nSTDERR:\n" <> indentedAll messageIndentation stdErr
+    showExecutable executable
+      <> " failed with an exit status of "
+      <> showInt status
+      <> "."
+      <> "\nSTDOUT:\n"
+      <> indentedAll messageIndentation stdOut
+      <> "\nSTDERR:\n"
+      <> indentedAll messageIndentation stdErr
 printFilterError (FilterPathError pathError) = printPathError pathError
 
 printPathError :: PathError -> Output ()
@@ -119,6 +128,6 @@ printError = putRedLn . indentedAll messageIndentation
 
 printErrorWithException :: IOError -> Text -> Output ()
 printErrorWithException exception =
-  putRedLn .
-  indentedAll messageIndentation .
-  (<> "\n" <> fromString (displayException exception))
+  putRedLn
+    . indentedAll messageIndentation
+    . (<> "\n" <> fromString (displayException exception))

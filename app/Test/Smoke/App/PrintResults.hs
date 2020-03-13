@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.App.PrintResults
-  ( printResult
-  ) where
+  ( printResult,
+  )
+where
 
 import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
@@ -26,8 +27,9 @@ printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
 printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
   printFailingInput
     "args"
-    (Text.unlines . Vector.toList . Vector.map fromString . unArgs <$>
-     testArgs test)
+    ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
+        <$> testArgs test
+    )
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
   printFailingOutput "status" ((<> "\n") . showInt . unStatus <$> statusResult)
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
@@ -51,7 +53,7 @@ printFailingOutput name (PartFailure comparisons) = do
     printDiff expected actual
 
 printFailingFilesOutput ::
-     Map (RelativePath File) (PartResult TestFileContents) -> Output ()
+  Map (RelativePath File) (PartResult TestFileContents) -> Output ()
 printFailingFilesOutput fileResults =
   if all isSuccess (Map.elems fileResults)
     then return ()
@@ -75,9 +77,11 @@ printFailingFileOutput path (PartFailure comparisons) = do
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do
-  AppOptions { optionsColor = color
-             , optionsDiffEngine = DiffEngine {engineRender = renderDiff}
-             } <- ask
+  AppOptions
+    { optionsColor = color,
+      optionsDiffEngine = DiffEngine {engineRender = renderDiff}
+    } <-
+    ask
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
 

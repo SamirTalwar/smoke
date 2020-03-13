@@ -101,7 +101,6 @@ tests:
           - test/unix
 
 build-tools:
-  - hindent
   - hlint
 
 when:

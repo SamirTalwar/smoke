@@ -1,10 +1,10 @@
 module Test.Smoke.Types.Summary where
 
-data Summary =
-  Summary
-    { summarySuccesses :: Int
-    , summaryFailures :: Int
-    }
+data Summary
+  = Summary
+      { summarySuccesses :: Int,
+        summaryFailures :: Int
+      }
   deriving (Eq, Show)
 
 summaryTotal :: Summary -> Int

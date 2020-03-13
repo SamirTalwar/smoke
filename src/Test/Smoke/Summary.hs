@@ -1,6 +1,7 @@
 module Test.Smoke.Summary
-  ( summarizeResults
-  ) where
+  ( summarizeResults,
+  )
+where
 
 import Test.Smoke.Types
 

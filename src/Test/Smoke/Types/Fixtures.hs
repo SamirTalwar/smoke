@@ -11,12 +11,12 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Types.Base
 
-data Fixture a =
-  Fixture (Contents a) (Maybe Command)
+data Fixture a
+  = Fixture (Contents a) (Maybe Command)
   deriving (Eq, Show)
 
-newtype Fixtures a =
-  Fixtures (Vector (Fixture a))
+newtype Fixtures a
+  = Fixtures (Vector (Fixture a))
   deriving (Eq, Show)
 
 noFixtures :: Fixtures a

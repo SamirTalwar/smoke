@@ -1,11 +1,12 @@
 module Test.Smoke
-  ( module Test.Smoke.Bless
-  , module Test.Smoke.Discovery
-  , module Test.Smoke.Execution
-  , module Test.Smoke.Plan
-  , module Test.Smoke.Summary
-  , module Test.Smoke.Types
-  ) where
+  ( module Test.Smoke.Bless,
+    module Test.Smoke.Discovery,
+    module Test.Smoke.Execution,
+    module Test.Smoke.Plan,
+    module Test.Smoke.Summary,
+    module Test.Smoke.Types,
+  )
+where
 
 import Test.Smoke.Bless
 import Test.Smoke.Discovery

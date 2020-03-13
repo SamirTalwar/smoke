@@ -7,14 +7,14 @@ import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
 import qualified Data.Maybe as Maybe
-import Data.String (IsString(..))
+import Data.String (IsString (..))
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text.IO
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
-import Test.Smoke (Executable(..), Shell(..))
-import Test.Smoke.App.OptionTypes (AppOptions(..), ColorOutput(..))
+import Test.Smoke (Executable (..), Shell (..))
+import Test.Smoke.App.OptionTypes (AppOptions (..), ColorOutput (..))
 import Test.Smoke.Paths
 
 type Output a = ReaderT AppOptions IO a
@@ -59,7 +59,7 @@ indented :: Int -> Text -> Text
 indented n = Text.unlines . indented' . Text.lines
   where
     indented' [] = []
-    indented' (first:rest) = first : map (mappend (spaces n)) rest
+    indented' (first : rest) = first : map (mappend (spaces n)) rest
 
 indentedAll :: Int -> Text -> Text
 indentedAll n = Text.unlines . map (mappend (spaces n)) . Text.lines
@@ -94,8 +94,9 @@ putError = withColor Red $ hPutStrWithLn stderr
 hPutStrWithLn :: Handle -> Text -> Output ()
 hPutStrWithLn handle contents = do
   liftIO $ Text.IO.hPutStr handle contents
-  unless (newline `Text.isSuffixOf` contents) $
-    liftIO $ Text.IO.hPutStrLn handle ""
+  unless (newline `Text.isSuffixOf` contents)
+    $ liftIO
+    $ Text.IO.hPutStrLn handle ""
 
 withColor :: Color -> (Text -> Output ()) -> Text -> Output ()
 withColor color act contents = do

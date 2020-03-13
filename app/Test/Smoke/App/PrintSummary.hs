@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.App.PrintSummary
-  ( printSummary
-  ) where
+  ( printSummary,
+  )
+where
 
 import Data.Text (Text)
 import Test.Smoke
@@ -20,8 +21,13 @@ printSummary summary = do
           then putGreenLn
           else putRedLn
   printSummaryLine $
-    showInt testCount <>
-    " " <> testWord <> ", " <> showInt failureCount <> " " <> failureWord
+    showInt testCount
+      <> " "
+      <> testWord
+      <> ", "
+      <> showInt failureCount
+      <> " "
+      <> failureWord
 
 pluralize :: Int -> Text -> Text -> Text
 pluralize 1 singular _ = singular

@@ -1,6 +1,7 @@
 module Test.Smoke.App.OptionColorOutput
-  ( ColorOutput(..)
-  ) where
+  ( ColorOutput (..),
+  )
+where
 
 data ColorOutput
   = Color

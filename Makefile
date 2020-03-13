@@ -71,8 +71,8 @@ bless: build
 lint: dependencies
 	@ echo >&2 '> hlint'
 	@ stack exec -- hlint .
-	@ echo >&2 '> hindent'
-	@ stack exec -- hindent --validate $(SRC)
+	@ echo >&2 '> ormolu'
+	@ ormolu --mode=check $(SRC)
 	@ echo >&2 '> cabal2nix'
 	@ ( \
 		set -e; \
@@ -88,7 +88,7 @@ check: test lint
 
 .PHONY: reformat
 reformat: dependencies
-	stack exec -- hindent $(SRC)
+	ormolu --mode=inplace $(SRC)
 
 .PHONY: dependencies
 dependencies:

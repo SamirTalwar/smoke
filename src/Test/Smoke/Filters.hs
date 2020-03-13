@@ -1,13 +1,14 @@
 module Test.Smoke.Filters
-  ( applyFilters
-  , applyFiltersFromFixture
-  , applyFiltersFromFixtures
-  ) where
+  ( applyFilters,
+    applyFiltersFromFixture,
+    applyFiltersFromFixtures,
+  )
+where
 
-import Control.Monad.Trans.Except (ExceptT(..), throwE, withExceptT)
+import Control.Monad.Trans.Except (ExceptT (..), throwE, withExceptT)
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
-import System.Exit (ExitCode(..))
+import System.Exit (ExitCode (..))
 import System.IO.Error (tryIOError)
 import Test.Smoke.Executable
 import Test.Smoke.Types
@@ -20,13 +21,13 @@ applyFilters fallbackShell (Filtered unfilteredValue command) =
   runFilter fallbackShell command unfilteredValue
 
 applyFiltersFromFixture ::
-     FixtureType a => Maybe Shell -> Fixture a -> a -> Filtering a
+  FixtureType a => Maybe Shell -> Fixture a -> a -> Filtering a
 applyFiltersFromFixture _ (Fixture _ Nothing) value = return value
 applyFiltersFromFixture fallbackShell (Fixture _ (Just fixtureFilter)) value =
   applyFilters fallbackShell (Filtered value fixtureFilter)
 
 applyFiltersFromFixtures ::
-     FixtureType a => Maybe Shell -> Fixtures a -> a -> Filtering (Vector a)
+  FixtureType a => Maybe Shell -> Fixtures a -> a -> Filtering (Vector a)
 applyFiltersFromFixtures fallbackShell (Fixtures fixtures) value =
   Vector.mapM
     (\fixture -> applyFiltersFromFixture fallbackShell fixture value)
@@ -36,18 +37,18 @@ runFilter :: FixtureType a => Maybe Shell -> Command -> a -> Filtering a
 runFilter fallbackShell command value = do
   executable <-
     withExceptT FilterPathError $
-    convertCommandToExecutable fallbackShell command
+      convertCommandToExecutable fallbackShell command
   (exitCode, processStdOut, processStdErr) <-
-    withExceptT (CouldNotExecuteFilter executable) $
-    ExceptT $
-    tryIOError $
-    runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
+    withExceptT (CouldNotExecuteFilter executable)
+      $ ExceptT
+      $ tryIOError
+      $ runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
   case exitCode of
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->
       throwE $
-      ExecutionFailed
-        executable
-        (Status code)
-        (StdOut processStdOut)
-        (StdErr processStdErr)
+        ExecutionFailed
+          executable
+          (Status code)
+          (StdOut processStdOut)
+          (StdErr processStdErr)

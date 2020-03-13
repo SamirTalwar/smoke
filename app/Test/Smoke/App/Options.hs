@@ -1,8 +1,9 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 module Test.Smoke.App.Options
-  ( parseOptions
-  ) where
+  ( parseOptions,
+  )
+where
 
 import Data.List (intercalate)
 import Data.Semigroup ((<>))
@@ -10,11 +11,11 @@ import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 import Options.Applicative
 import Test.Smoke
-  ( Args(..)
-  , Command(..)
-  , CommandLine(..)
-  , Mode(..)
-  , Options(..)
+  ( Args (..),
+    Command (..),
+    CommandLine (..),
+    Mode (..),
+    Options (..),
   )
 import qualified Test.Smoke.App.Diff as Diff
 import Test.Smoke.App.OptionTypes
@@ -33,8 +34,9 @@ options :: IsTTY -> Diff.Engine -> ParserInfo AppOptions
 options isTTY foundDiffEngine =
   info
     (optionParser isTTY foundDiffEngine <**> helper)
-    (fullDesc <>
-     header "Smoke: a framework for testing most things from the very edges.")
+    ( fullDesc
+        <> header "Smoke: a framework for testing most things from the very edges."
+    )
 
 optionParser :: IsTTY -> Diff.Engine -> Parser AppOptions
 optionParser isTTY foundDiffEngine = do
@@ -47,24 +49,24 @@ optionParser isTTY foundDiffEngine = do
     AppOptions
       { optionsExecution =
           Options
-            { optionsCommand = executionCommand
-            , optionsTestLocations = testLocation
-            }
-      , optionsColor = color
-      , optionsMode = mode
-      , optionsDiffEngine = diffEngine
+            { optionsCommand = executionCommand,
+              optionsTestLocations = testLocation
+            },
+        optionsColor = color,
+        optionsMode = mode,
+        optionsDiffEngine = diffEngine
       }
 
 commandParser :: Parser (Maybe Command)
 commandParser = do
   commandString <-
     optional $
-    strOption (long "command" <> help "Specify or override the command to run")
+      strOption (long "command" <> help "Specify or override the command to run")
   return $ constructCommand <$> commandString
   where
     constructCommand :: String -> Command
     constructCommand commandString =
-      let (program:args) = words commandString
+      let (program : args) = words commandString
        in CommandArgs
             (CommandLine (parseFile program) (Args (Vector.fromList args)))
 
@@ -74,12 +76,13 @@ modeParser =
 
 colorParser :: IsTTY -> Parser ColorOutput
 colorParser isTTY =
-  flag' Color (short 'c' <> long "color" <> help "Color output") <|>
-  flag' NoColor (long "no-color" <> help "Do not color output") <|>
-  pure
-    (if isTTY
-       then Color
-       else NoColor)
+  flag' Color (short 'c' <> long "color" <> help "Color output")
+    <|> flag' NoColor (long "no-color" <> help "Do not color output")
+    <|> pure
+      ( if isTTY
+          then Color
+          else NoColor
+      )
 
 diffEngineParser :: Diff.Engine -> Parser Diff.Engine
 diffEngineParser foundDiffEngine =
@@ -89,8 +92,8 @@ diffEngineParser foundDiffEngine =
   where
     readDiffEngine :: String -> ReadM Diff.Engine
     readDiffEngine =
-      maybe (readerError ("Valid diff engines are: " ++ validDiffEngine)) return .
-      Diff.getEngine
+      maybe (readerError ("Valid diff engines are: " ++ validDiffEngine)) return
+        . Diff.getEngine
     validDiffEngine = intercalate ", " Diff.engineNames
 
 testLocationParser :: Parser (Vector FilePath)

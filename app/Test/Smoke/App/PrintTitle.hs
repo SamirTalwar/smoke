@@ -1,6 +1,7 @@
 module Test.Smoke.App.PrintTitle
-  ( printTitle
-  ) where
+  ( printTitle,
+  )
+where
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.List as List
@@ -18,5 +19,5 @@ printTitle showSuiteNames thisSuiteName thisTestName = liftIO $ putStrLn name
         else Nothing
     name =
       List.intercalate "/" $
-      Maybe.catMaybes
-        [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]
+        Maybe.catMaybes
+          [unSuiteName <$> suiteNameForPrinting, unTestName <$> thisTestName]

@@ -6,6 +6,7 @@ mkShell {
     stack
     nix
     git
+    ormolu
     ruby
   ];
 }

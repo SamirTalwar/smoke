@@ -16,8 +16,8 @@ data SuiteResult
   | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
   deriving (Eq, Show)
 
-data TestResult =
-  TestResult Test TestOutcome
+data TestResult
+  = TestResult Test TestOutcome
   deriving (Eq, Show)
 
 data TestOutcome

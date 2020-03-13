@@ -9,8 +9,8 @@ import Test.Smoke.Types.Executable
 import Test.Smoke.Types.Files
 import Test.Smoke.Types.Tests
 
-newtype Plan =
-  Plan [SuitePlan]
+newtype Plan
+  = Plan [SuitePlan]
   deriving (Eq, Show)
 
 data SuitePlan
@@ -23,18 +23,18 @@ data TestPlanOutcome
   | TestPlanSuccess TestPlan
   deriving (Eq, Show)
 
-data TestPlan =
-  TestPlan
-    { planTest :: Test
-    , planWorkingDirectory :: WorkingDirectory
-    , planShell :: Maybe Shell
-    , planExecutable :: Executable
-    , planArgs :: Args
-    , planStdIn :: StdIn
-    , planStatus :: Status
-    , planStdOut :: Vector StdOut
-    , planStdErr :: Vector StdErr
-    , planFiles :: Map (RelativePath File) (Vector TestFileContents)
-    , planRevert :: Vector (ResolvedPath Dir)
-    }
+data TestPlan
+  = TestPlan
+      { planTest :: Test,
+        planWorkingDirectory :: WorkingDirectory,
+        planShell :: Maybe Shell,
+        planExecutable :: Executable,
+        planArgs :: Args,
+        planStdIn :: StdIn,
+        planStatus :: Status,
+        planStdOut :: Vector StdOut,
+        planStdErr :: Vector StdErr,
+        planFiles :: Map (RelativePath File) (Vector TestFileContents),
+        planRevert :: Vector (ResolvedPath Dir)
+      }
   deriving (Eq, Show)

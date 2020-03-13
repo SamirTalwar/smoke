@@ -7,24 +7,27 @@ import qualified Data.Vector as Vector
 import System.Exit (ExitCode)
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
-import System.Process (CreateProcess(..), proc)
+import System.Process (CreateProcess (..), proc)
 import System.Process.Text (readCreateProcessWithExitCode)
 import Test.Smoke.Paths
 import Test.Smoke.Shell
 import Test.Smoke.Types
 
 runExecutable ::
-     Executable
-  -> Args
-  -> StdIn
-  -> Maybe WorkingDirectory
-  -> IO (ExitCode, Text, Text)
+  Executable ->
+  Args ->
+  StdIn ->
+  Maybe WorkingDirectory ->
+  IO (ExitCode, Text, Text)
 runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdIn) workingDirectory =
   readCreateProcessWithExitCode
-    ((proc
-        (toFilePath executablePath)
-        (Vector.toList (unArgs (executableArgs <> args))))
-       {cwd = toFilePath . unWorkingDirectory <$> workingDirectory})
+    ( ( proc
+          (toFilePath executablePath)
+          (Vector.toList (unArgs (executableArgs <> args)))
+      )
+        { cwd = toFilePath . unWorkingDirectory <$> workingDirectory
+        }
+    )
     stdIn
 runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) args stdIn workingDirectory =
   withSystemTempFile defaultShellScriptName $ \scriptPath scriptHandle -> do
@@ -38,7 +41,7 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       workingDirectory
 
 convertCommandToExecutable ::
-     Maybe Shell -> Command -> ExceptT PathError IO Executable
+  Maybe Shell -> Command -> ExceptT PathError IO Executable
 convertCommandToExecutable _ (CommandArgs (CommandLine executableName commandArgs)) = do
   executablePath <- findExecutable executableName
   return $ ExecutableProgram executablePath commandArgs

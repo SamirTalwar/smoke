@@ -1,10 +1,11 @@
 module Test.Smoke.Spec.PathGenerator
-  ( genAbsoluteFilePath
-  , genRelativeDir
-  , genRelativeFile
-  , genRelativeFilePath
-  , genNamedSegment
-  ) where
+  ( genAbsoluteFilePath,
+    genRelativeDir,
+    genRelativeFile,
+    genRelativeFilePath,
+    genNamedSegment,
+  )
+where
 
 import qualified Data.List as List
 import Hedgehog
@@ -40,9 +41,9 @@ genRelativeFilePath segmentRange = do
 genSegment :: Gen FilePathSegment
 genSegment =
   Gen.frequency
-    [ (2, Gen.constant Current)
-    , (1, Gen.constant Parent)
-    , (5, Named <$> genNamedSegment)
+    [ (2, Gen.constant Current),
+      (1, Gen.constant Parent),
+      (5, Named <$> genNamedSegment)
     ]
 
 genNamedSegment :: Gen FilePath

@@ -6,8 +6,8 @@ let
 
   f = { mkDerivation, aeson, ansi-terminal, base, cabal2nix
       , containers, data-default, Diff, directory, exceptions, filepath
-      , Glob, hedgehog, hindent, hlint, hpack, hspec, hw-hspec-hedgehog
-      , mtl, optparse-applicative, process, process-extras, stdenv, tar
+      , Glob, hedgehog, hlint, hpack, hspec, hw-hspec-hedgehog, mtl
+      , optparse-applicative, process, process-extras, stdenv, tar
       , temporary, text, transformers, unix, vector, yaml
       }:
       mkDerivation {
@@ -21,19 +21,19 @@ let
           Glob process process-extras tar temporary text transformers vector
           yaml
         ];
-        libraryToolDepends = [ cabal2nix hindent hlint hpack ];
+        libraryToolDepends = [ cabal2nix hlint hpack ];
         executableHaskellDepends = [
           aeson ansi-terminal base containers data-default Diff directory
           exceptions filepath Glob mtl optparse-applicative process
           process-extras tar temporary text transformers unix vector yaml
         ];
-        executableToolDepends = [ cabal2nix hindent hlint ];
+        executableToolDepends = [ cabal2nix hlint ];
         testHaskellDepends = [
           aeson base containers data-default directory exceptions filepath
           Glob hedgehog hspec hw-hspec-hedgehog process process-extras tar
           temporary text transformers vector yaml
         ];
-        testToolDepends = [ cabal2nix hindent hlint ];
+        testToolDepends = [ cabal2nix hlint ];
         prePatch = "hpack";
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";

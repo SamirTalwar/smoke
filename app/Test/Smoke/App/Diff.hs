@@ -1,11 +1,12 @@
 module Test.Smoke.App.Diff
-  ( DiffEngine(..)
-  , Engine
-  , engines
-  , engineNames
-  , findEngine
-  , getEngine
-  ) where
+  ( DiffEngine (..),
+    Engine,
+    engines,
+    engineNames,
+    findEngine,
+    getEngine,
+  )
+where
 
 import Control.Monad (filterM)
 import Data.List (find)

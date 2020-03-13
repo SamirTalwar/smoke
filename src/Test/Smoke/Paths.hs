@@ -1,26 +1,27 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Test.Smoke.Paths
-  ( File
-  , Dir
-  , Path
-  , RelativePath
-  , ResolvedPath
-  , PathError(..)
-  , (</>)
-  , findExecutable
-  , findFilesInPath
-  , getCurrentWorkingDirectory
-  , parent
-  , parseDir
-  , parseFile
-  , readFromPath
-  , resolve
-  , toFilePath
-  , writeToPath
-  ) where
+  ( File,
+    Dir,
+    Path,
+    RelativePath,
+    ResolvedPath,
+    PathError (..),
+    (</>),
+    findExecutable,
+    findFilesInPath,
+    getCurrentWorkingDirectory,
+    parent,
+    parseDir,
+    parseFile,
+    readFromPath,
+    resolve,
+    toFilePath,
+    writeToPath,
+  )
+where
 
 import Control.Exception (Exception)
 import Control.Monad (unless)
@@ -38,12 +39,12 @@ data Dir
 
 data File
 
-newtype RelativePath t =
-  RelativePath FilePath
+newtype RelativePath t
+  = RelativePath FilePath
   deriving (Eq, Ord, Show)
 
-newtype ResolvedPath t =
-  ResolvedPath FilePath
+newtype ResolvedPath t
+  = ResolvedPath FilePath
   deriving (Eq, Ord, Show)
 
 class Path p t where
@@ -86,10 +87,12 @@ normalizeFilePath filePath =
   where
     normalizePath :: FilePath -> FilePath
     normalizePath =
-      FilePath.normalise .
-      FilePath.joinPath .
-      interpretParentAccess .
-      removeTrailingSeparators . FilePath.splitPath . FilePath.normalise
+      FilePath.normalise
+        . FilePath.joinPath
+        . interpretParentAccess
+        . removeTrailingSeparators
+        . FilePath.splitPath
+        . FilePath.normalise
     removeTrailingSeparators :: [FilePath] -> [FilePath]
     removeTrailingSeparators = map removeTrailingSeparator
     removeTrailingSeparator :: FilePath -> FilePath
@@ -102,19 +105,19 @@ normalizeFilePath filePath =
     interpretParentAccess = reverse . interpretParentAccess' []
     interpretParentAccess' :: [FilePath] -> [FilePath] -> [FilePath]
     interpretParentAccess' before [] = before
-    interpretParentAccess' ("..":before) ("..":after) =
+    interpretParentAccess' (".." : before) (".." : after) =
       interpretParentAccess' (".." : ".." : before) after
-    interpretParentAccess' (_:before) ("..":after) =
+    interpretParentAccess' (_ : before) (".." : after) =
       interpretParentAccess' before after
-    interpretParentAccess' before (x:xs) =
+    interpretParentAccess' before (x : xs) =
       interpretParentAccess' (x : before) xs
 
 -- Manipulate
 (</>) ::
-     (Path RelativePath t, Path ResolvedPath t)
-  => ResolvedPath Dir
-  -> RelativePath t
-  -> ResolvedPath t
+  (Path RelativePath t, Path ResolvedPath t) =>
+  ResolvedPath Dir ->
+  RelativePath t ->
+  ResolvedPath t
 ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
 
 parent :: (Path p t, Path p Dir) => p t -> p Dir
@@ -122,9 +125,9 @@ parent = fromFilePath . FilePath.dropFileName . toFilePath
 
 -- Resolve
 resolve ::
-     (Path RelativePath t, Path ResolvedPath t)
-  => RelativePath t
-  -> IO (ResolvedPath t)
+  (Path RelativePath t, Path ResolvedPath t) =>
+  RelativePath t ->
+  IO (ResolvedPath t)
 resolve path = do
   currentWorkingDirectory <- getCurrentWorkingDirectory
   return $ currentWorkingDirectory </> path
@@ -138,8 +141,9 @@ findExecutable path = do
   if exists
     then do
       permissions <- liftIO $ Directory.getPermissions (toFilePath path)
-      unless (Directory.executable permissions) $
-        throwE $ FileIsNotExecutable path
+      unless (Directory.executable permissions)
+        $ throwE
+        $ FileIsNotExecutable path
       liftIO $ resolve path
     else do
       executable <- liftIO $ Directory.findExecutable (toFilePath path)
@@ -150,7 +154,7 @@ findExecutable path = do
 
 -- Search
 findFilesInPath ::
-     (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
+  (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
 findFilesInPath filePattern path =
   map fromFilePath <$> Glob.globDir1 filePattern (toFilePath path)
 

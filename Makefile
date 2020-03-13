@@ -44,7 +44,7 @@ $(BIN_RELEASE): clean
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
 
-default.nix: dependencies
+default.nix: smoke.cabal
 	stack exec -- cabal2nix --shell . > $@
 	nixpkgs-fmt $@
 
@@ -69,7 +69,7 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless spec
 
 .PHONY: lint
-lint: dependencies
+lint: smoke.cabal
 	@ echo >&2 '> hlint'
 	@ stack exec -- hlint .
 	@ echo >&2 '> ormolu'
@@ -89,10 +89,9 @@ lint: dependencies
 check: test lint
 
 .PHONY: reformat
-reformat: dependencies
+reformat: smoke.cabal
 	ormolu --mode=inplace $(SRC)
 	nixpkgs-fmt *.nix
 
-.PHONY: dependencies
-dependencies:
+smoke.cabal: $(CONF)
 	stack install --only-dependencies --test --no-run-tests

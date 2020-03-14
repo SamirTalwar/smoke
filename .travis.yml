@@ -2,8 +2,6 @@ os:
   - linux
   - osx
 
-sudo: false
-
 language: nix
 
 cache:

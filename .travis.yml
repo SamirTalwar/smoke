@@ -34,7 +34,7 @@ before_install:
     fi
 
 install:
-  - stack --no-terminal install --only-dependencies --test --no-run-tests
+  - make smoke.cabal
 
 script:
   - make test

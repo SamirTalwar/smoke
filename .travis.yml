@@ -4,47 +4,25 @@ os:
 
 sudo: false
 
-language: generic
+language: nix
 
 cache:
   directories:
     - "$HOME/.stack"
   timeout: 600
 
-addons:
-  apt:
-    packages:
-      - libgmp-dev
-      - libssl-dev
-
 before_install:
-  - mkdir -p ~/.local/bin
-  - export PATH=$HOME/.local/bin:$PATH
-  - |
-    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
-      travis_retry curl -sSL 'https://www.stackage.org/stack/osx-x86_64' | tar xz --strip-components=1 -C ~/.local/bin '*/stack'
-    elif [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
-      travis_retry curl -sSL 'https://www.stackage.org/stack/linux-x86_64' | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-    fi
-  - stack setup
-  - mkdir -p ~/.stack
-  - |
-    if [[ "$TRAVIS_OS_NAME" == 'osx' ]]; then
-      cp stack.config.macos.yaml ~/.stack/config.yaml
-    fi
+  - nix-shell --run true
 
 install:
-  - make smoke.cabal
+  - nix-shell --run 'make smoke.cabal'
 
 script:
-  - make test
-  - |
-    if [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
-      make lint
-    fi
+  - nix-shell --run 'make test'
+  - nix-shell --run 'make lint'
 
 before_deploy:
-  - make out/build/release/smoke
+  - nix-shell --run 'make out/build/release/smoke'
   - mkdir -p out/publish
   - cp out/build/release/smoke "out/publish/smoke-${TRAVIS_TAG}-$(uname -s)-$(uname -m)"
 

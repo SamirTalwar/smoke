@@ -6,6 +6,7 @@ mkShell {
     git
     glibcLocales
     gmp
+    nix
     nixpkgs-fmt
     openssl
     ormolu

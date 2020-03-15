@@ -1,7 +1,12 @@
+# Artifacts
 out
 
-.dir-locals.el
+# Local
 .envrc
 
-.stack-work
+# Cabal
+/dist-newstyle
+
+# Stack
 *.cabal
+.stack-work

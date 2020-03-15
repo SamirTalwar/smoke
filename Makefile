@@ -44,8 +44,8 @@ $(BIN_RELEASE): clean
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
 
-default.nix: smoke.cabal
-	cabal2nix --shell . > $@
+app.nix: smoke.cabal
+	cabal2nix . > $@
 	nixpkgs-fmt $@
 
 .PHONY: clean
@@ -79,9 +79,9 @@ lint: smoke.cabal
 		set -e; \
 		NIX_FILE="$$(mktemp)"; \
 		trap 'rm -r $$NIX_FILE' EXIT; \
-		cabal2nix --shell . > "$$NIX_FILE"; \
+		cabal2nix . > "$$NIX_FILE"; \
 		nixpkgs-fmt "$$NIX_FILE"; \
-		git diff --no-index --exit-code default.nix "$$NIX_FILE" \
+		git diff --no-index --exit-code app.nix "$$NIX_FILE" \
 	)
 	@ echo >&2 'Linting succeeded.'
 
@@ -95,3 +95,4 @@ reformat: smoke.cabal
 
 smoke.cabal: $(CONF)
 	$(STACK) install --only-dependencies --test --no-run-tests
+	touch $@

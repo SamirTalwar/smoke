@@ -12,10 +12,8 @@ mkShell {
   nativeBuildInputs = app.env.nativeBuildInputs ++ [
     cabal2nix
     glibcLocales
-    gmp
     nix
     nixpkgs-fmt
-    openssl
     ormolu
     stack
   ];

@@ -102,8 +102,3 @@ tests:
 
 build-tools:
   - hlint
-
-when:
-  - condition: "!os(windows)"
-    build-tools:
-      - cabal2nix

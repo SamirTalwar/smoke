@@ -4,7 +4,6 @@ module Test.Smoke.App.Diff.GitDiff
 where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import Data.Text (Text)
 import qualified Data.Text as Text
 import Test.Smoke.App.Diff.ExternalDiffCommand
 import Test.Smoke.App.Diff.Types

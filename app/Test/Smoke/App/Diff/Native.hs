@@ -3,10 +3,9 @@ module Test.Smoke.App.Diff.Native
   )
 where
 
-import Data.Algorithm.Diff (Diff (..), getGroupedDiff)
+import Data.Algorithm.Diff (Diff, PolyDiff (..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation (..))
 import Data.String (fromString)
-import Data.Text (Text)
 import qualified Data.Text as Text
 import Test.Smoke.App.Diff.Types
 

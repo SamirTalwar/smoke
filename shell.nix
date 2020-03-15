@@ -3,6 +3,7 @@
 with pkgs;
 mkShell {
   buildInputs = [
+    cabal2nix
     git
     glibcLocales
     gmp

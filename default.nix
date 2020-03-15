@@ -7,7 +7,6 @@ let
     , aeson
     , ansi-terminal
     , base
-    , cabal2nix
     , containers
     , data-default
     , Diff
@@ -57,7 +56,7 @@ let
           vector
           yaml
         ];
-        libraryToolDepends = [ cabal2nix hlint hpack ];
+        libraryToolDepends = [ hlint hpack ];
         executableHaskellDepends = [
           aeson
           ansi-terminal
@@ -81,7 +80,7 @@ let
           vector
           yaml
         ];
-        executableToolDepends = [ cabal2nix hlint ];
+        executableToolDepends = [ hlint ];
         testHaskellDepends = [
           aeson
           base
@@ -103,7 +102,7 @@ let
           vector
           yaml
         ];
-        testToolDepends = [ cabal2nix hlint ];
+        testToolDepends = [ hlint ];
         prePatch = "hpack";
         homepage = "https://github.com/SamirTalwar/smoke#readme";
         description = "An integration test framework for console applications";

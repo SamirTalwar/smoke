@@ -2,7 +2,6 @@ module Test.Smoke.Types.Errors where
 
 import Control.Exception (Exception, IOException)
 import Data.Text (Text)
-import System.FilePath (FilePath)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Executable

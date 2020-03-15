@@ -1,5 +1,6 @@
 module Test.Smoke.Types.Results where
 
+import Data.Bifunctor (bimap)
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import Test.Smoke.Paths
@@ -39,4 +40,4 @@ data PartResult a
 instance Functor PartResult where
   _ `fmap` PartSuccess = PartSuccess
   f `fmap` (PartFailure failures) =
-    PartFailure ((\(expected, actual) -> (f expected, f actual)) <$> failures)
+    PartFailure (bimap f f <$> failures)

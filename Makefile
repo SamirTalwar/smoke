@@ -45,7 +45,7 @@ $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
 
 default.nix: smoke.cabal
-	stack exec -- cabal2nix --shell . > $@
+	cabal2nix --shell . > $@
 	nixpkgs-fmt $@
 
 .PHONY: clean
@@ -79,7 +79,7 @@ lint: smoke.cabal
 		set -e; \
 		NIX_FILE="$$(mktemp)"; \
 		trap 'rm -r $$NIX_FILE' EXIT; \
-		stack exec -- cabal2nix --shell . > "$$NIX_FILE"; \
+		cabal2nix --shell . > "$$NIX_FILE"; \
 		nixpkgs-fmt "$$NIX_FILE"; \
 		git diff --no-index --exit-code default.nix "$$NIX_FILE" \
 	)

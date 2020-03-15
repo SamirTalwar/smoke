@@ -6,7 +6,6 @@ module Test.Smoke.App.Options
 where
 
 import Data.List (intercalate)
-import Data.Semigroup ((<>))
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
 import Options.Applicative

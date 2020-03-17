@@ -10,11 +10,16 @@ mkShell {
     ruby
   ];
   nativeBuildInputs = app.env.nativeBuildInputs ++ [
+    cabal-install
     cabal2nix
     glibcLocales
+    gmp
+    libiconv
     nix
     nixpkgs-fmt
+    openssl
     ormolu
     stack
+    zlib
   ];
 }

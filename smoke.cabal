@@ -1,0 +1,192 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: c371c0c153120f1d32e55c05046b2084890516226c03cf3594ce6a94efe06c33
+
+name:           smoke
+version:        2.1.0
+synopsis:       An integration test framework for console applications.
+description:    Please see README.md
+category:       Testing
+homepage:       https://github.com/SamirTalwar/smoke#readme
+bug-reports:    https://github.com/SamirTalwar/smoke/issues
+author:         Samir Talwar
+maintainer:     samir@noodlesandwich.com
+copyright:      Samir Talwar
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/SamirTalwar/smoke
+
+library
+  exposed-modules:
+      Test.Smoke
+      Test.Smoke.Paths
+  other-modules:
+      Test.Smoke.Bless
+      Test.Smoke.Discovery
+      Test.Smoke.Errors
+      Test.Smoke.Executable
+      Test.Smoke.Execution
+      Test.Smoke.Filters
+      Test.Smoke.Maps
+      Test.Smoke.Plan
+      Test.Smoke.Summary
+      Test.Smoke.Types
+      Test.Smoke.Types.Base
+      Test.Smoke.Types.Errors
+      Test.Smoke.Types.Executable
+      Test.Smoke.Types.Files
+      Test.Smoke.Types.Filters
+      Test.Smoke.Types.Fixtures
+      Test.Smoke.Types.Plans
+      Test.Smoke.Types.Results
+      Test.Smoke.Types.Run
+      Test.Smoke.Types.Summary
+      Test.Smoke.Types.Tests
+      Paths_smoke
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Werror
+  build-tool-depends:
+      hlint:hlint
+  build-depends:
+      Glob
+    , aeson
+    , base >=4.12 && <5
+    , containers
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , process
+    , process-extras
+    , tar
+    , temporary
+    , text
+    , transformers
+    , vector
+    , yaml
+  if os(windows)
+    other-modules:
+        Test.Smoke.Shell
+    hs-source-dirs:
+        src/windows
+  else
+    other-modules:
+        Test.Smoke.Shell
+    hs-source-dirs:
+        src/unix
+  default-language: Haskell2010
+
+executable smoke
+  main-is: Test/Smoke/App/Main.hs
+  other-modules:
+      Test.Smoke.App.Diff
+      Test.Smoke.App.Diff.DiffUtility
+      Test.Smoke.App.Diff.ExternalDiffCommand
+      Test.Smoke.App.Diff.GitDiff
+      Test.Smoke.App.Diff.Native
+      Test.Smoke.App.Diff.Types
+      Test.Smoke.App.OptionColorOutput
+      Test.Smoke.App.Options
+      Test.Smoke.App.OptionTypes
+      Test.Smoke.App.Print
+      Test.Smoke.App.PrintErrors
+      Test.Smoke.App.PrintResults
+      Test.Smoke.App.PrintSummary
+      Test.Smoke.App.PrintTitle
+      Paths_smoke
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      hlint:hlint
+  build-depends:
+      Diff
+    , Glob
+    , aeson
+    , ansi-terminal
+    , base >=4.12 && <5
+    , containers
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , mtl
+    , optparse-applicative
+    , process
+    , process-extras
+    , smoke
+    , tar
+    , temporary
+    , text
+    , transformers
+    , vector
+    , yaml
+  if os(windows)
+    other-modules:
+        Test.Smoke.App.Shell
+    hs-source-dirs:
+        app/windows
+  else
+    other-modules:
+        Test.Smoke.App.Shell
+    hs-source-dirs:
+        app/unix
+    build-depends:
+        unix
+  default-language: Haskell2010
+
+test-suite smoke-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Test.Smoke.Spec.PathGenerator
+      Test.Smoke.Spec.PathsSpec
+      Paths_smoke
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      hlint:hlint
+  build-depends:
+      Glob
+    , aeson
+    , base >=4.12 && <5
+    , containers
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , hedgehog
+    , hspec
+    , hw-hspec-hedgehog
+    , process
+    , process-extras
+    , smoke
+    , tar
+    , temporary
+    , text
+    , transformers
+    , vector
+    , yaml
+  if os(windows)
+    other-modules:
+        Test.Smoke.Spec.RootDirectory
+    hs-source-dirs:
+        test/windows
+  else
+    other-modules:
+        Test.Smoke.Spec.RootDirectory
+    hs-source-dirs:
+        test/unix
+  default-language: Haskell2010

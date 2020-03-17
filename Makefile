@@ -13,8 +13,9 @@ else
   endif
 endif
 
-CONF = package.yaml stack.yaml
-SRC = $(shell find app src test -name '*.hs')
+CONF := smoke.cabal
+SRC_DIRS := app src test
+SRC = $(shell find $(SRC_DIRS) -name '*.hs')
 OUT := out
 OUT_BUILD = $(OUT)/build
 OUT_DEBUG := $(OUT_BUILD)/debug
@@ -22,35 +23,29 @@ BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := $(OUT_BUILD)/release
 BIN_RELEASE := $(OUT_RELEASE)/smoke
 
-ifdef CI
-  STACK := stack --no-terminal --nix
-else
-  STACK := stack
-endif
+CABAL := cabal --enable-nix
 
 .PHONY: build
 build: $(BIN_DEBUG)
 
 .PHONY: dist
-dist: $(OUT)/smoke-$(OS)
+dist: clean $(OUT)/smoke-$(OS)
 
 $(OUT)/smoke-$(OS): $(BIN_RELEASE)
+	mkdir -p $(OUT)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
-$(BIN_RELEASE): clean
-	$(STACK) build
-	$(STACK) install --local-bin-path=$(OUT_RELEASE)
+$(BIN_RELEASE): $(CONF) $(SRC)
+	mkdir -p $(OUT_RELEASE)
+	$(CABAL) v2-install --enable-optimization=2 --installdir=$(OUT_RELEASE) --install-method=copy --overwrite-policy=always
 
 $(BIN_DEBUG): $(CONF) $(SRC)
-	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
-
-app.nix: smoke.cabal
-	cabal2nix . > $@
-	nixpkgs-fmt $@
+	mkdir -p $(OUT_DEBUG)
+	$(CABAL) v2-install --disable-optimization --installdir=$(OUT_DEBUG) --install-method=copy --overwrite-policy=always
 
 .PHONY: clean
 clean:
-	$(STACK) clean
+	$(CABAL) v2-clean
 	rm -rf $(OUT_BUILD)
 
 .PHONY: test
@@ -58,7 +53,7 @@ test: unit-test spec
 
 .PHONY: unit-test
 unit-test: build
-	$(STACK) test
+	$(CABAL) v2-test
 
 .PHONY: spec
 spec: build
@@ -71,7 +66,7 @@ bless: build
 .PHONY: lint
 lint: smoke.cabal
 	@ echo >&2 '> hlint'
-	@ $(STACK) exec -- hlint .
+	@ hlint $(SRC_DIRS)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
 	@ echo >&2 '> cabal2nix'
@@ -93,6 +88,14 @@ reformat: smoke.cabal
 	ormolu --mode=inplace $(SRC)
 	nixpkgs-fmt *.nix
 
-smoke.cabal: $(CONF)
-	$(STACK) install --only-dependencies --test --no-run-tests
+cabal.project.freeze: smoke.cabal app.nix
+	rm -f $@
+	$(CABAL) v2-freeze
+
+app.nix: smoke.cabal
+	cabal2nix . > $@
+	nixpkgs-fmt $@
+
+smoke.cabal: package.yaml stack.yaml stack.yaml.lock
+	stack install --only-dependencies --test --no-run-tests
 	touch $@

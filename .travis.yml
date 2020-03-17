@@ -6,7 +6,7 @@ language: nix
 
 cache:
   directories:
-    - "$HOME/.stack"
+    - /nix/store
   timeout: 600
 
 before_install:

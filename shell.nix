@@ -1,8 +1,8 @@
-{ pkgs ? import <nixpkgs> {}, compiler ? "ghc883" }:
+{ pkgs ? import <nixpkgs> {}, ghc ? import ./ghc.nix { pkgs = pkgs; } }:
 
 with pkgs;
 let
-  app = pkgs.haskell.packages.${compiler}.callPackage ./app.nix {};
+  app = ghc.callPackage ./app.nix {};
 in
 mkShell {
   buildInputs = app.env.buildInputs ++ [

@@ -1,3 +1,3 @@
-{ pkgs ? import <nixpkgs> {}, compiler ? "ghc883" }:
+{ pkgs ? import <nixpkgs> {}, ghc ? import ./ghc.nix { pkgs = pkgs; } }:
 
-pkgs.haskell.packages.${compiler}.callPackage ./app.nix {}
+ghc.callPackage ./app.nix {}

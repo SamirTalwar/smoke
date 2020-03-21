@@ -13,6 +13,7 @@ mkShell {
     cabal-install
     cabal2nix
     glibcLocales
+    ghc.hlint
     gmp
     libiconv
     nix

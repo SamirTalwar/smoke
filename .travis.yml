@@ -6,7 +6,8 @@ language: nix
 
 cache:
   directories:
-    - /nix/store
+    - "/nix/store"
+    - "$HOME/.cabal/store"
   timeout: 600
 
 before_install:

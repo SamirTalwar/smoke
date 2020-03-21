@@ -134,6 +134,8 @@ test-suite smoke-test
     , hedgehog
     , hspec
     , hw-hspec-hedgehog
+  build-tool-depends:
+      hspec-discover:hspec-discover
   if os(windows)
     hs-source-dirs:
         test/windows

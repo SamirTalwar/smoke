@@ -14,7 +14,7 @@ before_install:
   - nix-shell --run true
 
 install:
-  - nix-shell --run 'make smoke.cabal'
+  - nix-shell --run 'cabal v2-update'
 
 script:
   - nix-shell --run 'make test'

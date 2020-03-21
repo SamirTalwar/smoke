@@ -95,7 +95,3 @@ cabal.project.freeze: smoke.cabal app.nix
 app.nix: smoke.cabal
 	cabal2nix . > $@
 	nixpkgs-fmt $@
-
-smoke.cabal: package.yaml stack.yaml stack.yaml.lock
-	stack install --only-dependencies --test --no-run-tests
-	touch $@

@@ -41,7 +41,7 @@ $(BIN_RELEASE): $(CONF) $(SRC)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
 	mkdir -p $(OUT_DEBUG)
-	$(CABAL) v2-install --disable-optimization --installdir=$(OUT_DEBUG) --install-method=copy --overwrite-policy=always
+	$(CABAL) v2-install --installdir=$(OUT_DEBUG) --install-method=copy --overwrite-policy=always
 
 .PHONY: clean
 clean:

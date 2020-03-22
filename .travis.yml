@@ -15,17 +15,17 @@ cache:
   timeout: 600
 
 before_install:
-  - nix-shell --run true
+  - nix-shell --pure --run true
 
 install:
-  - nix-shell --run 'cabal v2-update'
+  - nix-shell --pure --run 'cabal v2-update'
 
 script:
-  - nix-shell --run 'make test'
-  - nix-shell --run 'make lint'
+  - nix-shell --pure --run 'make test'
+  - nix-shell --pure --run 'make lint'
 
 before_deploy:
-  - nix-shell --run 'make out/build/release/smoke'
+  - nix-shell --pure --run 'make out/build/release/smoke'
   - mkdir -p out/publish
   - cp out/build/release/smoke "out/publish/smoke-${TRAVIS_TAG}-$(uname -s)-$(uname -m)"
 

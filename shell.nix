@@ -20,7 +20,6 @@ mkShell {
     nixpkgs-fmt
     openssl
     ormolu
-    stack
     zlib
   ];
 }

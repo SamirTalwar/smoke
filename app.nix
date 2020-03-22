@@ -10,9 +10,8 @@
 , filepath
 , Glob
 , hedgehog
-, hlint
-, hpack
 , hspec
+, hspec-discover
 , hw-hspec-hedgehog
 , mtl
 , optparse-applicative
@@ -51,7 +50,6 @@ mkDerivation {
     vector
     yaml
   ];
-  libraryToolDepends = [ hlint hpack ];
   executableHaskellDepends = [
     aeson
     ansi-terminal
@@ -75,7 +73,6 @@ mkDerivation {
     vector
     yaml
   ];
-  executableToolDepends = [ hlint ];
   testHaskellDepends = [
     aeson
     base
@@ -97,8 +94,7 @@ mkDerivation {
     vector
     yaml
   ];
-  testToolDepends = [ hlint ];
-  prePatch = "hpack";
+  testToolDepends = [ hspec-discover ];
   homepage = "https://github.com/SamirTalwar/smoke#readme";
   description = "An integration test framework for console applications";
   license = stdenv.lib.licenses.mit;

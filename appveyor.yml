@@ -6,7 +6,7 @@ cache:
 build: off
 
 before_build:
-  - ps: 'choco install --yes ghc --version $(Get-Content .\ghc.version)'
+  - ps: 'choco install --yes --no-progress ghc --version $(Get-Content .\ghc.version)'
   - ps: '$env:PATH = "C:\ProgramData\chocolatey\lib\ghc\tools\ghc-$(Get-Content .\ghc.version)\bin;${env:PATH}"'
   - ps: "cabal v2-update"
 

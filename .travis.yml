@@ -1,13 +1,12 @@
 version: ~> 1.0
 
-language: nix
-nix: 2.3.3
+language: generic
 
 os:
   - linux
   - osx
 
-dist: xenial
+dist: bionic
 
 cache:
   directories:
@@ -15,10 +14,16 @@ cache:
     - "$HOME/.cabal/store"
   timeout: 600
 
+env:
+  - NIX_VERSION: "2.3.3"
+
 before_install:
-  - nix-shell --pure --keep LANG --run true
+  - wget --retry-connrefused --waitretry=1 -O '/tmp/nix-install' "https://nixos.org/releases/nix/nix-${NIX_VERSION}/install"
+  - yes | sh /tmp/nix-install
+  - source "${TRAVIS_HOME}/.nix-profile/etc/profile.d/nix.sh"
 
 install:
+  - nix-shell --pure --keep LANG --run true
   - nix-shell --pure --keep LANG --run 'cabal v2-update'
 
 script:

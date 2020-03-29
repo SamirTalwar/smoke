@@ -5,6 +5,7 @@ ghc-options:
   $locals: -Wall -Werror
 nix:
   packages:
+    - gmp
     - libiconv
     - openssl
     - zlib

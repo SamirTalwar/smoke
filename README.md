@@ -21,18 +21,12 @@ You can download the latest release from the [Releases][] page.
 
 You can also build it yourself.
 
-1.  Install [Stack][], which we will use to compile the Haskell code.
-2.  Clone the repository and `cd` into the directory.
-3.  Run `stack setup` to download the correct version of GHC.
-4.  Run `stack install --local-bin-path=out/build` to build the application.
-5.  Copy the application binary at `out/build/smoke-exe` to wherever you need it to go.
-
-If you are using [Nix][] you can build Smoke via `nix-build`.
+1.  Install [Nix][].
+2.  Run `nix-build`.
 
 Smoke is distributed under [the MIT license][mit license].
 
 [releases]: https://github.com/SamirTalwar/smoke/releases
-[stack]: https://docs.haskellstack.org/en/stable/README/
 [nix]: https://nixos.org/nix
 [mit license]: http://samirtalwar.mit-license.org/
 
@@ -213,31 +207,24 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-You will need to set up Stack as above.
+You will need to set up Nix as above, and enter a Nix shell with `nix-shell`.
 
 We dog-food. Smoke is tested using itself.
 
-Before committing, these four commands should be run, and any failures should be fixed:
+Before committing, these commands should be run, and any failures should be fixed:
 
 ```sh
-make reformat  # Reformats the code using hindent.
-make build     # Builds the application using Stack.
-make test      # Run the unit tests.
-make spec      # Tests the application using itself, with the tests in the "spec" directory.
-make lint      # Lints the code using HLint.
+cabal v2-update # Update the Cabal packages.
+make reformat   # Reformats the code using hindent.
+make build      # Builds the application using Cabal.
+make test       # Run the unit tests.
+make spec       # Tests the application using itself, with the tests in the "spec" directory.
+make lint       # Lints the code using HLint.
 ```
 
 (You can typically just run `make reformat check` to trigger them all.)
 
-On Windows, Makefiles don't work very well, so run the commands directly:
-
-```powershell
-stack exec -- hindent <changed files>
-stack install --local-bin-path=out\build
-stack test
-.\out\build\smoke.exe --command=.\out\build\smoke.exe spec
-stack exec -- hlint .
-```
+Some commands, such as `cabal2nix` and `ormolu`, don't work on Windows, so we encourage you to develop on a Nix-compatible environment. However, you can always read the _Makefile_ to figure out what commands to run.
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

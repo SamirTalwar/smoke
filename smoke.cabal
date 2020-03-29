@@ -1,0 +1,148 @@
+cabal-version: 2.4
+
+name: smoke
+version: 2.1.0
+synopsis: An integration test framework for console applications.
+category: Testing
+homepage: https://github.com/SamirTalwar/smoke#readme
+bug-reports: https://github.com/SamirTalwar/smoke/issues
+author: Samir Talwar
+maintainer: samir@noodlesandwich.com
+copyright: Samir Talwar
+license: MIT
+license-file: LICENSE
+
+extra-source-files: README.md
+
+source-repository head
+  type: git
+  location: https://github.com/SamirTalwar/smoke
+
+common standard
+  default-language: Haskell2010
+  ghc-options: -Wall -Werror
+  build-depends:
+      Glob
+    , aeson
+    , base ^>=4.13
+    , containers
+    , data-default
+    , directory
+    , exceptions
+    , filepath
+    , process
+    , process-extras
+    , tar
+    , temporary
+    , text
+    , transformers
+    , vector
+    , yaml
+
+library
+  import: standard
+  hs-source-dirs:
+      src
+  exposed-modules:
+      Test.Smoke
+      Test.Smoke.Paths
+  other-modules:
+      Test.Smoke.Bless
+      Test.Smoke.Discovery
+      Test.Smoke.Errors
+      Test.Smoke.Executable
+      Test.Smoke.Execution
+      Test.Smoke.Filters
+      Test.Smoke.Maps
+      Test.Smoke.Plan
+      Test.Smoke.Summary
+      Test.Smoke.Types
+      Test.Smoke.Types.Base
+      Test.Smoke.Types.Errors
+      Test.Smoke.Types.Executable
+      Test.Smoke.Types.Files
+      Test.Smoke.Types.Filters
+      Test.Smoke.Types.Fixtures
+      Test.Smoke.Types.Plans
+      Test.Smoke.Types.Results
+      Test.Smoke.Types.Run
+      Test.Smoke.Types.Summary
+      Test.Smoke.Types.Tests
+  if os(windows)
+    hs-source-dirs:
+        src/windows
+    other-modules:
+        Test.Smoke.Shell
+  else
+    hs-source-dirs:
+        src/unix
+    other-modules:
+        Test.Smoke.Shell
+
+executable smoke
+  import: standard
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs:
+      app
+  main-is: Test/Smoke/App/Main.hs
+  other-modules:
+      Test.Smoke.App.Diff
+      Test.Smoke.App.Diff.DiffUtility
+      Test.Smoke.App.Diff.ExternalDiffCommand
+      Test.Smoke.App.Diff.GitDiff
+      Test.Smoke.App.Diff.Native
+      Test.Smoke.App.Diff.Types
+      Test.Smoke.App.OptionColorOutput
+      Test.Smoke.App.Options
+      Test.Smoke.App.OptionTypes
+      Test.Smoke.App.Print
+      Test.Smoke.App.PrintErrors
+      Test.Smoke.App.PrintResults
+      Test.Smoke.App.PrintSummary
+      Test.Smoke.App.PrintTitle
+  build-depends:
+      smoke
+    , Diff
+    , ansi-terminal
+    , mtl
+    , optparse-applicative
+  if os(windows)
+    hs-source-dirs:
+        app/windows
+    other-modules:
+        Test.Smoke.App.Shell
+  else
+    hs-source-dirs:
+        app/unix
+    other-modules:
+        Test.Smoke.App.Shell
+    build-depends:
+        unix
+
+test-suite smoke-test
+  import: standard
+  type: exitcode-stdio-1.0
+  ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs:
+      test
+  main-is: Spec.hs
+  other-modules:
+      Test.Smoke.Spec.PathGenerator
+      Test.Smoke.Spec.PathsSpec
+  build-depends:
+      smoke
+    , hedgehog
+    , hspec
+    , hw-hspec-hedgehog
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  if os(windows)
+    hs-source-dirs:
+        test/windows
+    other-modules:
+        Test.Smoke.Spec.RootDirectory
+  else
+    hs-source-dirs:
+        test/unix
+    other-modules:
+        Test.Smoke.Spec.RootDirectory

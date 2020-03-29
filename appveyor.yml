@@ -1,24 +1,24 @@
 cache:
-  - '%LOCALAPPDATA%\Programs\stack'
-  - '%APPDATA%\stack'
-  - .stack-work
+  - '%APPDATA%\cabal\store -> cabal.project.freeze'
+  - 'C:\ProgramData\chocolatey\bin -> ghc.version'
+  - 'C:\ProgramData\chocolatey\lib -> ghc.version'
 
 build: off
 
 before_build:
-  - curl -o stack.zip -L --insecure https://www.stackage.org/stack/windows-x86_64
-  - 7z x stack.zip stack.exe
-  - stack --no-terminal setup > nul
+  - ps: 'choco install --yes --no-progress ghc --version $(Get-Content .\ghc.version)'
+  - ps: '$env:PATH = "C:\ProgramData\chocolatey\lib\ghc\tools\ghc-$(Get-Content .\ghc.version)\bin;${env:PATH}"'
+  - ps: "cabal v2-update"
 
 build_script:
-  - stack --no-terminal build
-  - stack --no-terminal install --local-bin-path=.\out\build
-  - md .\out\publish
-  - if /i %APPVEYOR_REPO_TAG% equ true copy .\out\build\smoke.exe .\out\publish\smoke-%APPVEYOR_REPO_TAG_NAME%-windows-x64.exe
+  - ps: "cabal v2-build --only-dependencies --enable-tests"
+  - ps: 'New-Item -ItemType Directory -Path .\out\build\release,.\out\publish'
+  - ps: 'cabal v2-install --enable-optimization=2 --installdir=.\out\build\release --install-method=copy --overwrite-policy=always'
+  - ps: 'Copy-Item .\out\build\release\smoke.exe .\out\publish\smoke-${env:APPVEYOR_REPO_TAG_NAME}-windows-x64.exe'
 
 test_script:
-  - stack --no-terminal test
-  - '.\out\build\smoke --command=.\out\build\smoke spec'
+  - ps: "cabal v2-test"
+  - ps: '.\out\build\release\smoke.exe --command=.\out\build\release\smoke.exe spec'
 
 artifacts:
   - name: published

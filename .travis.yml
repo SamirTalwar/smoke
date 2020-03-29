@@ -1,37 +1,49 @@
+version: ~> 1.0
+
+language: generic
+
 os:
   - linux
   - osx
 
-language: nix
+dist: bionic
 
 cache:
   directories:
-    - "$HOME/.stack"
+    - "/nix/store"
+    - "$HOME/.cabal/store"
   timeout: 600
 
+env:
+  - NIX_VERSION: "2.3.3"
+
 before_install:
-  - nix-shell --run true
+  - wget --retry-connrefused --waitretry=1 -O '/tmp/nix-install' "https://nixos.org/releases/nix/nix-${NIX_VERSION}/install"
+  - yes | sh /tmp/nix-install
+  - source "${TRAVIS_HOME}/.nix-profile/etc/profile.d/nix.sh"
 
 install:
-  - nix-shell --run 'make smoke.cabal'
+  - nix-shell --pure --keep LANG --run true
+  - nix-shell --pure --keep LANG --run 'cabal v2-update'
 
 script:
-  - nix-shell --run 'make test'
-  - nix-shell --run 'make lint'
+  - nix-shell --pure --keep LANG --run 'make test'
+  - nix-shell --pure --keep LANG --run 'make lint'
 
 before_deploy:
-  - nix-shell --run 'make out/build/release/smoke'
+  - nix-shell --pure --keep LANG --run 'make out/build/release/smoke'
   - mkdir -p out/publish
   - cp out/build/release/smoke "out/publish/smoke-${TRAVIS_TAG}-$(uname -s)-$(uname -m)"
 
 deploy:
   provider: releases
-  draft: true
-  file_glob: true
-  file: out/publish/*
-  overwrite: true
-  skip_cleanup: true
+  edge: true
   on:
     tags: true
-  api_key:
+  draft: true
+  file_glob: true
+  file: "out/publish/*"
+  overwrite: true
+  cleanup: false
+  token:
     secure: "dt3YESE3S86tqhWu0J8HxTTsTewcj6S3o//P9hwlFAcPUsqzlZLL9KmySnYvNQ91TuBpUu2blXVRY+CFPU59MEIXtSI4ZSHWEd9vetMdW7GcoN8HYNQapL0jEvIx1D2495jCWr6gEHERFUr6eJgI0ZasmlIPSPL5H3vFS2SxGRs="

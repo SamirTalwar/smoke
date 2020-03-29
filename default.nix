@@ -1,3 +1,12 @@
-{ pkgs ? import <nixpkgs> {}, ghc ? import ./ghc.nix { pkgs = pkgs; } }:
-
-ghc.callPackage ./app.nix {}
+{ pkgs ? import ./nixpkgs.nix {}
+, ghc ? import ./ghc.nix { inherit (pkgs) lib haskell; }
+, drv ? import ./smoke.nix { inherit ghc; }
+}:
+let
+  inherit (pkgs) haskell;
+  inherit (haskell.lib) justStaticExecutables buildStrictly doStrip;
+in
+rec {
+  smoke = justStaticExecutables (buildStrictly (doStrip drv));
+  docker = import ./docker.nix { inherit smoke; inherit (pkgs) dockerTools; };
+}

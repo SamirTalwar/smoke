@@ -42,7 +42,7 @@ common standard
 library
   import: standard
   hs-source-dirs:
-      src
+      src/lib
   exposed-modules:
       Test.Smoke
       Test.Smoke.Paths
@@ -70,12 +70,12 @@ library
       Test.Smoke.Types.Tests
   if os(windows)
     hs-source-dirs:
-        src/windows
+        src/lib/windows
     other-modules:
         Test.Smoke.Shell
   else
     hs-source-dirs:
-        src/unix
+        src/lib/unix
     other-modules:
         Test.Smoke.Shell
 
@@ -83,7 +83,7 @@ executable smoke
   import: standard
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   hs-source-dirs:
-      app
+      src/app
   main-is: Test/Smoke/App/Main.hs
   other-modules:
       Test.Smoke.App.Diff
@@ -108,12 +108,12 @@ executable smoke
     , optparse-applicative
   if os(windows)
     hs-source-dirs:
-        app/windows
+        src/app/windows
     other-modules:
         Test.Smoke.App.Shell
   else
     hs-source-dirs:
-        app/unix
+        src/app/unix
     other-modules:
         Test.Smoke.App.Shell
     build-depends:
@@ -124,7 +124,7 @@ test-suite smoke-test
   type: exitcode-stdio-1.0
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   hs-source-dirs:
-      test
+      src/test
   main-is: Spec.hs
   other-modules:
       Test.Smoke.Spec.PathGenerator
@@ -138,11 +138,11 @@ test-suite smoke-test
       hspec-discover:hspec-discover
   if os(windows)
     hs-source-dirs:
-        test/windows
+        src/test/windows
     other-modules:
         Test.Smoke.Spec.RootDirectory
   else
     hs-source-dirs:
-        test/unix
+        src/test/unix
     other-modules:
         Test.Smoke.Spec.RootDirectory

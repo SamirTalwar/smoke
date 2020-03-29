@@ -14,8 +14,8 @@ else
 endif
 
 CONF := smoke.cabal
-SRC_DIRS := app src test
-SRC = $(shell find $(SRC_DIRS) -name '*.hs')
+SRC_DIR := src
+SRC = $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out
 OUT_BUILD = $(OUT)/build
 OUT_DEBUG := $(OUT_BUILD)/debug
@@ -66,7 +66,7 @@ bless: build
 .PHONY: lint
 lint: smoke.cabal
 	@ echo >&2 '> hlint'
-	@ hlint $(SRC_DIRS)
+	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
 	@ echo >&2 '> cabal2nix'

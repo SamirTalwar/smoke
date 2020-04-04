@@ -1,17 +1,12 @@
 FROM nixos/nix
 
-RUN nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
-RUN nix-channel --update
-
 WORKDIR /src
-COPY *.nix ghc.version ./
-RUN nix-shell --pure --run true
+COPY .gitignore *.nix ghc.version smoke.cabal ./
+COPY nix nix/
+RUN nix-build --no-out-link shell.nix
 
-RUN nix-shell --pure --run 'cabal v2-update'
-
-COPY smoke.cabal cabal.project.freeze ./
-RUN nix-shell --pure --run 'cabal v2-build --only-dependencies'
-
-ENV LANG=en_US.utf8
-COPY . ./
-ENTRYPOINT nix-shell --pure --keep LANG --run "$0 $*"
+ENV LANG=C.UTF-8
+COPY LICENSE README.md ./
+COPY src src/
+RUN nix-build --out-link /opt/smoke .
+ENTRYPOINT ["/opt/smoke/bin/smoke"]

@@ -1,6 +1,6 @@
-{ pkgs ? import ./nixpkgs.nix {}
-, ghc ? import ./ghc.nix { inherit (pkgs) lib haskell; }
-, smoke ? import ./smoke.nix { inherit ghc; inherit (pkgs) nix-gitignore; }
+{ pkgs ? import ./nix/nixpkgs.nix {}
+, ghc ? import ./nix/ghc.nix { inherit (pkgs) lib haskell; }
+, smoke ? import ./nix/smoke.nix { inherit ghc; inherit (pkgs) nix-gitignore; }
 }:
 
 ghc.shellFor {

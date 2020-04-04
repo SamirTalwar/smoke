@@ -1,6 +1,6 @@
-{ pkgs ? import ./nixpkgs.nix {}
-, ghc ? import ./ghc.nix { inherit (pkgs) lib haskell; }
-, drv ? import ./smoke.nix { inherit ghc; inherit (pkgs) nix-gitignore; }
+{ pkgs ? import ./nix/nixpkgs.nix {}
+, ghc ? import ./nix/ghc.nix { inherit (pkgs) lib haskell; }
+, drv ? import ./nix/smoke.nix { inherit ghc; inherit (pkgs) nix-gitignore; }
 }:
 let
   inherit (pkgs) haskell;
@@ -8,5 +8,5 @@ let
 in
 rec {
   smoke = justStaticExecutables (buildStrictly (doStrip drv));
-  docker = import ./docker.nix { inherit smoke; inherit (pkgs) dockerTools; };
+  docker = import ./nix/docker.nix { inherit smoke; inherit (pkgs) dockerTools; };
 }

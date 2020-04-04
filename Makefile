@@ -14,7 +14,7 @@ else
 endif
 
 CONF := smoke.cabal
-NIX_FILES = $(wildcard *.nix)
+NIX_FILES = $(wildcard *.nix nix/*.nix)
 SRC_DIR := src
 SRC = $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out

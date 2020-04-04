@@ -69,15 +69,6 @@ lint: smoke.cabal
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
-	@ echo >&2 '> cabal2nix'
-	@ ( \
-		set -e; \
-		NIX_FILE="$$(mktemp)"; \
-		trap 'rm -r $$NIX_FILE' EXIT; \
-		cabal2nix . > "$$NIX_FILE"; \
-		nixpkgs-fmt "$$NIX_FILE"; \
-		git diff --no-index --exit-code app.nix "$$NIX_FILE" \
-	)
 	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check

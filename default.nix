@@ -6,7 +6,6 @@ let
   inherit (pkgs) haskell;
   inherit (haskell.lib) justStaticExecutables buildStrictly doStrip;
 in
-rec {
+{
   smoke = justStaticExecutables (buildStrictly (doStrip drv));
-  docker = import ./nix/docker.nix { inherit smoke; inherit (pkgs) dockerTools; };
 }

@@ -14,6 +14,7 @@ else
 endif
 
 CONF := smoke.cabal
+NIX_FILES = $(wildcard *.nix)
 SRC_DIR := src
 SRC = $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out
@@ -69,6 +70,8 @@ lint: smoke.cabal
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
+	@ echo >&2 '> nixpkgs-fmt'
+	@ nixpkgs-fmt --check $(NIX_FILES)
 	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check
@@ -77,7 +80,7 @@ check: test lint
 .PHONY: reformat
 reformat: smoke.cabal
 	ormolu --mode=inplace $(SRC)
-	nixpkgs-fmt *.nix
+	nixpkgs-fmt $(NIX_FILES)
 
 cabal.project.freeze: smoke.cabal app.nix
 	rm -f $@

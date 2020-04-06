@@ -8,9 +8,10 @@ ghc.shellFor {
   withHoogle = true;
   buildInputs = with pkgs; [
     cabal-install
+    ghc.hlint
+    git
     glibcLocales
     gmp
-    ghc.hlint
     libiconv
     nix
     nixpkgs-fmt

@@ -16,6 +16,7 @@ ghc.shellFor {
     nixpkgs-fmt
     openssl
     ormolu
+    ruby
     zlib
   ];
 }

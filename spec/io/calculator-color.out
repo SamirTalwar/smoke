@@ -23,6 +23,8 @@ complex
           [32m+[m[32m2[m
 infix-words-error
 [32m  succeeded
+[0mignored-test
+[33m  ignored
 [0m
-[31m8 tests, 3 failures
+[31m9 tests, 3 failures, 1 ignored
 [0m

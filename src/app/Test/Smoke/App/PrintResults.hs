@@ -36,6 +36,7 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
   printFailingFilesOutput fileResults
 printResult (TestResult _ (TestError testError)) = printTestError testError
+printResult (TestResult _ TestIgnored) = putYellowLn "  ignored"
 
 printFailingInput :: Foldable f => String -> f Text -> Output ()
 printFailingInput name value =

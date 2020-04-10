@@ -54,3 +54,11 @@ tests:
         fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
       - |
         fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Integer (NoMethodError)
+
+  - name: ignored-test
+    ignored: true
+    stdin: |
+      This test should be ignored.
+    exit-status: 99
+    stdout: |
+      This should never happen.

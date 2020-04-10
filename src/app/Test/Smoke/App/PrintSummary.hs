@@ -14,6 +14,7 @@ printSummary summary = do
   putEmptyLn
   let testCount = summaryTotal summary
   let failureCount = summaryFailures summary
+  let ignoredCount = summaryIgnored summary
   let testWord = pluralize testCount "test" "tests"
   let failureWord = pluralize failureCount "failure" "failures"
   let printSummaryLine =
@@ -28,6 +29,7 @@ printSummary summary = do
       <> showInt failureCount
       <> " "
       <> failureWord
+      <> (if ignoredCount > 0 then ", " <> showInt ignoredCount <> " ignored" else "")
 
 pluralize :: Int -> Text -> Text -> Text
 pluralize 1 singular _ = singular

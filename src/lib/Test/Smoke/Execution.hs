@@ -36,15 +36,16 @@ type ActualOutputs = (Status, StdOut, StdErr, ActualFiles)
 type ActualFiles = Map (ResolvedPath File) TestFileContents
 
 runTest :: ResolvedPath Dir -> TestPlan -> IO TestResult
-runTest location testPlan = do
-  testResult <-
-    runExceptT $ do
-      actualOutputs <- executeTest location testPlan
-      processOutput location testPlan actualOutputs
-  return $
-    handleError
-      (TestResult (planTest testPlan) . TestError . ExecutionError)
-      testResult
+runTest location testPlan =
+  TestResult (planTest testPlan)
+    <$> if testIgnored (planTest testPlan)
+      then return TestIgnored
+      else do
+        testOutcome <-
+          runExceptT $ do
+            actualOutputs <- executeTest location testPlan
+            processOutput location testPlan actualOutputs
+        return $ handleError (TestError . ExecutionError) testOutcome
 
 executeTest :: ResolvedPath Dir -> TestPlan -> Execution ActualOutputs
 executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
@@ -93,7 +94,7 @@ revertingDirectory path execution = do
     return result
 
 processOutput ::
-  ResolvedPath Dir -> TestPlan -> ActualOutputs -> Execution TestResult
+  ResolvedPath Dir -> TestPlan -> ActualOutputs -> Execution TestOutcome
 processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (actualStatus, actualStdOut, actualStdErr, actualFiles) = do
   filteredStatus <-
     withExceptT ExecutionFilterError $
@@ -124,9 +125,8 @@ processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSta
               )
       )
       expectedFiles
-  return
-    $ TestResult test
-    $ if statusResult == PartSuccess
+  return $
+    if statusResult == PartSuccess
       && stdOutResult == PartSuccess
       && stdErrResult == PartSuccess
       && all (== PartSuccess) (Map.elems fileResults)

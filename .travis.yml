@@ -21,6 +21,7 @@ before_install:
   - wget --retry-connrefused --waitretry=1 -O '/tmp/nix-install' "https://nixos.org/releases/nix/nix-${NIX_VERSION}/install"
   - yes | sh /tmp/nix-install
   - source "${TRAVIS_HOME}/.nix-profile/etc/profile.d/nix.sh"
+  - nix-channel --update
 
 install:
   - nix-shell --pure --keep LANG --run true

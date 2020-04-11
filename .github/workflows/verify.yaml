@@ -12,7 +12,10 @@ jobs:
       - uses: cachix/cachix-action@v5
         with:
           name: samirtalwar
-          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          skipNixBuild: true
+      - run: nix-instantiate shell.nix | cachix push samirtalwar
+        env:
+          CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
       - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
 
   test-linux:
@@ -25,12 +28,13 @@ jobs:
       - uses: cachix/cachix-action@v5
         with:
           name: samirtalwar
-          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          skipNixBuild: true
       - uses: actions/cache@v1
         with:
           path: ~/.cabal/store
           key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: v1-cabal-store-
+      - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
       - run: nix-shell --pure --keep LANG --run 'make test'
 
   lint:
@@ -43,10 +47,5 @@ jobs:
       - uses: cachix/cachix-action@v5
         with:
           name: samirtalwar
-          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
-      - uses: actions/cache@v1
-        with:
-          path: ~/.cabal/store
-          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-cabal-store-
+          skipNixBuild: true
       - run: nix-shell --pure --keep LANG --run 'make lint'

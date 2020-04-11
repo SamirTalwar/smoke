@@ -3,13 +3,57 @@ on:
   - push
 
 jobs:
-  verify-unix:
-    name: Verify
+  install-dependencies-linux:
+    name: Install dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
+      - uses: actions/cache@v1
+        with:
+          path: /nix/store
+          key: v1-nix-store-${{ hashFiles('*.nix') }}
+          restore-keys: v1-nix-store-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-cabal-store-
       - run: nix-shell --pure --keep LANG --run true
       - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
+
+  test-linux:
+    name: Build and test
+    needs: install-dependencies-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v7
+      - uses: actions/cache@v1
+        with:
+          path: /nix/store
+          key: v1-nix-store-${{ hashFiles('*.nix') }}
+          restore-keys: v1-nix-store-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
       - run: nix-shell --pure --keep LANG --run 'make test'
+
+  lint:
+    name: Lint
+    needs: install-dependencies-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cachix/install-nix-action@v7
+      - uses: actions/cache@v1
+        with:
+          path: /nix/store
+          key: v1-nix-store-${{ hashFiles('*.nix') }}
+          restore-keys: v1-nix-store-
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
       - run: nix-shell --pure --keep LANG --run 'make lint'

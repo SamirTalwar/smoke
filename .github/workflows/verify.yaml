@@ -9,17 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
-      - uses: actions/cache@v1
+      - uses: cachix/cachix-action@v5
         with:
-          path: /nix/store
-          key: v1-nix-store-${{ hashFiles('*.nix') }}
-          restore-keys: v1-nix-store-
-      - uses: actions/cache@v1
-        with:
-          path: ~/.cabal/store
-          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-cabal-store-
-      - run: nix-shell --pure --keep LANG --run true
+          name: samirtalwar
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
 
   test-linux:
@@ -29,15 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
-      - uses: actions/cache@v1
+      - uses: cachix/cachix-action@v5
         with:
-          path: /nix/store
-          key: v1-nix-store-${{ hashFiles('*.nix') }}
-          restore-keys: v1-nix-store-
+          name: samirtalwar
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - uses: actions/cache@v1
         with:
           path: ~/.cabal/store
           key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-cabal-store-
       - run: nix-shell --pure --keep LANG --run 'make test'
 
   lint:
@@ -47,13 +40,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
-      - uses: actions/cache@v1
+      - uses: cachix/cachix-action@v5
         with:
-          path: /nix/store
-          key: v1-nix-store-${{ hashFiles('*.nix') }}
-          restore-keys: v1-nix-store-
+          name: samirtalwar
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - uses: actions/cache@v1
         with:
           path: ~/.cabal/store
           key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-cabal-store-
       - run: nix-shell --pure --keep LANG --run 'make lint'

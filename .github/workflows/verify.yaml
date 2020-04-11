@@ -22,6 +22,11 @@ jobs:
       - run: nix-instantiate shell.nix | cachix push samirtalwar
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-cabal-store-
       - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
 
   test-unix:

@@ -3,9 +3,15 @@ on:
   - push
 
 jobs:
-  install-dependencies-linux:
+  install-dependencies-unix:
     name: Install dependencies
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
@@ -20,8 +26,14 @@ jobs:
 
   test-linux:
     name: Build and test
-    needs: install-dependencies-linux
-    runs-on: ubuntu-latest
+    needs: install-dependencies-unix
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v7
@@ -39,7 +51,7 @@ jobs:
 
   lint:
     name: Lint
-    needs: install-dependencies-linux
+    needs: install-dependencies-unix
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

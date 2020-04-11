@@ -3,8 +3,8 @@ on:
   - push
 
 jobs:
-  install-dependencies-unix:
-    name: Install dependencies
+  build-unix:
+    name: Build
     strategy:
       fail-fast: false
       matrix:
@@ -18,15 +18,15 @@ jobs:
       - uses: cachix/cachix-action@v5
         with:
           name: samirtalwar
-          skipNixBuild: true
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
       - run: nix-instantiate shell.nix | cachix push samirtalwar
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
       - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
 
-  test-linux:
-    name: Build and test
-    needs: install-dependencies-unix
+  test-unix:
+    name: Build and Test
+    needs: build-unix
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +51,7 @@ jobs:
 
   lint:
     name: Lint
-    needs: install-dependencies-unix
+    needs: build-unix
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -27,7 +27,7 @@ jobs:
           path: ~/.cabal/store
           key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: v1-cabal-store-
-      - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
+      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
 
   test-unix:
     name: Build and Test
@@ -51,7 +51,7 @@ jobs:
           path: ~/.cabal/store
           key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: v1-cabal-store-
-      - run: nix-shell --pure --keep LANG --run 'cabal v2-update'
+      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
       - run: nix-shell --pure --keep LANG --run 'make test'
 
   lint:

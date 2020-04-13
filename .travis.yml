@@ -25,7 +25,7 @@ before_install:
 
 install:
   - nix-shell --pure --keep LANG --run true
-  - nix-shell --pure --keep LANG --run 'cabal v2-update'
+  - nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
 
 script:
   - nix-shell --pure --keep LANG --run 'make test'

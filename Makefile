@@ -82,8 +82,9 @@ reformat: smoke.cabal
 	ormolu --mode=inplace $(SRC)
 	nixpkgs-fmt $(NIX_FILES)
 
-cabal.project.freeze: smoke.cabal app.nix
-	rm -f $@
+.PHONY: freeze
+freeze:
+	cp -f ~/.nix-defexpr/channels/nixpkgs/.git-revision nix/nixpkgs.version
 	$(CABAL) v2-freeze
 
 app.nix: smoke.cabal

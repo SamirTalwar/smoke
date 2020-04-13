@@ -86,7 +86,3 @@ reformat: smoke.cabal
 freeze:
 	cp -f ~/.nix-defexpr/channels/nixpkgs/.git-revision nix/nixpkgs.version
 	$(CABAL) v2-freeze
-
-app.nix: smoke.cabal
-	cabal2nix . > $@
-	nixpkgs-fmt $@

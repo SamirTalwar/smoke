@@ -54,6 +54,36 @@ jobs:
       - run: make smoke.cabal
       - run: make test
 
+  test-windows:
+    name: Build and Test (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: 'C:\ProgramData\chocolatey\bin'
+          key: v1-windows-latest-chocolatey-bin
+      - uses: actions/cache@v2
+        with:
+          path: 'C:\ProgramData\chocolatey\lib'
+          key: v1-windows-latest-chocolatey-lib
+      - uses: actions/cache@v2
+        with:
+          path: '${{ env.LOCALAPPDATA }}\Programs\stack'
+          key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
+          restore-keys: v1-windows-latest-programs-stack-
+      - uses: actions/cache@v2
+        with:
+          path: '${{ env.APPDATA }}\stack'
+          key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
+          restore-keys: v1-windows-latest-appdata-stack-
+      - run: "choco install --yes --no-progress haskell-stack"
+      - run: "stack --no-terminal setup"
+      - run: "stack --no-terminal build --fast"
+      - run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
+      - run: "stack --no-terminal test"
+      - run: '.\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+
   lint:
     name: Lint
     needs: build-unix

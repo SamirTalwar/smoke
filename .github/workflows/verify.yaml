@@ -26,8 +26,8 @@ jobs:
       - uses: actions/cache@v1
         with:
           path: ~/.cabal/store
-          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-cabal-store-
+          key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-${{ matrix.os }}-cabal-store-
       - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
 
   test-unix:
@@ -50,8 +50,8 @@ jobs:
       - uses: actions/cache@v1
         with:
           path: ~/.cabal/store
-          key: v1-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-cabal-store-
+          key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-${{ matrix.os }}-cabal-store-
       - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
       - run: nix-shell --pure --keep LANG --run 'make test'
 

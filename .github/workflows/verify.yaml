@@ -1,5 +1,6 @@
 name: Verify
 on:
+  - pull_request
   - push
 
 jobs:

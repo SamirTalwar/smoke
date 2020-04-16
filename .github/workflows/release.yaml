@@ -5,8 +5,28 @@ on:
       - "v*"
 
 jobs:
-  release-unix:
+  release:
     name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: ${{ github.ref }}
+          draft: true
+      - run: echo "${{ steps.create_release.outputs.upload_url }}" > release_upload_url.txt
+      - uses: actions/upload-artifact@v1
+        with:
+          name: release_upload_url
+          path: release_upload_url.txt
+
+  publish-unix:
+    name: Release
+    needs: release
     strategy:
       fail-fast: false
       matrix:
@@ -16,4 +36,41 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - run: echo 'This is a test on ${{ matrix.os }}.'
+      - uses: cachix/install-nix-action@v7
+      - uses: cachix/cachix-action@v5
+        with:
+          name: samirtalwar
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+      - run: nix-instantiate shell.nix | cachix push samirtalwar
+        env:
+          CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cabal/store
+          key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: v1-${{ matrix.os }}-cabal-store-
+      - uses: actions/download-artifact@v1
+        with:
+          name: release_upload_url
+      - id: release
+        run: |
+          echo ::set-output name=upload_url::"$(cat release_upload_url/release_upload_url.txt)"
+      - id: asset
+        run: |
+          export TAG="${{ github.ref }}"
+          export ASSET_NAME="smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
+          echo ::set-output name=asset_name::"$ASSET_NAME"
+          echo ::set-output name=asset_path::"out/publish/${ASSET_NAME}"
+      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
+      - run: nix-shell --pure --keep LANG --run 'make out/build/release/smoke'
+      - run: |
+          mkdir -p "$(dirname ${{ steps.asset.outputs.asset_path }})"
+          cp out/build/release/smoke ${{ steps.asset.outputs.asset_path }}
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_name: ${{ steps.asset.outputs.asset_name }}
+          asset_path: ${{ steps.asset.outputs.asset_path }}
+          asset_content_type: application/octet-stream

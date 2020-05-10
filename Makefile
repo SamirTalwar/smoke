@@ -85,4 +85,6 @@ reformat: smoke.cabal
 .PHONY: freeze
 freeze:
 	cp -f ~/.nix-defexpr/channels/nixpkgs/.git-revision nix/nixpkgs.version
-	$(CABAL) v2-freeze
+	# Need to run these in a new Nix shell to make sure changes are picked up.
+	nix-shell --pure --run '$(CABAL) v2-update'
+	nix-shell --pure --run '$(CABAL) v2-freeze'

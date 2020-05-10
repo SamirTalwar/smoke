@@ -1,4 +1,4 @@
-{ pkgs ? import ./nix/nixpkgs.nix {}
+{ pkgs ? import ./nix/nixpkgs.nix { }
 , ghc ? import ./nix/ghc.nix { inherit (pkgs) lib haskell; }
 , drv ? import ./nix/smoke.nix { inherit ghc pkgs; }
 

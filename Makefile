@@ -14,6 +14,7 @@ else
 endif
 
 CONF := smoke.cabal
+NIX_FILES = $(wildcard *.nix nix/*.nix)
 SRC_DIR := src
 SRC = $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out
@@ -69,15 +70,8 @@ lint: smoke.cabal
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
-	@ echo >&2 '> cabal2nix'
-	@ ( \
-		set -e; \
-		NIX_FILE="$$(mktemp)"; \
-		trap 'rm -r $$NIX_FILE' EXIT; \
-		cabal2nix . > "$$NIX_FILE"; \
-		nixpkgs-fmt "$$NIX_FILE"; \
-		git diff --no-index --exit-code app.nix "$$NIX_FILE" \
-	)
+	@ echo >&2 '> nixpkgs-fmt'
+	@ nixpkgs-fmt --check $(NIX_FILES)
 	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check
@@ -86,12 +80,11 @@ check: test lint
 .PHONY: reformat
 reformat: smoke.cabal
 	ormolu --mode=inplace $(SRC)
-	nixpkgs-fmt *.nix
+	nixpkgs-fmt $(NIX_FILES)
 
-cabal.project.freeze: smoke.cabal app.nix
-	rm -f $@
-	$(CABAL) v2-freeze
-
-app.nix: smoke.cabal
-	cabal2nix . > $@
-	nixpkgs-fmt $@
+.PHONY: freeze
+freeze:
+	cp -f ~/.nix-defexpr/channels/nixpkgs/.git-revision nix/nixpkgs.version
+	# Need to run these in a new Nix shell to make sure changes are picked up.
+	nix-shell --pure --run '$(CABAL) v2-update'
+	nix-shell --pure --run '$(CABAL) v2-freeze'

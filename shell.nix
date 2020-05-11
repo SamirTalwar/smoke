@@ -1,25 +1,17 @@
-{ pkgs ? import <nixpkgs> {}, ghc ? import ./ghc.nix { pkgs = pkgs; } }:
+{ pkgs ? import ./nix/nixpkgs.nix { }
+, ghc ? import ./nix/ghc.nix { inherit (pkgs) lib haskell; }
+, drv ? import ./nix/smoke.nix { inherit ghc pkgs; }
+}:
 
-with pkgs;
-let
-  app = ghc.callPackage ./app.nix {};
-in
-mkShell {
-  buildInputs = app.env.buildInputs ++ [
-    git
-    ruby
-  ];
-  nativeBuildInputs = app.env.nativeBuildInputs ++ [
+ghc.shellFor {
+  packages = _: [ drv ];
+  withHoogle = true;
+  buildInputs = with pkgs; [
     cabal-install
-    cabal2nix
-    glibcLocales
     ghc.hlint
-    gmp
-    libiconv
-    nix
+    git
     nixpkgs-fmt
-    openssl
     ormolu
-    zlib
+    ruby
   ];
 }

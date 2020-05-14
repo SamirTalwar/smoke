@@ -76,6 +76,9 @@ putPlainLn = hPutStrWithLn stdout
 putGreenLn :: Text -> Output ()
 putGreenLn = putColorLn Green
 
+putYellowLn :: Text -> Output ()
+putYellowLn = putColorLn Yellow
+
 putRed :: Text -> Output ()
 putRed = putColor Red
 

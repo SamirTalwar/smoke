@@ -107,6 +107,8 @@ tests:
       file: tests/subtraction.out
 ```
 
+You can ignore tests (temporarily, we hope) by adding `ignored: true`.
+
 And, of course, you can combine all these techniques together.
 
 ### Example: HTTP requests

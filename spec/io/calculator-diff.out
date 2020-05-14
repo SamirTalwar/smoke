@@ -26,5 +26,7 @@ complex
           > 2
 infix-words-error
   succeeded
+ignored-test
+  ignored
 
-8 tests, 3 failures
+9 tests, 3 failures, 1 ignored

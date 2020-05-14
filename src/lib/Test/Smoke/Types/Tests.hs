@@ -32,6 +32,7 @@ data Suite
 data Test
   = Test
       { testName :: TestName,
+        testIgnored :: Bool,
         testWorkingDirectory :: Maybe WorkingDirectory,
         testCommand :: Maybe Command,
         testArgs :: Maybe Args,
@@ -57,6 +58,7 @@ parseTest :: ResolvedPath Dir -> Value -> Parser Test
 parseTest location =
   withObject "Test" $ \v ->
     Test <$> (TestName <$> v .: "name")
+      <*> (v .:? "ignored" .!= False)
       <*> (toWorkingDirectory location <$> (v .:? "working-directory"))
       <*> (v .:? "command")
       <*> (v .:? "args")

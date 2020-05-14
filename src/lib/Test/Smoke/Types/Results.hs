@@ -30,6 +30,7 @@ data TestOutcome
       (PartResult StdErr)
       (Map (RelativePath File) (PartResult TestFileContents))
   | TestError SmokeError
+  | TestIgnored
   deriving (Eq, Show)
 
 data PartResult a

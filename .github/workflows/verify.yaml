@@ -16,8 +16,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v7
-      - uses: cachix/cachix-action@v5
+      - uses: cachix/install-nix-action@v10
+      - uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -43,11 +43,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v7
-      - uses: cachix/cachix-action@v5
+      - uses: cachix/install-nix-action@v10
+      - uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
-          skipNixBuild: true
       - uses: actions/cache@v2
         with:
           path: ~/.cabal/store
@@ -62,9 +61,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v7
-      - uses: cachix/cachix-action@v5
+      - uses: cachix/install-nix-action@v10
+      - uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
-          skipNixBuild: true
       - run: nix-shell --pure --keep LANG --run 'make lint'

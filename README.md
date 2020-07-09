@@ -22,7 +22,8 @@ You can download the latest release from the [Releases][] page.
 You can also build it yourself.
 
 1.  Install [Nix][].
-2.  Run `nix-build`.
+2.  Run `nix-build -o out/build/nix`.
+3.  Find Smoke at `./out/build/nix/bin/smoke`.
 
 Smoke is distributed under [the MIT license][mit license].
 
@@ -279,7 +280,7 @@ Issues and pull requests are very welcome. Please don't hesitate.
 
 Developers of Smoke pledge to follow the [Contributor Covenant][].
 
-You will need to set up Nix as above, and enter a Nix shell with `nix-shell`.
+You will need to set up Nix as above, and enter a Nix shell with `nix-shell`, or use `lorri` with `direnv`.
 
 We dog-food. Smoke is tested using itself.
 

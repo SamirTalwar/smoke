@@ -24,7 +24,7 @@ jobs:
       - run: nix-instantiate shell.nix | cachix push samirtalwar
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         with:
           path: ~/.cabal/store
           key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
@@ -48,7 +48,7 @@ jobs:
         with:
           name: samirtalwar
           skipNixBuild: true
-      - uses: actions/cache@v1
+      - uses: actions/cache@v2
         with:
           path: ~/.cabal/store
           key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}

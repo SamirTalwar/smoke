@@ -1,0 +1,18 @@
+copy a file
+  succeeded
+uppercase a file
+  succeeded
+lowercase a file
+  succeeded
+multiple files
+  The fixture "file contents" is embedded in the test specification, so the result cannot be blessed.
+  Attempted to write:
+    three
+multiple possible file contents
+  There are multiple expected "files" values, so the result cannot be blessed.
+increment a number
+  succeeded
+write to two files
+  succeeded
+
+7 tests, 2 failures

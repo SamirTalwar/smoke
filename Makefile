@@ -19,6 +19,8 @@ SRC_DIR := src
 SRC = $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out
 OUT_BUILD = $(OUT)/build
+OUT_NIX := $(OUT_BUILD)/nix
+BIN_NIX := $(OUT_NIX)/bin/smoke
 OUT_DEBUG := $(OUT_BUILD)/debug
 BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := $(OUT_BUILD)/release
@@ -36,13 +38,16 @@ $(OUT)/smoke-$(OS): $(BIN_RELEASE)
 	mkdir -p $(OUT)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
-$(BIN_RELEASE): $(CONF) $(SRC)
-	mkdir -p $(OUT_RELEASE)
-	$(CABAL) v2-install --enable-optimization=2 --installdir=$(OUT_RELEASE) --install-method=copy --overwrite-policy=always
+$(BIN_NIX): $(CONF) $(SRC)
+	nix-build --out-link $(OUT_NIX)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
 	mkdir -p $(OUT_DEBUG)
 	$(CABAL) v2-install --installdir=$(OUT_DEBUG) --install-method=copy --overwrite-policy=always
+
+$(BIN_RELEASE): $(CONF) $(SRC)
+	mkdir -p $(OUT_RELEASE)
+	$(CABAL) v2-install --enable-optimization=2 --installdir=$(OUT_RELEASE) --install-method=copy --overwrite-policy=always
 
 .PHONY: clean
 clean:

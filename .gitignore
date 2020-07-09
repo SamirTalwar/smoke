@@ -2,10 +2,7 @@
 out
 
 # Local
-.envrc
+.envrc.local
 
 # Cabal
 /dist-newstyle
-
-# Stack
-.stack-work

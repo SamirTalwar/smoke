@@ -18,3 +18,13 @@ tests:
       file: io/calculator-bless-failure.out
     revert:
       - ../fixtures/calculator
+
+  - name: files
+    args:
+      - --bless
+      - fixtures/files
+    exit-status: 1
+    stdout:
+      file: io/files-bless-failure.out
+    revert:
+      - ../fixtures/files

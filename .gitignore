@@ -6,6 +6,3 @@ out
 
 # Cabal
 /dist-newstyle
-
-# Stack
-.stack-work

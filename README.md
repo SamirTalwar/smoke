@@ -49,9 +49,11 @@ Outputs that can be observed by Smoke consist of _standard output_, _standard er
 
 At least one of standard output and standard error must be specified, though it can be empty. If no exit status is specified, it will be assumed to be `0`.
 
-### Example: Calculator
+### Simple test cases
 
-Our simplest calculator test case looks like this. It's a file named _smoke.yaml_ (the file basename is a convention; you can name it anything you want ending in _.yaml_).
+For a simple example, let's try testing a command-line calculator program.
+
+Our simplest calculator test case looks like this. It's a specification file named _smoke.yaml_ (the file basename is a convention; you can name it anything you want ending in _.yaml_).
 
 ```yaml
 command:
@@ -96,6 +98,8 @@ tests:
         -2
 ```
 
+You can ignore tests (temporarily, we hope) by adding `ignored: true`.
+
 You can use files to specify the STDIN, STDOUT or STDERR values:
 
 ```yaml
@@ -107,11 +111,74 @@ tests:
       file: tests/subtraction.out
 ```
 
-You can ignore tests (temporarily, we hope) by adding `ignored: true`.
+Using files gives us one big advantage over specifying the content inline: if the tests fail, but the actual output looks correct, we can "bless" the new STDOUT or STDERR with the `--bless` flag. This means you don't have to spend time copying and pasting, and can instead just approve the results automatically.
 
 And, of course, you can combine all these techniques together.
 
-### Example: HTTP requests
+### Testing files
+
+Smoke can also test that your application wrote a file.
+
+For example, if we wanted to test that our implementation of the `cp` (copy) command worked, we could write the following:
+
+```yaml
+working-directory: .
+
+tests:
+  - name: copy a file
+    command:
+      - cp
+    args:
+      - input.file
+      - output.file
+    files:
+      - path: output.file
+        contents:
+          file: input.file
+    revert:
+      - .
+```
+
+You also need to create a file called _input.file_, containing whatever you want.
+
+This test will run `cp input.file output.file`. In doing so, it will set the working directory to the same directory as the _smoke.yaml_ file (so you can run the tests from anywhere, and they'll behave exactly the same). It will then revert the entire contents of the specified directory, `.`, to its state before the test was run.
+
+As with STDOUT and STDERR, you can also use `--bless` to automatically accept the new output if it changes.
+
+Take a look at the [files fixture][] for more examples.
+
+[files fixture]: ./fixtures/files/smoke.yaml
+
+### Running with a shell
+
+Sometimes writing a small program for testing purposes is a bit distracting or over the top. We can specify a string as the contents of a command, which will be passed to the default shell (`sh` on Unix, `cmd` on Windows).
+
+You can override the shell, too, both per test, or at the top-level, by providing a `shell:` section. For example, we could use this to pass the `-e` flag to `bash`, making sure it fails fast:
+
+```yaml
+tests:
+  - name: use custom shell flags
+    command:
+      shell:
+        - bash
+        - -e
+      script: |
+        echo 'Something.' >&2
+        false
+        echo 'Something else.' >&2
+    exit-status: 1
+    stderr: |
+      Something.
+```
+
+You could even set your shell to `python` or `ruby` (or your favorite scripting language) to allow you to embed scripts of any kind in your Smoke specification.
+
+You can find more examples in the [local shell fixture][] and [global shell fixture][].
+
+[local shell fixture]: ./fixtures/shell/local.yaml
+[global shell fixture]: ./fixtures/shell/global.yaml
+
+### Filtering output
 
 Sometimes, things aren't quite so deterministic. When some of the output (or input) is meaningless, or if there's just too much, you can specify filters to transform the data.
 
@@ -151,15 +218,18 @@ tests:
           "foo": "bar"
         }
       filter:
-        - "jq"
-        - ".args"
+        - jq
+        - .args
 ```
 
 Now my test passes every time.
 
 You can also specify the filter as an inline script by using a string rather than an array. It will be run with `sh -c`. We prefer the array structure, as it's more portable.
 
+There are more examples in the [processing-filters fixture][].
+
 [httpbin.org]: https://httpbin.org/
+[processing-filters fixture]: ./fixtures/processing-filters/smoke.yaml
 
 ### Further examples
 
@@ -217,7 +287,7 @@ Before committing, these commands should be run, and any failures should be fixe
 
 ```sh
 cabal v2-update # Update the Cabal packages.
-make reformat   # Reformats the code using hindent.
+make reformat   # Reformats the code using ormolu and nixpkgs-fmt.
 make build      # Builds the application using Cabal.
 make test       # Run the unit tests.
 make spec       # Tests the application using itself, with the tests in the "spec" directory.
@@ -226,7 +296,7 @@ make lint       # Lints the code using HLint.
 
 (You can typically just run `make reformat check` to trigger them all.)
 
-Some commands, such as `cabal2nix` and `ormolu`, don't work on Windows, so we encourage you to develop on a Nix-compatible environment. However, you can always read the _Makefile_ to figure out what commands to run.
+Some development tools, such as `ormolu`, don't work on Windows, so we encourage you to develop on a Nix-compatible environment. However, if you need to write or test some code on Windows, you can always read the _Makefile_ to figure out what commands to run.
 
 Smoke should work on Linux and macOS without any issue. Almost all features should also work on Windows, with the exception of allowing scripts as commands. This is due to a (quite reasonable) limitation of Windows; you can't make text files executable.
 

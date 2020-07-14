@@ -1,8 +1,9 @@
-{ pkgs ? import ./nix/nixpkgs.nix { }
-, ghc ? import ./nix/ghc.nix { inherit (pkgs) lib haskell; }
-, drv ? import ./nix/smoke.nix { inherit ghc pkgs; }
-}:
-
+let
+  sources = import ./nix/sources.nix;
+  pkgs = import sources.nixpkgs { };
+  ghc = import ./nix/ghc.nix { inherit (pkgs) lib haskell; };
+  drv = import ./nix/smoke.nix { inherit ghc pkgs; };
+in
 ghc.shellFor {
   packages = _: [ drv ];
   withHoogle = true;
@@ -10,6 +11,7 @@ ghc.shellFor {
     cabal-install
     ghc.hlint
     git
+    niv
     nixpkgs-fmt
     ormolu
     ruby

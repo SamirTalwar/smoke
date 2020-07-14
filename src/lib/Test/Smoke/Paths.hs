@@ -141,9 +141,9 @@ findExecutable path = do
   if exists
     then do
       permissions <- liftIO $ Directory.getPermissions (toFilePath path)
-      unless (Directory.executable permissions)
-        $ throwE
-        $ FileIsNotExecutable path
+      unless (Directory.executable permissions) $
+        throwE $
+          FileIsNotExecutable path
       liftIO $ resolve path
     else do
       executable <- liftIO $ Directory.findExecutable (toFilePath path)

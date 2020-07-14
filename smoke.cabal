@@ -24,7 +24,7 @@ common standard
   build-depends:
       Glob
     , aeson
-    , base ^>=4.13
+    , base ^>=4.14
     , containers
     , data-default
     , directory

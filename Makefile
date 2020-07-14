@@ -92,4 +92,5 @@ freeze:
 	niv update
 	# Need to run these in a new Nix shell to make sure changes are picked up.
 	nix-shell --pure --run '$(CABAL) v2-update'
+	rm -f cabal.project.freeze
 	nix-shell --pure --run '$(CABAL) v2-freeze'

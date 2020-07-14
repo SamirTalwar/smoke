@@ -25,11 +25,11 @@ enabled = return True
 
 render :: PrintDiff
 render _ left right =
-  return
-    $ mconcat
-    $ map prettyPrintOperation
-    $ diffToLineRanges
-    $ getGroupedDiff (Text.lines left) (Text.lines right)
+  return $
+    mconcat $
+      map prettyPrintOperation $
+        diffToLineRanges $
+          getGroupedDiff (Text.lines left) (Text.lines right)
   where
     diffToLineRanges :: [Diff [Text]] -> [DiffOperation LineRange]
     diffToLineRanges = toLineRange 1 1
@@ -62,8 +62,8 @@ render _ left right =
               linesF = length lsF
            in Change
                 (LineRange (leftLine, leftLine + linesF - 1) lsF)
-                (LineRange (rightLine, rightLine + linesS - 1) lsS)
-                : toLineRange (leftLine + linesF) (rightLine + linesS) rs
+                (LineRange (rightLine, rightLine + linesS - 1) lsS) :
+              toLineRange (leftLine + linesF) (rightLine + linesS) rs
     prettyPrintOperation :: DiffOperation LineRange -> Text
     prettyPrintOperation (Deletion (LineRange leftNumbers leftContents) lineNoRight) =
       mconcat

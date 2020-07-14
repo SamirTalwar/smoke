@@ -74,10 +74,10 @@ decodeSpecificationFile directory path = do
   resolvedPath <- liftIO $ resolve path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $ do
     parsedValue <- ExceptT $ decodeFileEither (toFilePath resolvedPath)
-    withExceptT AesonException
-      $ ExceptT
-      $ return
-      $ parseEither (parseSuite location) parsedValue
+    withExceptT AesonException $
+      ExceptT $
+        return $
+          parseEither (parseSuite location) parsedValue
 
 parseRoot :: String -> Discovery Root
 parseRoot location = do

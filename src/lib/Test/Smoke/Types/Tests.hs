@@ -19,30 +19,28 @@ data TestSpecification
 
 type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
 
-data Suite
-  = Suite
-      { suiteLocation :: ResolvedPath Dir,
-        suiteWorkingDirectory :: Maybe WorkingDirectory,
-        suiteShell :: Maybe CommandLine,
-        suiteCommand :: Maybe Command,
-        suiteTests :: [Test]
-      }
+data Suite = Suite
+  { suiteLocation :: ResolvedPath Dir,
+    suiteWorkingDirectory :: Maybe WorkingDirectory,
+    suiteShell :: Maybe CommandLine,
+    suiteCommand :: Maybe Command,
+    suiteTests :: [Test]
+  }
   deriving (Eq, Show)
 
-data Test
-  = Test
-      { testName :: TestName,
-        testIgnored :: Bool,
-        testWorkingDirectory :: Maybe WorkingDirectory,
-        testCommand :: Maybe Command,
-        testArgs :: Maybe Args,
-        testStdIn :: Maybe (Fixture StdIn),
-        testStdOut :: Fixtures StdOut,
-        testStdErr :: Fixtures StdErr,
-        testStatus :: Fixture Status,
-        testFiles :: Map (RelativePath File) (Fixtures TestFileContents),
-        testRevert :: Vector (RelativePath Dir)
-      }
+data Test = Test
+  { testName :: TestName,
+    testIgnored :: Bool,
+    testWorkingDirectory :: Maybe WorkingDirectory,
+    testCommand :: Maybe Command,
+    testArgs :: Maybe Args,
+    testStdIn :: Maybe (Fixture StdIn),
+    testStdOut :: Fixtures StdOut,
+    testStdErr :: Fixtures StdErr,
+    testStatus :: Fixture Status,
+    testFiles :: Map (RelativePath File) (Fixtures TestFileContents),
+    testRevert :: Vector (RelativePath Dir)
+  }
   deriving (Eq, Show)
 
 parseSuite :: ResolvedPath Dir -> Value -> Parser Suite

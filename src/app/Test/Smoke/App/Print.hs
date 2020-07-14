@@ -97,9 +97,9 @@ putError = withColor Red $ hPutStrWithLn stderr
 hPutStrWithLn :: Handle -> Text -> Output ()
 hPutStrWithLn handle contents = do
   liftIO $ Text.IO.hPutStr handle contents
-  unless (newline `Text.isSuffixOf` contents)
-    $ liftIO
-    $ Text.IO.hPutStrLn handle ""
+  unless (newline `Text.isSuffixOf` contents) $
+    liftIO $
+      Text.IO.hPutStrLn handle ""
 
 withColor :: Color -> (Text -> Output ()) -> Text -> Output ()
 withColor color act contents = do

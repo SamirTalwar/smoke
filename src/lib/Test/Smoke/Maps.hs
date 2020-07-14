@@ -1,6 +1,6 @@
 module Test.Smoke.Maps where
 
-import Control.Monad ((>=>), foldM)
+import Control.Monad (foldM, (>=>))
 import Data.Map.Strict
 
 mapFromTraversable :: (Foldable f, Ord a) => f (a, b) -> Map a b

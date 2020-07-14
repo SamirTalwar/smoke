@@ -9,17 +9,15 @@ import Data.Vector (Vector)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Fixtures
 
-data TestFile
-  = TestFile
-      { testFilePath :: RelativePath File,
-        testFileContents :: Fixtures TestFileContents
-      }
+data TestFile = TestFile
+  { testFilePath :: RelativePath File,
+    testFileContents :: Fixtures TestFileContents
+  }
   deriving (Eq, Show)
 
-newtype TestFileContents
-  = TestFileContents
-      { unTestFileContents :: Text
-      }
+newtype TestFileContents = TestFileContents
+  { unTestFileContents :: Text
+  }
   deriving (Eq, Show, FromJSON)
 
 instance FixtureType TestFileContents where
@@ -32,8 +30,7 @@ instance FromJSON TestFile where
     withObject "TestFile" $ \v ->
       TestFile <$> (v .: "path") <*> (v .: "contents")
 
-newtype Reversions
-  = Reversions
-      { unReversions :: Vector (RelativePath Dir)
-      }
+newtype Reversions = Reversions
+  { unReversions :: Vector (RelativePath Dir)
+  }
   deriving (Eq, Show, FromJSON)

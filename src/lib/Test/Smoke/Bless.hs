@@ -17,21 +17,21 @@ import Test.Smoke.Types
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
 blessResult location (TestResult test (TestFailure _ status stdOut stdErr files))
   | isFailureWithMultipleExpectedValues status =
-    return
-      $ TestResult test
-      $ TestError (BlessError (CouldNotBlessWithMultipleValues "status"))
+    return $
+      TestResult test $
+        TestError (BlessError (CouldNotBlessWithMultipleValues "status"))
   | isFailureWithMultipleExpectedValues stdOut =
-    return
-      $ TestResult test
-      $ TestError (BlessError (CouldNotBlessWithMultipleValues "stdout"))
+    return $
+      TestResult test $
+        TestError (BlessError (CouldNotBlessWithMultipleValues "stdout"))
   | isFailureWithMultipleExpectedValues stdErr =
-    return
-      $ TestResult test
-      $ TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
+    return $
+      TestResult test $
+        TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
   | any isFailureWithMultipleExpectedValues (Map.elems files) =
-    return
-      $ TestResult test
-      $ TestError (BlessError (CouldNotBlessWithMultipleValues "files"))
+    return $
+      TestResult test $
+        TestError (BlessError (CouldNotBlessWithMultipleValues "files"))
   | otherwise =
     do
       case status of

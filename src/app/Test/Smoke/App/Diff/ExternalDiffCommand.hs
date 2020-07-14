@@ -8,8 +8,8 @@ module Test.Smoke.App.Diff.ExternalDiffCommand
 where
 
 import Control.Exception (throwIO)
-import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text.IO
@@ -42,13 +42,13 @@ render command@(executable :| args) left right =
         ExitSuccess -> return stdout
         ExitFailure 1 -> return stdout
         ExitFailure code ->
-          throwIO
-            $ userError
-            $ "`"
-              ++ unwords (NonEmpty.toList command)
-              ++ "`"
-              ++ " failed with status "
-              ++ show code
-              ++ "."
-              ++ "\n"
-              ++ Text.unpack stderr
+          throwIO $
+            userError $
+              "`"
+                ++ unwords (NonEmpty.toList command)
+                ++ "`"
+                ++ " failed with status "
+                ++ show code
+                ++ "."
+                ++ "\n"
+                ++ Text.unpack stderr

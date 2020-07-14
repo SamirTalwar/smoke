@@ -32,34 +32,29 @@ parseContents deserialize (Object v) = do
     (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\"."
 parseContents _ invalid = typeMismatch "contents" invalid
 
-newtype SuiteName
-  = SuiteName
-      { unSuiteName :: String
-      }
+newtype SuiteName = SuiteName
+  { unSuiteName :: String
+  }
   deriving (Eq, Ord, Show)
 
-newtype TestName
-  = TestName
-      { unTestName :: String
-      }
+newtype TestName = TestName
+  { unTestName :: String
+  }
   deriving (Eq, Ord, Show)
 
-newtype WorkingDirectory
-  = WorkingDirectory
-      { unWorkingDirectory :: ResolvedPath Dir
-      }
+newtype WorkingDirectory = WorkingDirectory
+  { unWorkingDirectory :: ResolvedPath Dir
+  }
   deriving (Eq, Show)
 
-newtype Args
-  = Args
-      { unArgs :: Vector String
-      }
+newtype Args = Args
+  { unArgs :: Vector String
+  }
   deriving (Eq, Show, Semigroup, Monoid, FromJSON)
 
-newtype Script
-  = Script
-      { unScript :: Text
-      }
+newtype Script = Script
+  { unScript :: Text
+  }
   deriving (Eq, Show, FromJSON)
 
 data CommandLine
@@ -85,44 +80,39 @@ instance FromJSON Command where
   parseJSON args@(Array _) = CommandArgs <$> parseJSON args
   parseJSON invalid = typeMismatch "command" invalid
 
-newtype Status
-  = Status
-      { unStatus :: Int
-      }
+newtype Status = Status
+  { unStatus :: Int
+  }
   deriving (Eq, Show)
 
 instance Default Status where
   def = Status 0
 
-newtype StdIn
-  = StdIn
-      { unStdIn :: Text
-      }
+newtype StdIn = StdIn
+  { unStdIn :: Text
+  }
   deriving (Eq, Show)
 
 instance Default StdIn where
   def = StdIn Text.empty
 
-newtype StdOut
-  = StdOut
-      { unStdOut :: Text
-      }
+newtype StdOut = StdOut
+  { unStdOut :: Text
+  }
   deriving (Eq, Show)
 
 instance Default StdOut where
   def = StdOut Text.empty
 
-newtype StdErr
-  = StdErr
-      { unStdErr :: Text
-      }
+newtype StdErr = StdErr
+  { unStdErr :: Text
+  }
   deriving (Eq, Show)
 
 instance Default StdErr where
   def = StdErr Text.empty
 
-newtype FixtureName
-  = FixtureName
-      { unFixtureName :: String
-      }
+newtype FixtureName = FixtureName
+  { unFixtureName :: String
+  }
   deriving (Eq, Show, IsString)

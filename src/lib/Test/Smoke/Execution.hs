@@ -25,7 +25,6 @@ import System.IO.Temp (withSystemTempFile)
 import Test.Smoke.Errors
 import Test.Smoke.Executable
 import Test.Smoke.Filters
-import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
@@ -113,7 +112,7 @@ processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSta
   let stdErrResult =
         result $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
   fileResults <-
-    mapWithKeyM
+    Map.traverseWithKey
       ( \relativePath contents ->
           result . Vector.zip contents
             <$> withExceptT

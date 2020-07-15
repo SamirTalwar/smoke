@@ -7,10 +7,10 @@ module Test.Smoke.Bless
 where
 
 import Control.Exception (catch, throwIO)
+import Control.Monad (forM_)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector as Vector
-import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
@@ -55,7 +55,7 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr files)
             (testStdErr test)
             (snd (Vector.head comparisons))
         _ -> return ()
-      forWithKeyM_ files $ \path fileResult ->
+      forM_ (Map.toList files) $ \(path, fileResult) ->
         case fileResult of
           PartFailure comparisons ->
             writeFixtures

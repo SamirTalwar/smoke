@@ -5,9 +5,9 @@ module Test.Smoke.Types.Tests where
 import Data.Aeson hiding (Options)
 import Data.Aeson.Types (Parser)
 import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
@@ -68,7 +68,7 @@ parseTest location =
       <*> ( Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0)
               <*> return Nothing
           )
-      <*> ( mapFromTraversable
+      <*> ( Map.fromList . Vector.toList
               <$> (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))
           )
       <*> (v .:? "revert" .!= Vector.empty)

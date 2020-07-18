@@ -1,5 +1,5 @@
 cache:
-  - '%APPDATA%\cabal\store -> cabal.project.freeze'
+  - '%APPDATA%\cabal\store -> smoke.cabal'
   - 'C:\ProgramData\chocolatey\bin -> ghc.version'
   - 'C:\ProgramData\chocolatey\lib -> ghc.version'
 

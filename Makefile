@@ -90,7 +90,13 @@ reformat: smoke.cabal
 .PHONY: freeze
 freeze:
 	niv update
-	# Need to run these in a new Nix shell to make sure changes are picked up.
+
+	# We need to run these in a new Nix shell to make sure changes are picked up.
 	nix-shell --pure --run '$(CABAL) v2-update'
-	rm -f cabal.project.freeze
-	nix-shell --pure --run '$(CABAL) v2-freeze'
+
+	# We no longer do this, because Windows has different dependencies to Linux and
+	# macOS. Attempting to create a freeze file just confuses matters. It's totally
+	# possible for Cabal to reject the frozen dependencies on a different operating
+	# system, because the constraints provided by packages differ between OSes.
+	#rm -f cabal.project.freeze
+	#nix-shell --pure --run '$(CABAL) v2-freeze'

@@ -4,5 +4,7 @@ out
 # Local
 .envrc.local
 
-# Cabal
-/dist-newstyle
+# Stack
+/.stack-work
+*.cabal
+stack.yaml.lock

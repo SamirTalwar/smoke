@@ -26,10 +26,17 @@ jobs:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
       - uses: actions/cache@v2
         with:
-          path: ~/.cabal/store
-          key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-${{ matrix.os }}-cabal-store-
-      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
+          path: ~/.stack
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          restore-keys: v1-${{ matrix.os }}-stack-
+      - run: |
+          mkdir -p ~/.stack
+          cat > ~/.stack/config.yaml <<EOF
+          nix:
+            enable: true
+          EOF
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make build'
 
   test-unix:
     name: Build and Test
@@ -49,11 +56,17 @@ jobs:
           name: samirtalwar
       - uses: actions/cache@v2
         with:
-          path: ~/.cabal/store
-          key: v1-${{ matrix.os }}-cabal-store-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: v1-${{ matrix.os }}-cabal-store-
-      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
-      - run: nix-shell --pure --keep LANG --run 'make test'
+          path: ~/.stack
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          restore-keys: v1-${{ matrix.os }}-stack-
+      - run: |
+          mkdir -p ~/.stack
+          cat > ~/.stack/config.yaml <<EOF
+          nix:
+            enable: true
+          EOF
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make test'
 
   lint:
     name: Lint
@@ -65,4 +78,4 @@ jobs:
       - uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
-      - run: nix-shell --pure --keep LANG --run 'make lint'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make lint'

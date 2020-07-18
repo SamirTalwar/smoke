@@ -19,17 +19,26 @@ It's not a replacement for other, smaller tests. We recommend writing unit tests
 
 You can download the latest release from the [Releases][] page.
 
-You can also build it yourself.
+You can also build it yourself, using either Nix or Stack.
 
-1.  Install [Nix][].
-2.  Run `nix-build -o out/build/nix`.
-3.  Find Smoke at `./out/build/nix/bin/smoke`.
+With [Nix][]:
+
+1.  Install Nix.
+2.  Run `nix-build -o ./out/build`.
+3.  Find Smoke at `./out/build/bin/smoke`.
+
+With [Stack][]:
+
+1.  Install Stack.
+2.  Run `stack install --local-bin-path=./out/build`.
+3.  Find Smoke at `./out/build/smoke`.
 
 Smoke is distributed under [the MIT license][mit license].
 
+[mit license]: http://samirtalwar.mit-license.org/
 [releases]: https://github.com/SamirTalwar/smoke/releases
 [nix]: https://nixos.org/nix
-[mit license]: http://samirtalwar.mit-license.org/
+[stack]: https://haskellstack.org/
 
 ## Writing Test Cases
 

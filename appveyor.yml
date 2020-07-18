@@ -9,9 +9,10 @@ before_build:
   - ps: 'choco install --yes --no-progress ghc --version $(Get-Content .\ghc.version)'
   - ps: '$env:PATH = "C:\ProgramData\chocolatey\lib\ghc\tools\ghc-$(Get-Content .\ghc.version)\bin;${env:PATH}"'
   - ps: "cabal v2-update"
+  - ps: "cabal v2-configure --enable-tests"
 
 build_script:
-  - ps: "cabal v2-build --only-dependencies --enable-tests"
+  - ps: "cabal v2-build --only-dependencies"
   - ps: 'New-Item -ItemType Directory -Path .\out\build\release,.\out\publish'
   - ps: 'cabal v2-install --enable-optimization=2 --installdir=.\out\build\release --install-method=copy --overwrite-policy=always'
   - ps: 'Copy-Item .\out\build\release\smoke.exe .\out\publish\smoke-${env:APPVEYOR_REPO_TAG_NAME}-windows-x64.exe'

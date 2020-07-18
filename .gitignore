@@ -6,3 +6,4 @@ out
 
 # Cabal
 /dist-newstyle
+cabal.project.local

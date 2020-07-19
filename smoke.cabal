@@ -53,7 +53,6 @@ library
       Test.Smoke.Executable
       Test.Smoke.Execution
       Test.Smoke.Filters
-      Test.Smoke.Maps
       Test.Smoke.Plan
       Test.Smoke.Summary
       Test.Smoke.Types

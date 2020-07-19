@@ -6,8 +6,8 @@ module Test.Smoke.Filters
 where
 
 import Control.Monad.Trans.Except (ExceptT (..), throwE, withExceptT)
-import qualified Data.Vector as Vector
 import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import System.Exit (ExitCode (..))
 import System.IO.Error (tryIOError)
 import Test.Smoke.Executable
@@ -39,10 +39,10 @@ runFilter fallbackShell command value = do
     withExceptT FilterPathError $
       convertCommandToExecutable fallbackShell command
   (exitCode, processStdOut, processStdErr) <-
-    withExceptT (CouldNotExecuteFilter executable)
-      $ ExceptT
-      $ tryIOError
-      $ runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
+    withExceptT (CouldNotExecuteFilter executable) $
+      ExceptT $
+        tryIOError $
+          runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
   case exitCode of
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->

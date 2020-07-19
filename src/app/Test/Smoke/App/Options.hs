@@ -6,8 +6,8 @@ module Test.Smoke.App.Options
 where
 
 import Data.List (intercalate)
-import qualified Data.Vector as Vector
 import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 import Options.Applicative
 import Test.Smoke
   ( Args (..),

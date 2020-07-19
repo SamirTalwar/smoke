@@ -8,7 +8,7 @@ import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
 import Data.Default
-import Data.Map.Strict ((!), Map)
+import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import Data.Vector (Vector)
@@ -25,7 +25,6 @@ import System.IO.Temp (withSystemTempFile)
 import Test.Smoke.Errors
 import Test.Smoke.Executable
 import Test.Smoke.Filters
-import Test.Smoke.Maps
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
@@ -52,9 +51,9 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
-  unless workingDirectoryExists
-    $ throwE
-    $ NonExistentWorkingDirectory workingDirectory
+  unless workingDirectoryExists $
+    throwE $
+      NonExistentWorkingDirectory workingDirectory
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
       tryIO (CouldNotExecuteCommand executable) $
@@ -113,7 +112,7 @@ processOutput location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSta
   let stdErrResult =
         result $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
   fileResults <-
-    mapWithKeyM
+    Map.traverseWithKey
       ( \relativePath contents ->
           result . Vector.zip contents
             <$> withExceptT

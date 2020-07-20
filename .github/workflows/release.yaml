@@ -61,8 +61,8 @@ jobs:
           export ASSET_NAME="smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
           echo ::set-output name=asset_name::"$ASSET_NAME"
           echo ::set-output name=asset_path::"out/publish/${ASSET_NAME}"
-      - run: nix-shell --pure --keep LANG --run 'cabal --enable-nix v2-update'
-      - run: nix-shell --pure --keep LANG --run 'make out/build/release/smoke'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'cabal --enable-nix v2-update'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make out/build/release/smoke'
       - run: |
           mkdir -p "$(dirname ${{ steps.asset.outputs.asset_path }})"
           cp out/build/release/smoke ${{ steps.asset.outputs.asset_path }}

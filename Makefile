@@ -13,12 +13,12 @@ else
   endif
 endif
 
-CONF := smoke.cabal
-NIX_FILES = $(wildcard *.nix nix/*.nix)
+CONF := package.yaml stack.yaml
+NIX_FILES := $(wildcard *.nix nix/*.nix)
 SRC_DIR := src
-SRC = $(shell find $(SRC_DIR) -name '*.hs')
+SRC := $(shell find $(SRC_DIR) -name '*.hs')
 OUT := out
-OUT_BUILD = $(OUT)/build
+OUT_BUILD := $(OUT)/build
 OUT_NIX := $(OUT_BUILD)/nix
 BIN_NIX := $(OUT_NIX)/bin/smoke
 OUT_DEBUG := $(OUT_BUILD)/debug
@@ -26,7 +26,11 @@ BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := $(OUT_BUILD)/release
 BIN_RELEASE := $(OUT_RELEASE)/smoke
 
-CABAL := cabal --enable-nix
+ifdef CI
+  STACK := stack --no-terminal
+else
+  STACK := stack
+endif
 
 .PHONY: build
 build: $(BIN_DEBUG)
@@ -35,23 +39,20 @@ build: $(BIN_DEBUG)
 dist: clean $(OUT)/smoke-$(OS)
 
 $(OUT)/smoke-$(OS): $(BIN_RELEASE)
-	mkdir -p $(OUT)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
 $(BIN_NIX): $(CONF) $(SRC)
 	nix-build --out-link $(OUT_NIX)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
-	mkdir -p $(OUT_DEBUG)
-	$(CABAL) v2-install --installdir=$(OUT_DEBUG) --install-method=copy --overwrite-policy=always
+	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
 
 $(BIN_RELEASE): $(CONF) $(SRC)
-	mkdir -p $(OUT_RELEASE)
-	$(CABAL) v2-install --enable-optimization=2 --installdir=$(OUT_RELEASE) --install-method=copy --overwrite-policy=always
+	$(STACK) install --local-bin-path=$(OUT_RELEASE)
 
 .PHONY: clean
 clean:
-	$(CABAL) v2-clean
+	$(STACK) clean
 	rm -rf $(OUT_BUILD)
 
 .PHONY: test
@@ -59,7 +60,7 @@ test: unit-test spec
 
 .PHONY: unit-test
 unit-test: build
-	$(CABAL) v2-test
+	$(STACK) test
 
 .PHONY: spec
 spec: build
@@ -70,7 +71,7 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless spec
 
 .PHONY: lint
-lint: smoke.cabal
+lint: $(NIX_FILES) $(SRC)
 	@ echo >&2 '> hlint'
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
@@ -83,13 +84,10 @@ lint: smoke.cabal
 check: test lint
 
 .PHONY: reformat
-reformat: smoke.cabal
+reformat: $(NIX_FILES) $(SRC)
 	ormolu --mode=inplace $(SRC)
 	nixpkgs-fmt $(NIX_FILES)
 
-.PHONY: freeze
-freeze:
-	niv update
-	# Need to run these in a new Nix shell to make sure changes are picked up.
-	nix-shell --pure --run '$(CABAL) v2-update'
-	nix-shell --pure --run '$(CABAL) v2-freeze'
+smoke.cabal: $(CONF)
+	$(STACK) install --only-dependencies --test --no-run-tests
+	touch $@

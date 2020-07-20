@@ -1,0 +1,100 @@
+name: smoke
+version: 2.1.0
+github: SamirTalwar/smoke
+license: MIT
+author: Samir Talwar
+maintainer: samir@noodlesandwich.com
+copyright: Samir Talwar
+
+extra-source-files:
+  - README.md
+
+synopsis: An integration test framework for console applications.
+category: Testing
+description: Please see README.md
+
+dependencies:
+  - base >= 4.13 && < 5
+  - aeson
+  - containers
+  - data-default
+  - directory
+  - exceptions
+  - filepath
+  - Glob
+  - process
+  - process-extras
+  - tar
+  - temporary
+  - text
+  - transformers
+  - vector
+  - yaml
+
+library:
+  source-dirs:
+    - src/lib
+  exposed-modules:
+    - Test.Smoke
+    - Test.Smoke.Paths
+  ghc-options:
+    - -Wall
+    - -Werror
+  when:
+    condition: os(windows)
+    then:
+      source-dirs:
+        - src/lib/windows
+    else:
+      source-dirs:
+        - src/lib/unix
+
+executables:
+  smoke:
+    source-dirs:
+      - src/app
+    main: Test/Smoke/App/Main.hs
+    dependencies:
+      - smoke
+      - ansi-terminal
+      - Diff
+      - mtl
+      - optparse-applicative
+    ghc-options:
+      - -Wall
+      - -Werror
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    when:
+      condition: os(windows)
+      then:
+        source-dirs:
+          - src/app/windows
+      else:
+        source-dirs:
+          - src/app/unix
+        dependencies:
+          - unix
+
+tests:
+  smoke-test:
+    main: Spec.hs
+    source-dirs: src/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - smoke
+      - hedgehog
+      - hspec
+      - hw-hspec-hedgehog
+    when:
+      condition: os(windows)
+      then:
+        source-dirs:
+          - src/test/windows
+      else:
+        source-dirs:
+          - src/test/unix

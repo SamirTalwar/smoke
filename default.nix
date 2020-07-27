@@ -1,7 +1,9 @@
-{}:
 let
   sources = import ./nix/sources.nix;
-  pkgs = import sources.nixpkgs { };
+  nixpkgs = import sources.nixpkgs { };
+in
+{ pkgs ? nixpkgs }:
+let
   ghc = import ./nix/ghc.nix { inherit (pkgs) lib haskell; };
   drv = import ./nix/smoke.nix { inherit ghc pkgs; };
   inherit (pkgs) haskell stdenv;

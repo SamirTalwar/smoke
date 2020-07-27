@@ -21,7 +21,12 @@ jobs:
         with:
           name: samirtalwar
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - run: nix-instantiate shell.nix | cachix push samirtalwar
+      - run: |
+          if [[ -n "$CACHIX_SIGNING_KEY" ]]; then
+            nix-instantiate shell.nix | cachix push samirtalwar
+          else
+            nix-instantiate shell.nix
+          fi
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
       - uses: actions/cache@v2

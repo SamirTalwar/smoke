@@ -53,7 +53,7 @@ printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
 printTestError (ExecutionError (CouldNotRevertDirectory path exception)) =
   printErrorWithException exception $
     "The directory " <> showPath path <> " could not be reverted."
-printTestError (ExecutionError (ExecutionFilterError filterError)) =
+printTestError (AssertionError (AssertionFilterError filterError)) =
   printFilterError filterError
 printTestError (BlessError (CouldNotBlessInlineFixture (FixtureName fixtureName') propertyValue)) =
   printError $
@@ -105,7 +105,7 @@ printFilterError MissingFilterScript =
 printFilterError (CouldNotExecuteFilter executable exception) =
   printErrorWithException exception $
     showExecutable executable <> " could not be executed."
-printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
+printFilterError (FilterExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
     showExecutable executable
       <> " failed with an exit status of "

@@ -66,8 +66,11 @@ runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@T
 
 runTestPlan :: ResolvedPath Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do
+  let test = planTest testPlan
   AppOptions {optionsMode = mode} <- ask
-  testResult <- liftIO $ runTest location testPlan
+  executionResult <- liftIO $ runTest location testPlan
+  testOutcome <- liftIO $ assertResult location testPlan executionResult
+  let testResult = TestResult test testOutcome
   modifiedTestResult <-
     case mode of
       Check -> return testResult

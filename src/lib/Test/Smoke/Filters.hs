@@ -47,7 +47,7 @@ runFilter fallbackShell command value = do
     ExitSuccess -> return $ deserializeFixture processStdOut
     ExitFailure code ->
       throwE $
-        ExecutionFailed
+        FilterExecutionFailed
           executable
           (Status code)
           (StdOut processStdOut)

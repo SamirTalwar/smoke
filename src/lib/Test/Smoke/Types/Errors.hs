@@ -10,6 +10,7 @@ data SmokeError
   = DiscoveryError SmokeDiscoveryError
   | PlanningError SmokePlanningError
   | ExecutionError SmokeExecutionError
+  | AssertionError SmokeAssertionError
   | BlessError SmokeBlessError
   deriving (Eq, Show)
 
@@ -42,10 +43,15 @@ data SmokeExecutionError
   | CouldNotReadFile (RelativePath File) IOError
   | CouldNotStoreDirectory (ResolvedPath Dir) IOError
   | CouldNotRevertDirectory (ResolvedPath Dir) IOError
-  | ExecutionFilterError SmokeFilterError
   deriving (Eq, Show)
 
 instance Exception SmokeExecutionError
+
+newtype SmokeAssertionError
+  = AssertionFilterError SmokeFilterError
+  deriving (Eq, Show)
+
+instance Exception SmokeAssertionError
 
 data SmokeBlessError
   = CouldNotBlessInlineFixture FixtureName Text
@@ -59,7 +65,7 @@ instance Exception SmokeBlessError
 data SmokeFilterError
   = MissingFilterScript
   | CouldNotExecuteFilter Executable IOError
-  | ExecutionFailed Executable Status StdOut StdErr
+  | FilterExecutionFailed Executable Status StdOut StdErr
   | FilterPathError PathError
   deriving (Eq, Show)
 

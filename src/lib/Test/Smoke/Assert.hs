@@ -34,15 +34,15 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
     withExceptT AssertionFilterError $
       ifEmpty actualStdErr
         <$> applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
-  let statusResult = result $ Vector.singleton (expectedStatus, filteredStatus)
+  let statusResult = assertAll $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
-        result $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
+        assertAll $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
   let stdErrResult =
-        result $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
+        assertAll $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
   fileResults <-
     Map.traverseWithKey
       ( \relativePath contents ->
-          result . Vector.zip contents
+          assertAll . Vector.zip contents
             <$> withExceptT
               AssertionFilterError
               ( applyFiltersFromFixtures
@@ -66,11 +66,13 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
           stdErrResult
           fileResults
   where
-    result :: Eq a => Vector (a, a) -> PartResult a
-    result comparison =
-      if Vector.any (uncurry (==)) comparison
+    assertAll :: Eq a => Vector (Assert a, a) -> PartResult a
+    assertAll comparisons =
+      if Vector.any (uncurry assert) comparisons
         then PartSuccess
-        else PartFailure comparison
+        else PartFailure comparisons
+    assert :: Eq a => Assert a -> a -> Bool
+    assert (AssertEqual expected) actual = expected == actual
 
 ifEmpty :: a -> Vector a -> Vector a
 ifEmpty x xs

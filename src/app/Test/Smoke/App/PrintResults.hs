@@ -48,10 +48,10 @@ printFailingOutput :: String -> PartResult Text -> Output ()
 printFailingOutput _ PartSuccess = return ()
 printFailingOutput name (PartFailure comparisons) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  uncurry printDiff (Vector.head comparisons)
+  uncurry printFailure (Vector.head comparisons)
   forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
     putRed "      or: "
-    printDiff expected actual
+    printFailure expected actual
 
 printFailingFilesOutput ::
   Map (RelativePath File) (PartResult TestFileContents) -> Output ()
@@ -71,10 +71,13 @@ printFailingFileOutput _ PartSuccess = return ()
 printFailingFileOutput path (PartFailure comparisons) = do
   putRedLn $ fromString ("    " ++ toFilePath path ++ ":")
   putPlain $ fromString $ indentedKey ""
-  uncurry printDiff (Vector.head comparisons)
+  uncurry printFailure (Vector.head comparisons)
   forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
     putRed "      or: "
-    printDiff expected actual
+    printFailure expected actual
+
+printFailure :: Assert Text -> Text -> Output ()
+printFailure (AssertEqual expected) = printDiff expected
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

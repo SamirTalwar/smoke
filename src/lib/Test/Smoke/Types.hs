@@ -1,5 +1,6 @@
 module Test.Smoke.Types
-  ( module Test.Smoke.Types.Base,
+  ( module Test.Smoke.Types.Assert,
+    module Test.Smoke.Types.Base,
     module Test.Smoke.Types.Errors,
     module Test.Smoke.Types.Executable,
     module Test.Smoke.Types.ExecutionResult,
@@ -14,6 +15,7 @@ module Test.Smoke.Types
   )
 where
 
+import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Executable

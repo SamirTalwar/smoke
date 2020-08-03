@@ -87,11 +87,11 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
       <$> sequence (readFixture location <$> testStdIn test)
   stdIn <-
     withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
-  status <- unfiltered <$> readFixture location (testStatus test)
-  stdOut <- Vector.map unfiltered <$> readFixtures location (testStdOut test)
-  stdErr <- Vector.map unfiltered <$> readFixtures location (testStdErr test)
+  status <- AssertEqual . unfiltered <$> readFixture location (testStatus test)
+  stdOut <- Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdOut test)
+  stdErr <- Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdErr test)
   files <-
-    mapM (fmap (Vector.map unfiltered) . readFixtures location) (testFiles test)
+    mapM (fmap (Vector.map (AssertEqual . unfiltered)) . readFixtures location) (testFiles test)
   let revert = Vector.map (location </>) (testRevert test)
   return $
     TestPlan

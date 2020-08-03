@@ -1,9 +1,11 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Test.Smoke.Types.Results where
 
-import Data.Bifunctor (bimap)
 import Data.Map.Strict (Map)
 import Data.Vector (Vector)
 import Test.Smoke.Paths
+import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Files
@@ -35,10 +37,5 @@ data TestOutcome
 
 data PartResult a
   = PartSuccess
-  | PartFailure (Vector (a, a))
-  deriving (Eq, Show)
-
-instance Functor PartResult where
-  _ `fmap` PartSuccess = PartSuccess
-  f `fmap` (PartFailure failures) =
-    PartFailure (bimap f f <$> failures)
+  | PartFailure (Vector (Assert a, a))
+  deriving (Eq, Show, Functor)

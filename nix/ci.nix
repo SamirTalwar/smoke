@@ -5,4 +5,6 @@ let
 in
 pkgs.mkShell {
   buildInputs = deps ++ [ pkgs.nix ];
+
+  CI = "true";
 }

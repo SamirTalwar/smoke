@@ -5,4 +5,6 @@ let
 in
 pkgs.mkShell {
   buildInputs = deps;
+
+  NIX_PATH = "nixpkgs=" + sources.nixpkgs;
 }

@@ -7,4 +7,5 @@ pkgs.mkShell {
   buildInputs = deps ++ [ pkgs.nix ];
 
   CI = "true";
+  NIX_PATH = "nixpkgs=" + sources.nixpkgs;
 }

@@ -7,4 +7,3 @@ out
 # Stack
 /.stack-work
 *.cabal
-stack.yaml.lock

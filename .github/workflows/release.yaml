@@ -48,7 +48,6 @@ jobs:
         with:
           path: ~/.stack
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-          restore-keys: v1-${{ matrix.os }}-stack-
       - uses: actions/download-artifact@v1
         with:
           name: release_upload_url

@@ -32,7 +32,6 @@ jobs:
         with:
           path: ~/.stack
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-          restore-keys: v1-${{ matrix.os }}-stack-
       - run: |
           mkdir -p ~/.stack
           cat > ~/.stack/config.yaml <<EOF
@@ -62,7 +61,6 @@ jobs:
         with:
           path: ~/.stack
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-          restore-keys: v1-${{ matrix.os }}-stack-
       - run: |
           mkdir -p ~/.stack
           cat > ~/.stack/config.yaml <<EOF

@@ -28,10 +28,10 @@ jobs:
           fi
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - uses: actions/cache@v2
-        with:
-          path: ~/.stack
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ~/.stack
+      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: |
           mkdir -p ~/.stack
           cat > ~/.stack/config.yaml <<EOF
@@ -57,10 +57,10 @@ jobs:
       - uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
-      - uses: actions/cache@v2
-        with:
-          path: ~/.stack
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ~/.stack
+      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: |
           mkdir -p ~/.stack
           cat > ~/.stack/config.yaml <<EOF

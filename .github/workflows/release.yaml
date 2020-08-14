@@ -44,10 +44,10 @@ jobs:
       - run: nix-instantiate shell.nix | cachix push samirtalwar
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - uses: actions/cache@v2
-        with:
-          path: ~/.stack
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ~/.stack
+      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - uses: actions/download-artifact@v1
         with:
           name: release_upload_url

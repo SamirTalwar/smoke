@@ -16,6 +16,7 @@ import System.Directory (doesDirectoryExist, doesFileExist)
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
 import Test.Smoke.Errors
+import Test.Smoke.Parse
 import Test.Smoke.Paths
 import Test.Smoke.Types
 

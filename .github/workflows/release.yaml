@@ -44,11 +44,10 @@ jobs:
       - run: nix-instantiate shell.nix | cachix push samirtalwar
         env:
           CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - uses: actions/cache@v2
-        with:
-          path: ~/.stack
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-          restore-keys: v1-${{ matrix.os }}-stack-
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ~/.stack
+      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - uses: actions/download-artifact@v1
         with:
           name: release_upload_url
@@ -61,7 +60,7 @@ jobs:
           export ASSET_NAME="smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
           echo ::set-output name=asset_name::"$ASSET_NAME"
           echo ::set-output name=asset_path::"out/publish/${ASSET_NAME}"
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'cabal --enable-nix v2-update'
+      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
       - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make out/build/release/smoke'
       - run: |
           mkdir -p "$(dirname ${{ steps.asset.outputs.asset_path }})"

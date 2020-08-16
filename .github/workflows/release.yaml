@@ -47,12 +47,8 @@ jobs:
       - id: asset
         run: |
           export TAG="${{ github.ref }}"
-          export ASSET_NAME="smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
-          echo ::set-output name=asset_name::"$ASSET_NAME"
-          echo ::set-output name=asset_path::"out/publish/${ASSET_NAME}"
-      - run: |
-          mkdir -p "$(dirname ${{ steps.asset.outputs.asset_path }})"
-          cp out/build/release/smoke ${{ steps.asset.outputs.asset_path }}
+          echo "::set-output name=asset_name::smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
+          echo "::set-output name=asset_path::out/build/release/smoke"
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,10 +7,12 @@ on:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    outputs:
+      release_upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - id: create_release
-        uses: actions/create-release@latest
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -18,11 +20,6 @@ jobs:
           release_name: ${{ github.ref }}
           body: ${{ github.ref }}
           draft: true
-      - run: echo "${{ steps.create_release.outputs.upload_url }}" > release_upload_url.txt
-      - uses: actions/upload-artifact@v1
-        with:
-          name: release_upload_url
-          path: release_upload_url.txt
 
   publish-unix:
     name: Release
@@ -31,45 +28,32 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-20.04
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v7
-      - uses: cachix/cachix-action@v5
+      - uses: actions/setup-haskell@v1
         with:
-          name: samirtalwar
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - run: nix-instantiate shell.nix | cachix push samirtalwar
-        env:
-          CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ~/.stack
-      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - uses: actions/download-artifact@v1
+          ghc-version: "8.8.3"
+          enable-stack: true
+          stack-no-global: true
+      - uses: actions/cache@v2
         with:
-          name: release_upload_url
-      - id: release
-        run: |
-          echo ::set-output name=upload_url::"$(cat release_upload_url/release_upload_url.txt)"
+          path: ~/.stack/snapshots
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      - run: make smoke.cabal
+      - run: make out/build/release/smoke
       - id: asset
         run: |
           export TAG="${{ github.ref }}"
-          export ASSET_NAME="smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
-          echo ::set-output name=asset_name::"$ASSET_NAME"
-          echo ::set-output name=asset_path::"out/publish/${ASSET_NAME}"
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make out/build/release/smoke'
-      - run: |
-          mkdir -p "$(dirname ${{ steps.asset.outputs.asset_path }})"
-          cp out/build/release/smoke ${{ steps.asset.outputs.asset_path }}
+          echo "::set-output name=asset_name::smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
+          echo "::set-output name=asset_path::out/build/release/smoke"
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.release_upload_url }}
           asset_name: ${{ steps.asset.outputs.asset_name }}
           asset_path: ${{ steps.asset.outputs.asset_path }}
           asset_content_type: application/octet-stream

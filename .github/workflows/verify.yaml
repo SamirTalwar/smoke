@@ -10,36 +10,22 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-20.04
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v10
-      - uses: cachix/cachix-action@v6
+      - uses: actions/setup-haskell@v1
         with:
-          name: samirtalwar
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-      - run: |
-          if [[ -n "$CACHIX_SIGNING_KEY" ]]; then
-            nix-instantiate shell.nix | cachix push samirtalwar
-          else
-            nix-instantiate shell.nix
-          fi
-        env:
-          CACHIX_SIGNING_KEY: ${{ secrets.CACHIX_SIGNING_KEY }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ~/.stack
-      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - run: |
-          mkdir -p ~/.stack
-          cat > ~/.stack/config.yaml <<EOF
-          nix:
-            enable: true
-          EOF
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make build'
+          ghc-version: "8.8.3"
+          enable-stack: true
+          stack-no-global: true
+      - uses: actions/cache@v2
+        with:
+          path: ~/.stack/snapshots
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      - run: make smoke.cabal
+      - run: make build
 
   test-unix:
     name: Build and Test
@@ -48,32 +34,27 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-20.04
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v10
-      - uses: cachix/cachix-action@v6
+      - uses: actions/setup-haskell@v1
         with:
-          name: samirtalwar
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ~/.stack
-      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - run: |
-          mkdir -p ~/.stack
-          cat > ~/.stack/config.yaml <<EOF
-          nix:
-            enable: true
-          EOF
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make smoke.cabal'
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make test'
+          ghc-version: "8.8.3"
+          enable-stack: true
+          stack-no-global: true
+      - uses: actions/cache@v2
+        with:
+          path: ~/.stack/snapshots
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      - run: make smoke.cabal
+      - run: make test
 
   lint:
     name: Lint
     needs: build-unix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v10

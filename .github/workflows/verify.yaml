@@ -20,10 +20,10 @@ jobs:
           ghc-version: "8.8.3"
           enable-stack: true
           stack-no-global: true
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ~/.stack
-      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      - uses: actions/cache@v2
+        with:
+          path: ~/.stack
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: make smoke.cabal
       - run: make build
 
@@ -44,10 +44,10 @@ jobs:
           ghc-version: "8.8.3"
           enable-stack: true
           stack-no-global: true
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ~/.stack
-      #     key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+      - uses: actions/cache@v2
+        with:
+          path: ~/.stack
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: make smoke.cabal
       - run: make test
 

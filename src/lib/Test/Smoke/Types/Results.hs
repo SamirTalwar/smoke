@@ -37,5 +37,5 @@ data TestOutcome
 
 data PartResult a
   = PartSuccess
-  | PartFailure (Vector (Assert a, a))
-  deriving (Eq, Show, Functor)
+  | PartFailure (Vector (AssertFailure a))
+  deriving (Eq, Functor, Show)

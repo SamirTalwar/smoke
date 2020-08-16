@@ -46,12 +46,12 @@ printFailingInput name value =
 
 printFailingOutput :: String -> PartResult Text -> Output ()
 printFailingOutput _ PartSuccess = return ()
-printFailingOutput name (PartFailure comparisons) = do
+printFailingOutput name (PartFailure failures) = do
   putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  uncurry printFailure (Vector.head comparisons)
-  forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
+  printFailure (Vector.head failures)
+  forM_ (Vector.tail failures) $ \failure -> do
     putRed "      or: "
-    printFailure expected actual
+    printFailure failure
 
 printFailingFilesOutput ::
   Map (RelativePath File) (PartResult TestFileContents) -> Output ()
@@ -68,16 +68,16 @@ printFailingFilesOutput fileResults =
 
 printFailingFileOutput :: RelativePath File -> PartResult Text -> Output ()
 printFailingFileOutput _ PartSuccess = return ()
-printFailingFileOutput path (PartFailure comparisons) = do
+printFailingFileOutput path (PartFailure failures) = do
   putRedLn $ fromString ("    " ++ toFilePath path ++ ":")
   putPlain $ fromString $ indentedKey ""
-  uncurry printFailure (Vector.head comparisons)
-  forM_ (Vector.tail comparisons) $ \(expected, actual) -> do
+  printFailure (Vector.head failures)
+  forM_ (Vector.tail failures) $ \failure -> do
     putRed "      or: "
-    printFailure expected actual
+    printFailure failure
 
-printFailure :: Assert Text -> Text -> Output ()
-printFailure (AssertEqual expected) = printDiff expected
+printFailure :: AssertFailure Text -> Output ()
+printFailure (AssertFailureDiff expected actual) = printDiff expected actual
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

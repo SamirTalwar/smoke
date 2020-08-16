@@ -34,65 +34,46 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr files)
         TestError (BlessError (CouldNotBlessWithMultipleValues "files"))
   | otherwise =
     do
-      case status of
-        PartFailure comparisons ->
-          writeFixture
-            location
-            (testStatus test)
-            (snd (Vector.head comparisons))
-        _ -> return ()
-      case stdOut of
-        PartFailure comparisons ->
-          writeFixtures
-            location
-            (testStdOut test)
-            (snd (Vector.head comparisons))
-        _ -> return ()
-      case stdErr of
-        PartFailure comparisons ->
-          writeFixtures
-            location
-            (testStdErr test)
-            (snd (Vector.head comparisons))
-        _ -> return ()
+      writeFixture location (testStatus test) status
+      writeFixtures location (testStdOut test) stdOut
+      writeFixtures location (testStdErr test) stdErr
       forM_ (Map.toList files) $ \(path, fileResult) ->
-        case fileResult of
-          PartFailure comparisons ->
-            writeFixtures
-              location
-              (testFiles test ! path)
-              (snd (Vector.head comparisons))
-          _ -> return ()
+        writeFixtures location (testFiles test ! path) fileResult
       return $ TestResult test TestSuccess
       `catch` ( \(e :: SmokeBlessError) ->
                   return (TestResult test $ TestError $ BlessError e)
               )
       `catch` (return . TestResult test . TestError . BlessError . BlessIOException)
-  where
-    isFailureWithMultipleExpectedValues (PartFailure comparisons) =
-      Vector.length comparisons > 1
-    isFailureWithMultipleExpectedValues _ = False
 blessResult _ result = return result
 
-writeFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> a -> IO ()
-writeFixture _ (Fixture contents@(Inline _) _) value =
+writeFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> PartResult a -> IO ()
+writeFixture _ _ PartSuccess =
+  return ()
+writeFixture _ (Fixture contents@(Inline _) _) (PartFailure results) =
   throwIO $
-    CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture value)
-writeFixture location (Fixture (FileLocation path) _) value =
-  writeToPath (location </> path) (serializeFixture value)
+    CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture (assertFailureActual (Vector.head results)))
+writeFixture location (Fixture (FileLocation path) _) (PartFailure results) =
+  writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
 
 writeFixtures ::
   forall a.
   FixtureType a =>
   ResolvedPath Dir ->
   Fixtures a ->
-  a ->
+  PartResult a ->
   IO ()
-writeFixtures location (Fixtures fixtures) value
+writeFixtures _ _ PartSuccess =
+  return ()
+writeFixtures location (Fixtures fixtures) results
   | Vector.length fixtures == 1 =
-    writeFixture location (Vector.head fixtures) value
+    writeFixture location (Vector.head fixtures) results
   | Vector.length fixtures == 0 =
     throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: Contents a))
   | otherwise =
     throwIO $
       CouldNotBlessWithMultipleValues (fixtureName (undefined :: Contents a))
+
+isFailureWithMultipleExpectedValues :: PartResult a -> Bool
+isFailureWithMultipleExpectedValues (PartFailure results) =
+  Vector.length results > 1
+isFailureWithMultipleExpectedValues _ = False

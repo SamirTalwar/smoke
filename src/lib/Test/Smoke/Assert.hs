@@ -68,11 +68,12 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
   where
     assertAll :: Eq a => Vector (Assert a, a) -> PartResult a
     assertAll comparisons =
-      if Vector.any (uncurry assert) comparisons
-        then PartSuccess
-        else PartFailure comparisons
-    assert :: Eq a => Assert a -> a -> Bool
-    assert (AssertEqual expected) actual = expected == actual
+      maybe PartSuccess PartFailure $ sequence (Vector.map (uncurry assert) comparisons)
+    assert :: Assert a -> a -> Maybe (AssertFailure a)
+    assert (AssertEqual expected) actual =
+      if expected == actual
+        then Nothing
+        else Just $ AssertFailureDiff expected actual
 
 ifEmpty :: a -> Vector a -> Vector a
 ifEmpty x xs

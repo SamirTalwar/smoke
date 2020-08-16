@@ -22,7 +22,7 @@ jobs:
           stack-no-global: true
       - uses: actions/cache@v2
         with:
-          path: ~/.stack
+          path: ~/.stack/snapshots
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: make smoke.cabal
       - run: make build
@@ -46,7 +46,7 @@ jobs:
           stack-no-global: true
       - uses: actions/cache@v2
         with:
-          path: ~/.stack
+          path: ~/.stack/snapshots
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: make smoke.cabal
       - run: make test

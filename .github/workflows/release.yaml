@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - id: create_release
-        uses: actions/create-release@latest
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -19,7 +19,7 @@ jobs:
           body: ${{ github.ref }}
           draft: true
       - run: echo "${{ steps.create_release.outputs.upload_url }}" > release_upload_url.txt
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v2
         with:
           name: release_upload_url
           path: release_upload_url.txt
@@ -47,7 +47,7 @@ jobs:
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
       - run: make smoke.cabal
       - run: make out/build/release/smoke
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v2
         with:
           name: release_upload_url
       - id: release

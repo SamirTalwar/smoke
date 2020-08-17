@@ -21,7 +21,7 @@ newtype TestFileContents = TestFileContents
   deriving (Eq, Show, FromJSON)
 
 instance FixtureType TestFileContents where
-  fixtureName = const "file contents"
+  fixtureName = "file contents"
   serializeFixture = unTestFileContents
   deserializeFixture = TestFileContents
 

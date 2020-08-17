@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Test.Smoke.Bless
   ( blessResult,
@@ -46,12 +47,12 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr files)
       `catch` (return . TestResult test . TestError . BlessError . BlessIOException)
 blessResult _ result = return result
 
-writeFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> PartResult a -> IO ()
+writeFixture :: forall a. FixtureType a => ResolvedPath Dir -> Fixture a -> PartResult a -> IO ()
 writeFixture _ _ PartSuccess =
   return ()
-writeFixture _ (Fixture contents@(Inline _) _) (PartFailure results) =
+writeFixture _ (Fixture (Inline _) _) (PartFailure results) =
   throwIO $
-    CouldNotBlessInlineFixture (fixtureName contents) (serializeFixture (assertFailureActual (Vector.head results)))
+    CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture (assertFailureActual (Vector.head results)))
 writeFixture location (Fixture (FileLocation path) _) (PartFailure results) =
   writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
 
@@ -68,10 +69,9 @@ writeFixtures location (Fixtures fixtures) results
   | Vector.length fixtures == 1 =
     writeFixture location (Vector.head fixtures) results
   | Vector.length fixtures == 0 =
-    throwIO $ CouldNotBlessAMissingValue (fixtureName (undefined :: Contents a))
+    throwIO $ CouldNotBlessAMissingValue (fixtureName @a)
   | otherwise =
-    throwIO $
-      CouldNotBlessWithMultipleValues (fixtureName (undefined :: Contents a))
+    throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
 isFailureWithMultipleExpectedValues :: PartResult a -> Bool
 isFailureWithMultipleExpectedValues (PartFailure results) =

@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -23,32 +24,32 @@ noFixtures :: Fixtures a
 noFixtures = Fixtures Vector.empty
 
 class FixtureType a where
-  fixtureName :: Contents a -> FixtureName
+  fixtureName :: FixtureName
   serializeFixture :: a -> Text
   deserializeFixture :: Text -> a
 
 instance FixtureType Text where
-  fixtureName = const "text"
+  fixtureName = "text"
   serializeFixture = id
   deserializeFixture = id
 
 instance FixtureType Status where
-  fixtureName = const "exit-status"
+  fixtureName = "exit-status"
   serializeFixture = Text.pack . show . unStatus
   deserializeFixture = Status . read . Text.unpack
 
 instance FixtureType StdIn where
-  fixtureName = const "stdin"
+  fixtureName = "stdin"
   serializeFixture = unStdIn
   deserializeFixture = StdIn
 
 instance FixtureType StdOut where
-  fixtureName = const "stdout"
+  fixtureName = "stdout"
   serializeFixture = unStdOut
   deserializeFixture = StdOut
 
 instance FixtureType StdErr where
-  fixtureName = const "stderr"
+  fixtureName = "stderr"
   serializeFixture = unStdErr
   deserializeFixture = StdErr
 

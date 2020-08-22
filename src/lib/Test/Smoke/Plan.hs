@@ -24,34 +24,29 @@ planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
   currentWorkingDirectory <- WorkingDirectory <$> getCurrentWorkingDirectory
   suitePlans <-
-    forM suites $ \(suiteName, suite) ->
-      case suite of
+    forM suites $ \(SuiteWithMetadata suiteName location (Suite thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests)) -> do
+      let fallbackCommand = thisSuiteCommand <|> specificationCommand
+      shell <-
+        runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
+      case shell of
         Left exception ->
-          return $ SuitePlanError suiteName $ SuiteDiscoveryError exception
-        Right (Suite location thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests) -> do
-          let fallbackCommand = thisSuiteCommand <|> specificationCommand
-          shell <-
-            runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
-          case shell of
-            Left exception ->
-              return $ SuitePlanError suiteName $ SuitePathError exception
-            Right fallbackShell -> do
-              let fallbackWorkingDirectory =
-                    fromMaybe currentWorkingDirectory thisSuiteWorkingDirectory
-              testPlans <-
-                forM tests $ \test ->
-                  either (TestPlanError test) TestPlanSuccess
-                    <$> runExceptT
-                      ( do
-                          validateTest fallbackCommand test
-                          readTest
-                            location
-                            fallbackWorkingDirectory
-                            fallbackShell
-                            fallbackCommand
-                            test
-                      )
-              return $ SuitePlan suiteName location testPlans
+          return $ SuitePlanError suiteName $ SuitePathError exception
+        Right fallbackShell -> do
+          let fallbackWorkingDirectory = determineWorkingDirectory location thisSuiteWorkingDirectory currentWorkingDirectory
+          testPlans <-
+            forM tests $ \test ->
+              either (TestPlanError test) TestPlanSuccess
+                <$> runExceptT
+                  ( do
+                      validateTest fallbackCommand test
+                      readTest
+                        location
+                        fallbackWorkingDirectory
+                        fallbackShell
+                        fallbackCommand
+                        test
+                  )
+          return $ SuitePlan suiteName location testPlans
   return $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
@@ -69,8 +64,7 @@ readTest ::
   Test ->
   Planning TestPlan
 readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
-  let workingDirectory =
-        fromMaybe fallbackWorkingDirectory (testWorkingDirectory test)
+  let workingDirectory = determineWorkingDirectory location (testWorkingDirectory test) fallbackWorkingDirectory
   command <-
     maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
   executable <-
@@ -97,6 +91,10 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         planFiles = files,
         planRevert = revert
       }
+
+determineWorkingDirectory :: ResolvedPath Dir -> Maybe (RelativePath Dir) -> WorkingDirectory -> WorkingDirectory
+determineWorkingDirectory location workingDirectory fallbackWorkingDirectory =
+  maybe fallbackWorkingDirectory (WorkingDirectory . (location </>)) workingDirectory
 
 readStdIn :: ResolvedPath Dir -> Maybe Shell -> Test -> Planning StdIn
 readStdIn location fallbackShell test = do

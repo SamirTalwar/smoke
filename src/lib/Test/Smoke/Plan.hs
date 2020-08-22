@@ -104,16 +104,16 @@ readStdIn location fallbackShell test = do
   withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
 
 readStatus :: ResolvedPath Dir -> Test -> Planning (Assert Status)
-readStatus location test = AssertEqual . unfiltered <$> readFixture location (testStatus test)
+readStatus location test = readAssertable location (testStatus test)
 
 readStdOut :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdOut))
-readStdOut location test = Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdOut test)
+readStdOut location test = mapM (readAssertable location) (testStdOut test)
 
 readStdErr :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdErr))
-readStdErr location test = Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdErr test)
+readStdErr location test = mapM (readAssertable location) (testStdErr test)
 
 readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
-readFiles location test = mapM (fmap (Vector.map (AssertEqual . unfiltered)) . readFixtures location) (testFiles test)
+readFiles location test = mapM (mapM (readAssertable location)) (testFiles test)
 
 readFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
 readFixture _ (Fixture (Inline contents) maybeFilter) =
@@ -124,8 +124,9 @@ readFixture location (Fixture (FileLocation path) maybeFilter) =
       (handleMissingFileError path)
       (ExceptT $ tryIOError $ readFromPath (location </> path))
 
-readFixtures :: FixtureType a => ResolvedPath Dir -> Vector (Fixture a) -> Planning (Vector (Filtered a))
-readFixtures location = mapM (readFixture location)
+readAssertable :: FixtureType a => ResolvedPath Dir -> Assertable a -> Planning (Assert a)
+readAssertable location (Assertable constructor fixture) =
+  constructor . unfiltered <$> readFixture location fixture
 
 includeFilter :: Maybe Command -> a -> Filtered a
 includeFilter maybeFilter contents =

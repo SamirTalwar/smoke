@@ -48,28 +48,28 @@ blessResult location (TestResult test (TestFailure _ status stdOut stdErr files)
       `catch` (return . TestResult test . TestError . BlessError . BlessIOException)
 blessResult _ result = return result
 
-writeFixture :: forall a. FixtureType a => ResolvedPath Dir -> Fixture a -> PartResult a -> IO ()
+writeFixture :: forall a. FixtureType a => ResolvedPath Dir -> Assertable a -> PartResult a -> IO ()
 writeFixture _ _ PartSuccess =
   return ()
-writeFixture _ (Fixture (Inline _) _) (PartFailure results) =
+writeFixture _ (Assertable _ (Fixture (Inline _) _)) (PartFailure results) =
   throwIO $
     CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture (assertFailureActual (Vector.head results)))
-writeFixture location (Fixture (FileLocation path) _) (PartFailure results) =
+writeFixture location (Assertable _ (Fixture (FileLocation path) _)) (PartFailure results) =
   writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
 
 writeFixtures ::
   forall a.
   FixtureType a =>
   ResolvedPath Dir ->
-  Vector (Fixture a) ->
+  Vector (Assertable a) ->
   PartResult a ->
   IO ()
 writeFixtures _ _ PartSuccess =
   return ()
-writeFixtures location fixtures results
-  | Vector.length fixtures == 1 =
-    writeFixture location (Vector.head fixtures) results
-  | Vector.length fixtures == 0 =
+writeFixtures location assertables results
+  | Vector.length assertables == 1 =
+    writeFixture location (Vector.head assertables) results
+  | Vector.length assertables == 0 =
     throwIO $ CouldNotBlessAMissingValue (fixtureName @a)
   | otherwise =
     throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)

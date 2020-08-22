@@ -10,6 +10,7 @@ import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
+import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Files
 import Test.Smoke.Types.Fixtures
@@ -48,10 +49,10 @@ data Test = Test
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
     testStdIn :: Maybe (Fixture StdIn),
-    testStdOut :: Vector (Fixture StdOut),
-    testStdErr :: Vector (Fixture StdErr),
-    testStatus :: Fixture Status,
-    testFiles :: Map (RelativePath File) (Vector (Fixture TestFileContents)),
+    testStdOut :: Vector (Assertable StdOut),
+    testStdErr :: Vector (Assertable StdErr),
+    testStatus :: Assertable Status,
+    testFiles :: Map (RelativePath File) (Vector (Assertable TestFileContents)),
     testRevert :: Vector (RelativePath Dir)
   }
 
@@ -66,15 +67,18 @@ instance FromJSON Test where
         <*> (v .:? "stdin")
         <*> (manyMaybe =<< (v .:? "stdout"))
         <*> (manyMaybe =<< (v .:? "stderr"))
-        <*> ( Fixture . Inline <$> (v .:? "exit-status" .!= def)
-                <*> return Nothing
-            )
+        <*> (Assertable AssertEqual <$> (Fixture . Inline <$> (v .:? "exit-status" .!= def) <*> return Nothing))
         <*> ( Map.fromList . Vector.toList
                 <$> (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))
             )
         <*> (v .:? "revert" .!= Vector.empty)
 
-parseTestFile :: Value -> Parser (RelativePath File, Vector (Fixture TestFileContents))
+data Assertable a = Assertable (a -> Assert a) (Fixture a)
+
+instance (Eq a, FromJSON a) => FromJSON (Assertable a) where
+  parseJSON value = Assertable AssertEqual <$> parseJSON value
+
+parseTestFile :: Value -> Parser (RelativePath File, Vector (Assertable TestFileContents))
 parseTestFile =
   withObject "File" $ \v -> do
     path <- parseFile <$> v .: "path"

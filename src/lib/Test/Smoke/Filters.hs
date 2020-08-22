@@ -21,17 +21,17 @@ applyFilters fallbackShell (Filtered unfilteredValue command) =
   runFilter fallbackShell command unfilteredValue
 
 applyFiltersFromFixture ::
-  FixtureType a => Maybe Shell -> Fixture a -> a -> Filtering a
-applyFiltersFromFixture _ (Fixture _ Nothing) value = return value
-applyFiltersFromFixture fallbackShell (Fixture _ (Just fixtureFilter)) value =
+  FixtureType a => Maybe Shell -> Assertable a -> a -> Filtering a
+applyFiltersFromFixture _ (Assertable _ (Fixture _ Nothing)) value = return value
+applyFiltersFromFixture fallbackShell (Assertable _ (Fixture _ (Just fixtureFilter))) value =
   applyFilters fallbackShell (Filtered value fixtureFilter)
 
 applyFiltersFromFixtures ::
-  FixtureType a => Maybe Shell -> Vector (Fixture a) -> a -> Filtering (Vector a)
-applyFiltersFromFixtures fallbackShell fixtures value =
+  FixtureType a => Maybe Shell -> Vector (Assertable a) -> a -> Filtering (Vector a)
+applyFiltersFromFixtures fallbackShell assertables value =
   Vector.mapM
-    (\fixture -> applyFiltersFromFixture fallbackShell fixture value)
-    fixtures
+    (\assertable -> applyFiltersFromFixture fallbackShell assertable value)
+    assertables
 
 runFilter :: FixtureType a => Maybe Shell -> Command -> a -> Filtering a
 runFilter fallbackShell command value = do

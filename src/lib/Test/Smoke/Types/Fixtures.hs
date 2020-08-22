@@ -27,7 +27,7 @@ instance FromJSON a => FromJSON (Contents a) where
 data Fixture a
   = Fixture (Contents a) (Maybe Command)
 
-instance (FromJSON a, FixtureType a) => FromJSON (Fixture a) where
+instance FromJSON a => FromJSON (Fixture a) where
   parseJSON value@(String _) =
     Fixture <$> parseJSON value <*> pure Nothing
   parseJSON value@(Object v) =

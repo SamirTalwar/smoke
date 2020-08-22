@@ -17,43 +17,31 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult location (TestResult test (TestFailure _ status stdOut stdErr files))
-  | isFailureWithMultipleExpectedValues status =
-    return $
-      TestResult test $
-        TestError (BlessError (CouldNotBlessWithMultipleValues "status"))
+blessResult _ (TestResult test (TestFailure _ (PartFailure results) _ _ _)) =
+  failed test $ couldNotBlessInlineFixture results
+blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files))
   | isFailureWithMultipleExpectedValues stdOut =
-    return $
-      TestResult test $
-        TestError (BlessError (CouldNotBlessWithMultipleValues "stdout"))
+    failed test $ CouldNotBlessWithMultipleValues (fixtureName @StdOut)
   | isFailureWithMultipleExpectedValues stdErr =
-    return $
-      TestResult test $
-        TestError (BlessError (CouldNotBlessWithMultipleValues "stderr"))
+    failed test $ CouldNotBlessWithMultipleValues (fixtureName @StdErr)
   | any isFailureWithMultipleExpectedValues (Map.elems files) =
-    return $
-      TestResult test $
-        TestError (BlessError (CouldNotBlessWithMultipleValues "files"))
+    failed test $ CouldNotBlessWithMultipleValues "files"
   | otherwise =
     do
-      writeFixture location (testStatus test) status
       writeFixtures location (testStdOut test) stdOut
       writeFixtures location (testStdErr test) stdErr
       forM_ (Map.toList files) $ \(path, fileResult) ->
         writeFixtures location (testFiles test ! path) fileResult
       return $ TestResult test TestSuccess
-      `catch` ( \(e :: SmokeBlessError) ->
-                  return (TestResult test $ TestError $ BlessError e)
-              )
-      `catch` (return . TestResult test . TestError . BlessError . BlessIOException)
+      `catch` (\(e :: SmokeBlessError) -> failed test e)
+      `catch` (failed test . BlessIOException)
 blessResult _ result = return result
 
-writeFixture :: forall a. FixtureType a => ResolvedPath Dir -> TestOutput a -> PartResult a -> IO ()
+writeFixture :: FixtureType a => ResolvedPath Dir -> TestOutput a -> PartResult a -> IO ()
 writeFixture _ _ PartSuccess =
   return ()
 writeFixture _ (TestOutput _ _ (Inline _)) (PartFailure results) =
-  throwIO $
-    CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture (assertFailureActual (Vector.head results)))
+  throwIO $ couldNotBlessInlineFixture results
 writeFixture location (TestOutput _ _ (FileLocation path)) (PartFailure results) =
   writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
 
@@ -74,6 +62,13 @@ writeFixtures location outputs results =
       throwIO $ CouldNotBlessAMissingValue (fixtureName @a)
     _ ->
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
+
+failed :: Applicative f => Test -> SmokeBlessError -> f TestResult
+failed test = pure . TestResult test . TestError . BlessError
+
+couldNotBlessInlineFixture :: forall a. FixtureType a => Vector (AssertFailure a) -> SmokeBlessError
+couldNotBlessInlineFixture results =
+  CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture (assertFailureActual (Vector.head results)))
 
 isFailureWithMultipleExpectedValues :: PartResult a -> Bool
 isFailureWithMultipleExpectedValues (PartFailure results) =

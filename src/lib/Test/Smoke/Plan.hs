@@ -72,7 +72,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
       convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
   stdIn <- readStdIn location fallbackShell test
-  status <- readStatus location test
+  let status = testStatus test
   stdOut <- readStdOut location test
   stdErr <- readStdErr location test
   files <- readFiles location test
@@ -99,9 +99,6 @@ determineWorkingDirectory location workingDirectory fallbackWorkingDirectory =
 readStdIn :: ResolvedPath Dir -> Maybe Shell -> Test -> Planning StdIn
 readStdIn location fallbackShell test =
   fromMaybe (StdIn Text.empty) <$> sequence (readTestInput location fallbackShell <$> testStdIn test)
-
-readStatus :: ResolvedPath Dir -> Test -> Planning (Assert Status)
-readStatus location test = readTestOutput location (testStatus test)
 
 readStdOut :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdOut))
 readStdOut location test = mapM (readTestOutput location) (testStdOut test)

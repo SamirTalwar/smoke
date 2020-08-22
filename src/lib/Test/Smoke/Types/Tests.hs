@@ -48,9 +48,9 @@ data Test = Test
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
     testStdIn :: Maybe (TestInput StdIn),
+    testStatus :: Assert Status,
     testStdOut :: Vector (TestOutput StdOut),
     testStdErr :: Vector (TestOutput StdErr),
-    testStatus :: TestOutput Status,
     testFiles :: Map (RelativePath File) (Vector (TestOutput TestFileContents)),
     testRevert :: Vector (RelativePath Dir)
   }
@@ -64,9 +64,9 @@ instance FromJSON Test where
         <*> (v .:? "command")
         <*> (v .:? "args")
         <*> (v .:? "stdin")
+        <*> (AssertEqual <$> (v .:? "exit-status" .!= def))
         <*> (manyMaybe =<< (v .:? "stdout"))
         <*> (manyMaybe =<< (v .:? "stderr"))
-        <*> (TestOutput AssertEqual Nothing . Inline <$> (v .:? "exit-status" .!= def))
         <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList
                 <$> (v .:? "files" .!= Vector.empty)
             )

@@ -23,9 +23,6 @@ assertResult location testPlan (ExecutionSucceeded actualOutputs) =
 
 processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestOutcome
 processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
-  filteredStatus <-
-    withExceptT AssertionFilterError $
-      applyFiltersFromTestOutput fallbackShell (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT AssertionFilterError $
       ifEmpty actualStdOut
@@ -34,7 +31,7 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
     withExceptT AssertionFilterError $
       ifEmpty actualStdErr
         <$> applyFiltersFromTestOutputs fallbackShell (testStdErr test) actualStdErr
-  let statusResult = assertAll $ Vector.singleton (expectedStatus, filteredStatus)
+  let statusResult = assertAll $ Vector.singleton (expectedStatus, actualStatus)
   let stdOutResult =
         assertAll $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
   let stdErrResult =

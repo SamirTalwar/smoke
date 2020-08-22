@@ -1,5 +1,8 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Test.Smoke.Types.Base where
 
@@ -13,23 +16,6 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
-
-data Contents a
-  = Inline a
-  | FileLocation (RelativePath File)
-
-parseContents :: (Text -> a) -> Value -> Parser (Contents a)
-parseContents deserialize (String contents) =
-  return $ Inline (deserialize contents)
-parseContents deserialize (Object v) = do
-  maybeContents <- v .:? "contents"
-  maybeFile <- v .:? "file"
-  case (maybeContents, maybeFile) of
-    (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both."
-    (Just contents, Nothing) -> return $ Inline (deserialize contents)
-    (Nothing, Just file) -> return $ FileLocation file
-    (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\"."
-parseContents _ invalid = typeMismatch "contents" invalid
 
 newtype SuiteName = SuiteName
   { unSuiteName :: String
@@ -79,6 +65,24 @@ instance FromJSON Command where
   parseJSON args@(Array _) = CommandArgs <$> parseJSON args
   parseJSON invalid = typeMismatch "command" invalid
 
+newtype FixtureName = FixtureName
+  { unFixtureName :: String
+  }
+  deriving (Eq, Show, IsString)
+
+class FixtureType a where
+  fixtureName :: FixtureName
+  serializeFixture :: a -> Text
+  deserializeFixture :: Text -> a
+
+parseFixtureJSON :: forall a. FixtureType a => Value -> Parser a
+parseFixtureJSON = withText (unFixtureName (fixtureName @a)) (return . deserializeFixture)
+
+instance FixtureType Text where
+  fixtureName = "text"
+  serializeFixture = id
+  deserializeFixture = id
+
 newtype Status = Status
   { unStatus :: Int
   }
@@ -86,6 +90,14 @@ newtype Status = Status
 
 instance Default Status where
   def = Status 0
+
+instance FixtureType Status where
+  fixtureName = "exit-status"
+  serializeFixture = Text.pack . show . unStatus
+  deserializeFixture = Status . read . Text.unpack
+
+instance FromJSON Status where
+  parseJSON = withScientific (unFixtureName (fixtureName @Status)) (\value -> Status <$> parseJSON (Number value))
 
 newtype StdIn = StdIn
   { unStdIn :: Text
@@ -95,6 +107,14 @@ newtype StdIn = StdIn
 instance Default StdIn where
   def = StdIn Text.empty
 
+instance FixtureType StdIn where
+  fixtureName = "stdin"
+  serializeFixture = unStdIn
+  deserializeFixture = StdIn
+
+instance FromJSON StdIn where
+  parseJSON = parseFixtureJSON
+
 newtype StdOut = StdOut
   { unStdOut :: Text
   }
@@ -102,6 +122,14 @@ newtype StdOut = StdOut
 
 instance Default StdOut where
   def = StdOut Text.empty
+
+instance FixtureType StdOut where
+  fixtureName = "stdout"
+  serializeFixture = unStdOut
+  deserializeFixture = StdOut
+
+instance FromJSON StdOut where
+  parseJSON = parseFixtureJSON
 
 newtype StdErr = StdErr
   { unStdErr :: Text
@@ -111,7 +139,10 @@ newtype StdErr = StdErr
 instance Default StdErr where
   def = StdErr Text.empty
 
-newtype FixtureName = FixtureName
-  { unFixtureName :: String
-  }
-  deriving (Eq, Show, IsString)
+instance FixtureType StdErr where
+  fixtureName = "stderr"
+  serializeFixture = unStdErr
+  deserializeFixture = StdErr
+
+instance FromJSON StdErr where
+  parseJSON = parseFixtureJSON

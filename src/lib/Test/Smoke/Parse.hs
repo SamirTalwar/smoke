@@ -4,6 +4,7 @@ module Test.Smoke.Parse (parseSuite) where
 
 import Data.Aeson hiding (Options)
 import Data.Aeson.Types (Parser)
+import Data.Default
 import qualified Data.Map.Strict as Map
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
@@ -32,7 +33,7 @@ parseTest location =
       <*> (v .:? "stdin")
       <*> (v .:? "stdout" .!= noFixtures)
       <*> (v .:? "stderr" .!= noFixtures)
-      <*> ( Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0)
+      <*> ( Fixture . Inline <$> (v .:? "exit-status" .!= def)
               <*> return Nothing
           )
       <*> ( Map.fromList . Vector.toList

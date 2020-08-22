@@ -7,6 +7,7 @@ import Data.Aeson
 import Data.Text (Text)
 import Data.Vector (Vector)
 import Test.Smoke.Paths
+import Test.Smoke.Types.Base
 import Test.Smoke.Types.Fixtures
 
 data TestFile = TestFile

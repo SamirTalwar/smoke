@@ -1,10 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Test.Smoke.Types.Values where
 
 import Data.Aeson
-import Data.Aeson.Types (typeMismatch)
+import Data.Aeson.Types (Parser, typeMismatch)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
@@ -45,5 +46,15 @@ data TestOutput a = TestOutput
   }
 
 instance (Eq a, FromJSON a) => FromJSON (TestOutput a) where
-  parseJSON value@(Object v) = TestOutput AssertEqual <$> v .:? "filter" <*> parseJSON value
-  parseJSON value = TestOutput AssertEqual Nothing <$> parseJSON value
+  parseJSON value@(Object v) =
+    (v .:? "equals")
+      >>= ( \case
+              Just nested -> parseFiltered AssertEqual nested
+              Nothing -> parseFiltered AssertEqual value
+          )
+  parseJSON value =
+    parseFiltered AssertEqual value
+
+parseFiltered :: (Eq a, FromJSON a) => (a -> Assert a) -> Value -> Parser (TestOutput a)
+parseFiltered assertion value@(Object v) = TestOutput assertion <$> v .:? "filter" <*> parseJSON value
+parseFiltered assertion value = TestOutput assertion Nothing <$> parseJSON value

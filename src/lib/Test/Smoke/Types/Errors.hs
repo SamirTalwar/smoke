@@ -12,7 +12,7 @@ data SmokeError
   | ExecutionError SmokeExecutionError
   | AssertionError SmokeAssertionError
   | BlessError SmokeBlessError
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeError
 
@@ -21,7 +21,7 @@ data SmokeDiscoveryError
   | NoSuchTest (RelativePath File) TestName
   | CannotSelectTestInDirectory (RelativePath Dir) TestName
   | InvalidSpecification (RelativePath File) String
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeDiscoveryError
 
@@ -33,7 +33,7 @@ data SmokePlanningError
   | CouldNotReadFixture (RelativePath File) IOError
   | PlanningPathError PathError
   | PlanningFilterError SmokeFilterError
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokePlanningError
 
@@ -43,13 +43,13 @@ data SmokeExecutionError
   | CouldNotReadFile (RelativePath File) IOError
   | CouldNotStoreDirectory (ResolvedPath Dir) IOError
   | CouldNotRevertDirectory (ResolvedPath Dir) IOError
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeExecutionError
 
 newtype SmokeAssertionError
   = AssertionFilterError SmokeFilterError
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeAssertionError
 
@@ -58,7 +58,7 @@ data SmokeBlessError
   | CouldNotBlessAMissingValue FixtureName
   | CouldNotBlessWithMultipleValues FixtureName
   | BlessIOException IOException
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeBlessError
 
@@ -67,11 +67,11 @@ data SmokeFilterError
   | CouldNotExecuteFilter Executable IOError
   | FilterExecutionFailed Executable Status StdOut StdErr
   | FilterPathError PathError
-  deriving (Eq, Show)
+  deriving (Show)
 
 instance Exception SmokeFilterError
 
 data SuiteError
   = SuiteDiscoveryError SmokeDiscoveryError
   | SuitePathError PathError
-  deriving (Eq, Show)
+  deriving (Show)

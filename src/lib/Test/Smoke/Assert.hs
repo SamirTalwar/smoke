@@ -53,10 +53,10 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
       )
       expectedFiles
   return $
-    if statusResult == PartSuccess
-      && stdOutResult == PartSuccess
-      && stdErrResult == PartSuccess
-      && all (== PartSuccess) (Map.elems fileResults)
+    if isPartSuccess statusResult
+      && isPartSuccess stdOutResult
+      && isPartSuccess stdErrResult
+      && all isPartSuccess (Map.elems fileResults)
       then TestSuccess
       else
         TestFailure

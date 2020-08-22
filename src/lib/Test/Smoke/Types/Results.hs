@@ -17,11 +17,9 @@ type Results = [SuiteResult]
 data SuiteResult
   = SuiteResultError SuiteName SuiteError
   | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
-  deriving (Eq, Show)
 
 data TestResult
   = TestResult Test TestOutcome
-  deriving (Eq, Show)
 
 data TestOutcome
   = TestSuccess
@@ -33,9 +31,12 @@ data TestOutcome
       (Map (RelativePath File) (PartResult TestFileContents))
   | TestError SmokeError
   | TestIgnored
-  deriving (Eq, Show)
 
 data PartResult a
   = PartSuccess
   | PartFailure (Vector (AssertFailure a))
-  deriving (Eq, Functor, Show)
+  deriving (Functor)
+
+isPartSuccess :: PartResult a -> Bool
+isPartSuccess PartSuccess = True
+isPartSuccess PartFailure {} = False

@@ -20,7 +20,6 @@ data Suite = Suite
     suiteCommand :: Maybe Command,
     suiteTests :: [Test]
   }
-  deriving (Eq, Show)
 
 data Test = Test
   { testName :: TestName,
@@ -35,4 +34,3 @@ data Test = Test
     testFiles :: Map (RelativePath File) (Fixtures TestFileContents),
     testRevert :: Vector (RelativePath Dir)
   }
-  deriving (Eq, Show)

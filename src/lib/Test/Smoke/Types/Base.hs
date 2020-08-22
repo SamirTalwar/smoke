@@ -17,7 +17,6 @@ import Test.Smoke.Paths
 data Contents a
   = Inline a
   | FileLocation (RelativePath File)
-  deriving (Eq, Show)
 
 parseContents :: (Text -> a) -> Value -> Parser (Contents a)
 parseContents deserialize (String contents) =

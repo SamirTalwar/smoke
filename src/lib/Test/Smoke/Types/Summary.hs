@@ -5,7 +5,6 @@ data Summary = Summary
     summaryFailures :: Int,
     summaryIgnored :: Int
   }
-  deriving (Eq, Show)
 
 summaryTotal :: Summary -> Int
 summaryTotal (Summary successes failures ignored) = successes + failures + ignored

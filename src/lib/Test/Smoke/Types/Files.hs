@@ -13,7 +13,6 @@ data TestFile = TestFile
   { testFilePath :: RelativePath File,
     testFileContents :: Fixtures TestFileContents
   }
-  deriving (Eq, Show)
 
 newtype TestFileContents = TestFileContents
   { unTestFileContents :: Text
@@ -33,4 +32,4 @@ instance FromJSON TestFile where
 newtype Reversions = Reversions
   { unReversions :: Vector (RelativePath Dir)
   }
-  deriving (Eq, Show, FromJSON)
+  deriving (FromJSON)

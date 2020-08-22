@@ -10,7 +10,7 @@ import Test.Smoke.Filters
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
-type Assertion = ExceptT SmokeAssertionError IO
+type Asserting = ExceptT SmokeAssertionError IO
 
 assertResult ::
   ResolvedPath Dir -> TestPlan -> ExecutionResult -> IO TestOutcome
@@ -21,7 +21,7 @@ assertResult _ _ (ExecutionFailed exception) =
 assertResult location testPlan (ExecutionSucceeded actualOutputs) =
   either (TestError . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
 
-processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Assertion TestOutcome
+processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestOutcome
 processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   filteredStatus <-
     withExceptT AssertionFilterError $

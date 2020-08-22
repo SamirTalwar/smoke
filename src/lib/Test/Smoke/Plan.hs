@@ -6,6 +6,7 @@ where
 import Control.Applicative ((<|>))
 import Control.Monad (forM, when)
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
+import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe, isNothing)
 import qualified Data.Text as Text
@@ -82,16 +83,11 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
     withExceptT PlanningPathError $
       convertCommandToExecutable fallbackShell command
   let args = fromMaybe mempty (testArgs test)
-  unfilteredStdIn <-
-    fromMaybe (Unfiltered (StdIn Text.empty))
-      <$> sequence (readFixture location <$> testStdIn test)
-  stdIn <-
-    withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
-  status <- AssertEqual . unfiltered <$> readFixture location (testStatus test)
-  stdOut <- Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdOut test)
-  stdErr <- Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdErr test)
-  files <-
-    mapM (fmap (Vector.map (AssertEqual . unfiltered)) . readFixtures location) (testFiles test)
+  stdIn <- readStdIn location fallbackShell test
+  status <- readStatus location test
+  stdOut <- readStdOut location test
+  stdErr <- readStdErr location test
+  files <- readFiles location test
   let revert = Vector.map (location </>) (testRevert test)
   return $
     TestPlan
@@ -107,6 +103,25 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         planFiles = files,
         planRevert = revert
       }
+
+readStdIn :: ResolvedPath Dir -> Maybe Shell -> Test -> Planning StdIn
+readStdIn location fallbackShell test = do
+  unfilteredStdIn <-
+    fromMaybe (Unfiltered (StdIn Text.empty))
+      <$> sequence (readFixture location <$> testStdIn test)
+  withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
+
+readStatus :: ResolvedPath Dir -> Test -> Planning (Assert Status)
+readStatus location test = AssertEqual . unfiltered <$> readFixture location (testStatus test)
+
+readStdOut :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdOut))
+readStdOut location test = Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdOut test)
+
+readStdErr :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdErr))
+readStdErr location test = Vector.map (AssertEqual . unfiltered) <$> readFixtures location (testStdErr test)
+
+readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
+readFiles location test = mapM (fmap (Vector.map (AssertEqual . unfiltered)) . readFixtures location) (testFiles test)
 
 readFixture ::
   FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)

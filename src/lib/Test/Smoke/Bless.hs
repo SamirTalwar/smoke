@@ -11,6 +11,7 @@ import Control.Exception (catch, throwIO)
 import Control.Monad (forM_)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
+import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types
@@ -60,12 +61,12 @@ writeFixtures ::
   forall a.
   FixtureType a =>
   ResolvedPath Dir ->
-  Fixtures a ->
+  Vector (Fixture a) ->
   PartResult a ->
   IO ()
 writeFixtures _ _ PartSuccess =
   return ()
-writeFixtures location (Fixtures fixtures) results
+writeFixtures location fixtures results
   | Vector.length fixtures == 1 =
     writeFixture location (Vector.head fixtures) results
   | Vector.length fixtures == 0 =

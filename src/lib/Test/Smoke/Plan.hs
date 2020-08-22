@@ -57,15 +57,9 @@ planTests (TestSpecification specificationCommand suites) = do
 validateTest :: Maybe Command -> Test -> Planning ()
 validateTest fallbackCommand test = do
   when (isNothing (testCommand test <|> fallbackCommand)) $ throwE NoCommand
-  when
-    ( isEmptyFixtures (testStdOut test)
-        && isEmptyFixtures (testStdErr test)
-        && isEmptyFiles (testFiles test)
-    )
-    $ throwE NoOutput
+  when isInvalid $ throwE NoOutput
   where
-    isEmptyFixtures (Fixtures fixtures) = Vector.null fixtures
-    isEmptyFiles = Map.null
+    isInvalid = Vector.null (testStdOut test) && Vector.null (testStdErr test) && Map.null (testFiles test)
 
 readTest ::
   ResolvedPath Dir ->
@@ -123,8 +117,7 @@ readStdErr location test = Vector.map (AssertEqual . unfiltered) <$> readFixture
 readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
 readFiles location test = mapM (fmap (Vector.map (AssertEqual . unfiltered)) . readFixtures location) (testFiles test)
 
-readFixture ::
-  FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
+readFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
 readFixture _ (Fixture (Inline contents) maybeFilter) =
   return $ includeFilter maybeFilter contents
 readFixture location (Fixture (FileLocation path) maybeFilter) =
@@ -133,12 +126,8 @@ readFixture location (Fixture (FileLocation path) maybeFilter) =
       (handleMissingFileError path)
       (ExceptT $ tryIOError $ readFromPath (location </> path))
 
-readFixtures ::
-  FixtureType a =>
-  ResolvedPath Dir ->
-  Fixtures a ->
-  Planning (Vector (Filtered a))
-readFixtures location (Fixtures fixtures) = mapM (readFixture location) fixtures
+readFixtures :: FixtureType a => ResolvedPath Dir -> Vector (Fixture a) -> Planning (Vector (Filtered a))
+readFixtures location = mapM (readFixture location)
 
 includeFilter :: Maybe Command -> a -> Filtered a
 includeFilter maybeFilter contents =

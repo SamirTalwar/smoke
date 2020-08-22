@@ -27,8 +27,8 @@ applyFiltersFromFixture fallbackShell (Fixture _ (Just fixtureFilter)) value =
   applyFilters fallbackShell (Filtered value fixtureFilter)
 
 applyFiltersFromFixtures ::
-  FixtureType a => Maybe Shell -> Fixtures a -> a -> Filtering (Vector a)
-applyFiltersFromFixtures fallbackShell (Fixtures fixtures) value =
+  FixtureType a => Maybe Shell -> Vector (Fixture a) -> a -> Filtering (Vector a)
+applyFiltersFromFixtures fallbackShell fixtures value =
   Vector.mapM
     (\fixture -> applyFiltersFromFixture fallbackShell fixture value)
     fixtures

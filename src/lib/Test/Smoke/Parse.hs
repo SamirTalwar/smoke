@@ -2,10 +2,11 @@
 
 module Test.Smoke.Parse (parseSuite) where
 
-import Data.Aeson hiding (Options)
+import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Default
 import qualified Data.Map.Strict as Map
+import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
@@ -31,8 +32,8 @@ parseTest location =
       <*> (v .:? "command")
       <*> (v .:? "args")
       <*> (v .:? "stdin")
-      <*> (v .:? "stdout" .!= noFixtures)
-      <*> (v .:? "stderr" .!= noFixtures)
+      <*> (manyMaybe =<< (v .:? "stdout"))
+      <*> (manyMaybe =<< (v .:? "stderr"))
       <*> ( Fixture . Inline <$> (v .:? "exit-status" .!= def)
               <*> return Nothing
           )
@@ -41,13 +42,21 @@ parseTest location =
           )
       <*> (v .:? "revert" .!= Vector.empty)
 
-parseTestFile :: Value -> Parser (RelativePath File, Fixtures TestFileContents)
+parseTestFile :: Value -> Parser (RelativePath File, Vector (Fixture TestFileContents))
 parseTestFile =
   withObject "File" $ \v -> do
     path <- parseFile <$> v .: "path"
-    contents <- v .: "contents"
+    contents <- many =<< (v .: "contents")
     return (path, contents)
 
 toWorkingDirectory ::
   ResolvedPath Dir -> Maybe (RelativePath Dir) -> Maybe WorkingDirectory
 toWorkingDirectory location path = WorkingDirectory . (location </>) <$> path
+
+many :: FromJSON a => Value -> Parser (Vector a)
+many (Array v) = mapM parseJSON v
+many v = Vector.singleton <$> parseJSON v
+
+manyMaybe :: FromJSON a => Maybe Value -> Parser (Vector a)
+manyMaybe (Just v) = many v
+manyMaybe Nothing = return Vector.empty

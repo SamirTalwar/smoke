@@ -28,9 +28,9 @@ data Test = Test
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
     testStdIn :: Maybe (Fixture StdIn),
-    testStdOut :: Fixtures StdOut,
-    testStdErr :: Fixtures StdErr,
+    testStdOut :: Vector (Fixture StdOut),
+    testStdErr :: Vector (Fixture StdErr),
     testStatus :: Fixture Status,
-    testFiles :: Map (RelativePath File) (Fixtures TestFileContents),
+    testFiles :: Map (RelativePath File) (Vector (Fixture TestFileContents)),
     testRevert :: Vector (RelativePath Dir)
   }

@@ -12,7 +12,7 @@ import Test.Smoke.Types.Fixtures
 
 data TestFile = TestFile
   { testFilePath :: RelativePath File,
-    testFileContents :: Fixtures TestFileContents
+    testFileContents :: Vector (Fixture TestFileContents)
   }
 
 newtype TestFileContents = TestFileContents

@@ -25,15 +25,15 @@ processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting Tes
 processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   filteredStatus <-
     withExceptT AssertionFilterError $
-      applyFiltersFromFixture fallbackShell (testStatus test) actualStatus
+      applyFiltersFromTestOutput fallbackShell (testStatus test) actualStatus
   filteredStdOut <-
     withExceptT AssertionFilterError $
       ifEmpty actualStdOut
-        <$> applyFiltersFromFixtures fallbackShell (testStdOut test) actualStdOut
+        <$> applyFiltersFromTestOutputs fallbackShell (testStdOut test) actualStdOut
   filteredStdErr <-
     withExceptT AssertionFilterError $
       ifEmpty actualStdErr
-        <$> applyFiltersFromFixtures fallbackShell (testStdErr test) actualStdErr
+        <$> applyFiltersFromTestOutputs fallbackShell (testStdErr test) actualStdErr
   let statusResult = assertAll $ Vector.singleton (expectedStatus, filteredStatus)
   let stdOutResult =
         assertAll $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
@@ -45,7 +45,7 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
           assertAll . Vector.zip contents
             <$> withExceptT
               AssertionFilterError
-              ( applyFiltersFromFixtures
+              ( applyFiltersFromTestOutputs
                   fallbackShell
                   (testFiles test ! relativePath)
                   (actualFiles ! (location </> relativePath))

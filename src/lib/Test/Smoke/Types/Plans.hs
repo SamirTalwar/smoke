@@ -7,7 +7,6 @@ import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Executable
-import Test.Smoke.Types.Files
 import Test.Smoke.Types.Tests
 
 newtype Plan

@@ -1,7 +1,7 @@
 module Test.Smoke.Filters
   ( applyFilters,
-    applyFiltersFromFixture,
-    applyFiltersFromFixtures,
+    applyFiltersFromTestOutput,
+    applyFiltersFromTestOutputs,
   )
 where
 
@@ -15,26 +15,8 @@ import Test.Smoke.Types
 
 type Filtering = ExceptT SmokeFilterError IO
 
-applyFilters :: FixtureType a => Maybe Shell -> Filtered a -> Filtering a
-applyFilters _ (Unfiltered value) = return value
-applyFilters fallbackShell (Filtered unfilteredValue command) =
-  runFilter fallbackShell command unfilteredValue
-
-applyFiltersFromFixture ::
-  FixtureType a => Maybe Shell -> Assertable a -> a -> Filtering a
-applyFiltersFromFixture _ (Assertable _ (Fixture _ Nothing)) value = return value
-applyFiltersFromFixture fallbackShell (Assertable _ (Fixture _ (Just fixtureFilter))) value =
-  applyFilters fallbackShell (Filtered value fixtureFilter)
-
-applyFiltersFromFixtures ::
-  FixtureType a => Maybe Shell -> Vector (Assertable a) -> a -> Filtering (Vector a)
-applyFiltersFromFixtures fallbackShell assertables value =
-  Vector.mapM
-    (\assertable -> applyFiltersFromFixture fallbackShell assertable value)
-    assertables
-
-runFilter :: FixtureType a => Maybe Shell -> Command -> a -> Filtering a
-runFilter fallbackShell command value = do
+applyFilters :: FixtureType a => Maybe Shell -> Filter -> a -> Filtering a
+applyFilters fallbackShell (Filter command) value = do
   executable <-
     withExceptT FilterPathError $
       convertCommandToExecutable fallbackShell command
@@ -52,3 +34,17 @@ runFilter fallbackShell command value = do
           (Status code)
           (StdOut processStdOut)
           (StdErr processStdErr)
+
+applyFiltersFromTestOutput ::
+  FixtureType a => Maybe Shell -> TestOutput a -> a -> Filtering a
+applyFiltersFromTestOutput _ (TestOutput _ Nothing _) value =
+  return value
+applyFiltersFromTestOutput fallbackShell (TestOutput _ (Just fixtureFilter) _) value =
+  applyFilters fallbackShell fixtureFilter value
+
+applyFiltersFromTestOutputs ::
+  FixtureType a => Maybe Shell -> Vector (TestOutput a) -> a -> Filtering (Vector a)
+applyFiltersFromTestOutputs fallbackShell assertables value =
+  Vector.mapM
+    (\assertable -> applyFiltersFromTestOutput fallbackShell assertable value)
+    assertables

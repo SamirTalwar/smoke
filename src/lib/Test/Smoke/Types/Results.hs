@@ -8,7 +8,6 @@ import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
-import Test.Smoke.Types.Files
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
 

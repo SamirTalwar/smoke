@@ -97,40 +97,41 @@ determineWorkingDirectory location workingDirectory fallbackWorkingDirectory =
   maybe fallbackWorkingDirectory (WorkingDirectory . (location </>)) workingDirectory
 
 readStdIn :: ResolvedPath Dir -> Maybe Shell -> Test -> Planning StdIn
-readStdIn location fallbackShell test = do
-  unfilteredStdIn <-
-    fromMaybe (Unfiltered (StdIn Text.empty))
-      <$> sequence (readFixture location <$> testStdIn test)
-  withExceptT PlanningFilterError $ applyFilters fallbackShell unfilteredStdIn
+readStdIn location fallbackShell test =
+  fromMaybe (StdIn Text.empty) <$> sequence (readTestInput location fallbackShell <$> testStdIn test)
 
 readStatus :: ResolvedPath Dir -> Test -> Planning (Assert Status)
-readStatus location test = readAssertable location (testStatus test)
+readStatus location test = readTestOutput location (testStatus test)
 
 readStdOut :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdOut))
-readStdOut location test = mapM (readAssertable location) (testStdOut test)
+readStdOut location test = mapM (readTestOutput location) (testStdOut test)
 
 readStdErr :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdErr))
-readStdErr location test = mapM (readAssertable location) (testStdErr test)
+readStdErr location test = mapM (readTestOutput location) (testStdErr test)
 
 readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
-readFiles location test = mapM (mapM (readAssertable location)) (testFiles test)
+readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
-readFixture :: FixtureType a => ResolvedPath Dir -> Fixture a -> Planning (Filtered a)
-readFixture _ (Fixture (Inline contents) maybeFilter) =
-  return $ includeFilter maybeFilter contents
-readFixture location (Fixture (FileLocation path) maybeFilter) =
-  includeFilter maybeFilter . deserializeFixture
+readTestInput :: FixtureType a => ResolvedPath Dir -> Maybe Shell -> TestInput a -> Planning a
+readTestInput location fallbackShell (TestInput maybeFilter contents) = do
+  value <- readContents location contents
+  maybe (return value) (filtered value) maybeFilter
+  where
+    filtered :: FixtureType a => a -> Filter -> Planning a
+    filtered value fixtureFilter = withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
+
+readTestOutput :: FixtureType a => ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
+readTestOutput location (TestOutput constructor _ contents) =
+  constructor <$> readContents location contents
+
+readContents :: FixtureType a => ResolvedPath Dir -> Contents a -> Planning a
+readContents _ (Inline value) =
+  return value
+readContents location (FileLocation path) =
+  deserializeFixture
     <$> withExceptT
       (handleMissingFileError path)
       (ExceptT $ tryIOError $ readFromPath (location </> path))
-
-readAssertable :: FixtureType a => ResolvedPath Dir -> Assertable a -> Planning (Assert a)
-readAssertable location (Assertable constructor fixture) =
-  constructor . unfiltered <$> readFixture location fixture
-
-includeFilter :: Maybe Command -> a -> Filtered a
-includeFilter maybeFilter contents =
-  maybe (Unfiltered contents) (Filtered contents) maybeFilter
 
 handleMissingFileError :: RelativePath File -> IOError -> SmokePlanningError
 handleMissingFileError path e =

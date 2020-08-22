@@ -4,7 +4,6 @@ import Data.Map.Strict (Map)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
-import Test.Smoke.Types.Files
 
 data ExecutionResult
   = ExecutionSucceeded ActualOutputs

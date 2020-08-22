@@ -12,8 +12,7 @@ import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
-import Test.Smoke.Types.Files
-import Test.Smoke.Types.Fixtures
+import Test.Smoke.Types.Values
 
 data TestSpecification
   = TestSpecification (Maybe Command) Suites
@@ -48,11 +47,11 @@ data Test = Test
     testWorkingDirectory :: Maybe (RelativePath Dir),
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
-    testStdIn :: Maybe (Fixture StdIn),
-    testStdOut :: Vector (Assertable StdOut),
-    testStdErr :: Vector (Assertable StdErr),
-    testStatus :: Assertable Status,
-    testFiles :: Map (RelativePath File) (Vector (Assertable TestFileContents)),
+    testStdIn :: Maybe (TestInput StdIn),
+    testStdOut :: Vector (TestOutput StdOut),
+    testStdErr :: Vector (TestOutput StdErr),
+    testStatus :: TestOutput Status,
+    testFiles :: Map (RelativePath File) (Vector (TestOutput TestFileContents)),
     testRevert :: Vector (RelativePath Dir)
   }
 
@@ -67,23 +66,21 @@ instance FromJSON Test where
         <*> (v .:? "stdin")
         <*> (manyMaybe =<< (v .:? "stdout"))
         <*> (manyMaybe =<< (v .:? "stderr"))
-        <*> (Assertable AssertEqual <$> (Fixture . Inline <$> (v .:? "exit-status" .!= def) <*> return Nothing))
-        <*> ( Map.fromList . Vector.toList
-                <$> (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))
+        <*> (TestOutput AssertEqual Nothing . Inline <$> (v .:? "exit-status" .!= def))
+        <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList
+                <$> (v .:? "files" .!= Vector.empty)
             )
         <*> (v .:? "revert" .!= Vector.empty)
 
-data Assertable a = Assertable (a -> Assert a) (Fixture a)
+data TestFile = TestFile
+  { testFilePath :: RelativePath File,
+    testFileContents :: Vector (TestOutput TestFileContents)
+  }
 
-instance (Eq a, FromJSON a) => FromJSON (Assertable a) where
-  parseJSON value = Assertable AssertEqual <$> parseJSON value
-
-parseTestFile :: Value -> Parser (RelativePath File, Vector (Assertable TestFileContents))
-parseTestFile =
-  withObject "File" $ \v -> do
-    path <- parseFile <$> v .: "path"
-    contents <- many =<< (v .: "contents")
-    return (path, contents)
+instance FromJSON TestFile where
+  parseJSON =
+    withObject "TestFile" $ \v ->
+      TestFile <$> (v .: "path") <*> (many =<< (v .: "contents"))
 
 many :: FromJSON a => Value -> Parser (Vector a)
 many (Array v) = mapM parseJSON v

@@ -146,3 +146,16 @@ instance FixtureType StdErr where
 
 instance FromJSON StdErr where
   parseJSON = parseFixtureJSON
+
+newtype TestFileContents = TestFileContents
+  { unTestFileContents :: Text
+  }
+  deriving (Eq, Show)
+
+instance FixtureType TestFileContents where
+  fixtureName = "file contents"
+  serializeFixture = unTestFileContents
+  deserializeFixture = TestFileContents
+
+instance FromJSON TestFileContents where
+  parseJSON = parseFixtureJSON

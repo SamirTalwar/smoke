@@ -40,9 +40,9 @@ blessResult _ result = return result
 writeFixture :: FixtureType a => ResolvedPath Dir -> TestOutput a -> PartResult a -> IO ()
 writeFixture _ _ PartSuccess =
   return ()
-writeFixture _ (TestOutput _ _ (Inline _)) (PartFailure results) =
+writeFixture _ (TestOutput _ (Inline _)) (PartFailure results) =
   throwIO $ couldNotBlessInlineFixture results
-writeFixture location (TestOutput _ _ (FileLocation path)) (PartFailure results) =
+writeFixture location (TestOutput _ (FileLocation path)) (PartFailure results) =
   writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
 
 writeFixtures ::

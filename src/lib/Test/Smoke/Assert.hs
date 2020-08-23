@@ -22,32 +22,13 @@ assertResult location testPlan (ExecutionSucceeded actualOutputs) =
   either (TestError . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
 
 processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestOutcome
-processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
-  filteredStdOut <-
-    withExceptT AssertionFilterError $
-      ifEmpty actualStdOut
-        <$> applyFiltersFromTestOutputs fallbackShell (testStdOut test) actualStdOut
-  filteredStdErr <-
-    withExceptT AssertionFilterError $
-      ifEmpty actualStdErr
-        <$> applyFiltersFromTestOutputs fallbackShell (testStdErr test) actualStdErr
-  let statusResult = assertAll $ Vector.singleton (expectedStatus, actualStatus)
-  let stdOutResult =
-        assertAll $ Vector.zip (defaultIfEmpty expectedStdOuts) filteredStdOut
-  let stdErrResult =
-        assertAll $ Vector.zip (defaultIfEmpty expectedStdErrs) filteredStdErr
+processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
+  statusResult <- assertSingle expectedStatus actualStatus
+  stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
+  stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
   fileResults <-
     Map.traverseWithKey
-      ( \relativePath contents ->
-          assertAll . Vector.zip contents
-            <$> withExceptT
-              AssertionFilterError
-              ( applyFiltersFromTestOutputs
-                  fallbackShell
-                  (testFiles test ! relativePath)
-                  (actualFiles ! (location </> relativePath))
-              )
-      )
+      (\relativePath contents -> assertAll contents (actualFiles ! (location </> relativePath)))
       expectedFiles
   return $
     if isPartSuccess statusResult
@@ -63,14 +44,20 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
           stdErrResult
           fileResults
   where
-    assertAll :: Eq a => Vector (Assert a, a) -> PartResult a
-    assertAll comparisons =
-      maybe PartSuccess PartFailure $ sequence (Vector.map (uncurry assert) comparisons)
-    assert :: Assert a -> a -> Maybe (AssertFailure a)
+    assertSingle :: FixtureType a => Assert a -> a -> Asserting (PartResult a)
+    assertSingle = assertAll . Vector.singleton
+    assertAll :: FixtureType a => Vector (Assert a) -> a -> Asserting (PartResult a)
+    assertAll expecteds actual =
+      maybe PartSuccess PartFailure . sequence <$> Vector.mapM (`assert` actual) expecteds
+    assert :: FixtureType a => Assert a -> a -> Asserting (Maybe (AssertFailure a))
     assert (AssertEqual expected) actual =
-      if expected == actual
-        then Nothing
-        else Just $ AssertFailureDiff expected actual
+      return $
+        if expected == actual
+          then Nothing
+          else Just $ AssertFailureDiff expected actual
+    assert (AssertFiltered fixtureFilter expected) actual = do
+      filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
+      assert expected filteredActual
 
 ifEmpty :: a -> Vector a -> Vector a
 ifEmpty x xs

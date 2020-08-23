@@ -4,6 +4,7 @@ module Test.Smoke.Types
     module Test.Smoke.Types.Errors,
     module Test.Smoke.Types.Executable,
     module Test.Smoke.Types.ExecutionResult,
+    module Test.Smoke.Types.Filters,
     module Test.Smoke.Types.Plans,
     module Test.Smoke.Types.Results,
     module Test.Smoke.Types.Run,
@@ -18,6 +19,7 @@ import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Executable
 import Test.Smoke.Types.ExecutionResult
+import Test.Smoke.Types.Filters
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Results
 import Test.Smoke.Types.Run

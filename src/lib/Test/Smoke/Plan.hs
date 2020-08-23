@@ -118,7 +118,7 @@ readTestInput location fallbackShell (TestInput maybeFilter contents) = do
     filtered value fixtureFilter = withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
 
 readTestOutput :: FixtureType a => ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
-readTestOutput location (TestOutput constructor _ contents) =
+readTestOutput location (TestOutput constructor contents) =
   constructor <$> readContents location contents
 
 readContents :: FixtureType a => ResolvedPath Dir -> Contents a -> Planning a

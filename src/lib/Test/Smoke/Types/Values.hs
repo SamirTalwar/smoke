@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -8,14 +7,11 @@ import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
-import Test.Smoke.Types.Base
+import Test.Smoke.Types.Filters
 
 data Contents a
   = Inline a
   | FileLocation (RelativePath File)
-
-newtype Filter = Filter Command
-  deriving (FromJSON)
 
 instance FromJSON a => FromJSON (Contents a) where
   parseJSON s@(String _) =
@@ -41,7 +37,6 @@ instance FromJSON a => FromJSON (TestInput a) where
 
 data TestOutput a = TestOutput
   { testOutputAssertionConstructor :: a -> Assert a,
-    testOutputFilter :: Maybe Filter,
     testOutputContents :: Contents a
   }
 
@@ -56,5 +51,9 @@ instance (Eq a, FromJSON a) => FromJSON (TestOutput a) where
     parseFiltered AssertEqual value
 
 parseFiltered :: (Eq a, FromJSON a) => (a -> Assert a) -> Value -> Parser (TestOutput a)
-parseFiltered assertion value@(Object v) = TestOutput assertion <$> v .:? "filter" <*> parseJSON value
-parseFiltered assertion value = TestOutput assertion Nothing <$> parseJSON value
+parseFiltered assertion value@(Object v) =
+  TestOutput
+    <$> (maybe assertion (\f expected -> AssertFiltered f (assertion expected)) <$> v .:? "filter")
+    <*> parseJSON value
+parseFiltered assertion value =
+  TestOutput assertion <$> parseJSON value

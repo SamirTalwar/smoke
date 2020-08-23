@@ -22,6 +22,8 @@ import Test.Smoke.App.PrintErrors
 import Test.Smoke.Paths
 import Text.Printf (printf)
 
+data PartName = ShortName String | LongName String
+
 printResult :: TestResult -> Output ()
 printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
 printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
@@ -45,13 +47,7 @@ printFailingInput name value =
     putPlainLn $ indented outputIndentation v
 
 printFailingOutput :: String -> PartResult Text -> Output ()
-printFailingOutput _ PartSuccess = return ()
-printFailingOutput name (PartFailure failures) = do
-  putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-  printFailure (Vector.head failures)
-  forM_ (Vector.tail failures) $ \failure -> do
-    putRed "      or: "
-    printFailure failure
+printFailingOutput name = printFailures (ShortName name)
 
 printFailingFilesOutput ::
   Map (RelativePath File) (PartResult TestFileContents) -> Output ()
@@ -67,17 +63,30 @@ printFailingFilesOutput fileResults =
     isSuccess (PartFailure _) = False
 
 printFailingFileOutput :: RelativePath File -> PartResult Text -> Output ()
-printFailingFileOutput _ PartSuccess = return ()
-printFailingFileOutput path (PartFailure failures) = do
-  putRedLn $ fromString ("    " ++ toFilePath path ++ ":")
-  putPlain $ fromString $ indentedKey ""
+printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
+
+printFailures :: PartName -> PartResult Text -> Output ()
+printFailures _ PartSuccess =
+  return ()
+printFailures name (PartFailure (SingleAssertionFailure failure)) = do
+  printFailureName name
+  printFailure failure
+printFailures name (PartFailure (MultipleAssertionFailures failures)) = do
+  printFailureName name
   printFailure (Vector.head failures)
   forM_ (Vector.tail failures) $ \failure -> do
     putRed "      or: "
     printFailure failure
 
-printFailure :: AssertFailure Text -> Output ()
-printFailure (AssertFailureDiff expected actual) = printDiff expected actual
+printFailureName :: PartName -> Output ()
+printFailureName (ShortName name) =
+  putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
+printFailureName (LongName name) = do
+  putRedLn $ fromString ("  " ++ name ++ ":")
+  putPlain $ fromString $ indentedKey ""
+
+printFailure :: AssertionFailure Text -> Output ()
+printFailure (AssertionFailureDiff expected actual) = printDiff expected actual
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

@@ -3,7 +3,8 @@
 
 module Test.Smoke.Types.Assert where
 
-import Data.Default
+import Data.Default (Default (..))
+import Data.Vector (Vector)
 import Test.Smoke.Types.Filters
 
 data Assert a where
@@ -13,9 +14,11 @@ data Assert a where
 instance (Default a, Eq a) => Default (Assert a) where
   def = AssertEqual def
 
-data AssertFailure a
-  = AssertFailureDiff a a
+data AssertionFailure a
+  = AssertionFailureDiff a a
   deriving (Functor)
 
-assertFailureActual :: AssertFailure a -> a
-assertFailureActual (AssertFailureDiff _ actual) = actual
+data AssertionFailures a
+  = SingleAssertionFailure (AssertionFailure a)
+  | MultipleAssertionFailures (Vector (AssertionFailure a))
+  deriving (Functor)

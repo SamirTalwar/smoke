@@ -3,7 +3,6 @@
 module Test.Smoke.Types.Results where
 
 import Data.Map.Strict (Map)
-import Data.Vector (Vector)
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
@@ -33,7 +32,7 @@ data TestOutcome
 
 data PartResult a
   = PartSuccess
-  | PartFailure (Vector (AssertFailure a))
+  | PartFailure (AssertionFailures a)
   deriving (Functor)
 
 isPartSuccess :: PartResult a -> Bool

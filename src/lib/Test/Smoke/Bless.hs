@@ -11,66 +11,57 @@ import Control.Exception (catch, throwIO)
 import Control.Monad (forM_)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
+import Data.Text (Text)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult _ (TestResult test (TestFailure _ (PartFailure results) _ _ _)) =
-  failed test $ couldNotBlessInlineFixture results
-blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files))
-  | isFailureWithMultipleExpectedValues stdOut =
-    failed test $ CouldNotBlessWithMultipleValues (fixtureName @StdOut)
-  | isFailureWithMultipleExpectedValues stdErr =
-    failed test $ CouldNotBlessWithMultipleValues (fixtureName @StdErr)
-  | any isFailureWithMultipleExpectedValues (Map.elems files) =
-    failed test $ CouldNotBlessWithMultipleValues "files"
-  | otherwise =
-    do
-      writeFixtures location (testStdOut test) stdOut
-      writeFixtures location (testStdErr test) stdErr
-      forM_ (Map.toList files) $ \(path, fileResult) ->
-        writeFixtures location (testFiles test ! path) fileResult
-      return $ TestResult test TestSuccess
-      `catch` (\(e :: SmokeBlessError) -> failed test e)
-      `catch` (failed test . BlessIOException)
+blessResult _ (TestResult test (TestFailure _ (PartFailure (SingleAssertionFailure (AssertionFailureDiff _ actualStatus))) _ _ _)) =
+  failed test $ couldNotBlessInlineFixture actualStatus
+blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files)) =
+  do
+    serializedStdOut <- serialize (testStdOut test) stdOut
+    serializedStdErr <- serialize (testStdErr test) stdErr
+    serializedFiles <- Map.traverseWithKey (\path fileResult -> serialize (testFiles test ! path) fileResult) files
+    writeFixture location serializedStdOut
+    writeFixture location serializedStdErr
+    forM_ serializedFiles $ writeFixture location
+    return $ TestResult test TestSuccess
+    `catch` (\(e :: SmokeBlessError) -> failed test e)
+    `catch` (failed test . BlessIOException)
 blessResult _ result = return result
 
-writeFixture :: FixtureType a => ResolvedPath Dir -> TestOutput a -> PartResult a -> IO ()
-writeFixture _ _ PartSuccess =
-  return ()
-writeFixture _ (TestOutput _ (Inline _)) (PartFailure results) =
-  throwIO $ couldNotBlessInlineFixture results
-writeFixture location (TestOutput _ (FileLocation path)) (PartFailure results) =
-  writeToPath (location </> path) (serializeFixture (assertFailureActual (Vector.head results)))
-
-writeFixtures ::
-  forall a.
-  FixtureType a =>
-  ResolvedPath Dir ->
-  Vector (TestOutput a) ->
-  PartResult a ->
-  IO ()
-writeFixtures _ _ PartSuccess =
-  return ()
-writeFixtures location outputs results =
+serialize :: forall a. FixtureType a => Vector (TestOutput a) -> PartResult a -> IO (Maybe (RelativePath File, Text))
+serialize _ PartSuccess =
+  return Nothing
+serialize outputs (PartFailure result) =
   case Vector.length outputs of
     1 ->
-      writeFixture location (Vector.head outputs) results
+      serializeFailure (Vector.head outputs) result
     0 ->
       throwIO $ CouldNotBlessAMissingValue (fixtureName @a)
     _ ->
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
+serializeFailure :: forall a. FixtureType a => TestOutput a -> AssertionFailures a -> IO (Maybe (RelativePath File, Text))
+serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureDiff _ actual)) =
+  return $ Just (path, serializeFixture actual)
+serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ actual)) =
+  throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
+serializeFailure _ (MultipleAssertionFailures _) =
+  throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
+
+writeFixture :: ResolvedPath Dir -> Maybe (RelativePath File, Text) -> IO ()
+writeFixture _ Nothing =
+  return ()
+writeFixture location (Just (path, text)) =
+  writeToPath (location </> path) text
+
 failed :: Applicative f => Test -> SmokeBlessError -> f TestResult
 failed test = pure . TestResult test . TestError . BlessError
 
-couldNotBlessInlineFixture :: forall a. FixtureType a => Vector (AssertFailure a) -> SmokeBlessError
-couldNotBlessInlineFixture results =
-  CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture (assertFailureActual (Vector.head results)))
-
-isFailureWithMultipleExpectedValues :: PartResult a -> Bool
-isFailureWithMultipleExpectedValues (PartFailure results) =
-  Vector.length results > 1
-isFailureWithMultipleExpectedValues _ = False
+couldNotBlessInlineFixture :: forall a. FixtureType a => a -> SmokeBlessError
+couldNotBlessInlineFixture value =
+  CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture value)

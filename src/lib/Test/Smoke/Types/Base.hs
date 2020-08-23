@@ -153,7 +153,7 @@ newtype TestFileContents = TestFileContents
   deriving (Eq, Show)
 
 instance FixtureType TestFileContents where
-  fixtureName = "file contents"
+  fixtureName = "files"
   serializeFixture = unTestFileContents
   deserializeFixture = TestFileContents
 

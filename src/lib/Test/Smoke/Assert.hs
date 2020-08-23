@@ -44,20 +44,27 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
           stdErrResult
           fileResults
   where
-    assertSingle :: FixtureType a => Assert a -> a -> Asserting (PartResult a)
-    assertSingle = assertAll . Vector.singleton
-    assertAll :: FixtureType a => Vector (Assert a) -> a -> Asserting (PartResult a)
-    assertAll expecteds actual =
-      maybe PartSuccess PartFailure . sequence <$> Vector.mapM (`assert` actual) expecteds
-    assert :: FixtureType a => Assert a -> a -> Asserting (Maybe (AssertFailure a))
+    assert :: FixtureType a => Assert a -> a -> Asserting (Maybe (AssertionFailure a))
     assert (AssertEqual expected) actual =
       return $
         if expected == actual
           then Nothing
-          else Just $ AssertFailureDiff expected actual
+          else Just $ AssertionFailureDiff expected actual
     assert (AssertFiltered fixtureFilter expected) actual = do
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
+    assertSingle :: FixtureType a => Assert a -> a -> Asserting (PartResult a)
+    assertSingle expected actual =
+      maybe PartSuccess (PartFailure . SingleAssertionFailure) <$> assert expected actual
+    assertAll :: FixtureType a => Vector (Assert a) -> a -> Asserting (PartResult a)
+    assertAll expecteds actual = do
+      maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
+      return $ maybe PartSuccess (PartFailure . collapseAssertionFailures) maybeFailures
+    collapseAssertionFailures :: Vector (AssertionFailure a) -> AssertionFailures a
+    collapseAssertionFailures failures =
+      case Vector.length failures of
+        1 -> SingleAssertionFailure (Vector.head failures)
+        _ -> MultipleAssertionFailures failures
 
 ifEmpty :: a -> Vector a -> Vector a
 ifEmpty x xs

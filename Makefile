@@ -60,7 +60,7 @@ test: unit-test spec
 
 .PHONY: unit-test
 unit-test: build
-	$(STACK) test
+	$(STACK) test --fast
 
 .PHONY: spec
 spec: build
@@ -89,5 +89,5 @@ reformat: $(NIX_FILES) $(SRC)
 	nixpkgs-fmt $(NIX_FILES)
 
 smoke.cabal: $(CONF)
-	$(STACK) install --only-dependencies --test --no-run-tests
+	$(STACK) install --fast --only-dependencies --test --no-run-tests
 	touch $@

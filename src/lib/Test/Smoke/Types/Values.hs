@@ -1,7 +1,7 @@
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Test.Smoke.Types.Values where
+module Test.Smoke.Types.Values (Contents (..), TestInput (..), TestOutput (..)) where
 
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
@@ -42,11 +42,9 @@ data TestOutput a = TestOutput
 
 instance (Eq a, FromJSON a) => FromJSON (TestOutput a) where
   parseJSON value@(Object v) =
-    (v .:? "equals")
-      >>= ( \case
-              Just nested -> parseFiltered AssertEqual nested
-              Nothing -> parseFiltered AssertEqual value
-          )
+    let equals :: Parser (Maybe (TestOutput a)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEqual <$>))
+        fallback :: Parser (TestOutput a) = parseFiltered AssertEqual value
+     in equals `orDefinitely` fallback
   parseJSON value =
     parseFiltered AssertEqual value
 
@@ -57,3 +55,8 @@ parseFiltered assertion value@(Object v) =
     <*> parseJSON value
 parseFiltered assertion value =
   TestOutput assertion <$> parseJSON value
+
+orDefinitely :: Monad m => m (Maybe a) -> m a -> m a
+a `orDefinitely` b = do
+  aValue <- a
+  maybe b return aValue

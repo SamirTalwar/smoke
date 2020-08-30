@@ -5,7 +5,7 @@ module Test.Smoke.App.PrintResults
   )
 where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask)
 import Data.Map.Strict (Map)
@@ -69,24 +69,39 @@ printFailures :: PartName -> PartResult Text -> Output ()
 printFailures _ PartSuccess =
   return ()
 printFailures name (PartFailure (SingleAssertionFailure failure)) = do
-  printFailureName name
+  printFailureName name (failureIsInline failure)
   printFailure failure
 printFailures name (PartFailure (MultipleAssertionFailures failures)) = do
-  printFailureName name
-  printFailure (Vector.head failures)
+  printFailureName name isInline
+  printFailure firstFailure
   forM_ (Vector.tail failures) $ \failure -> do
-    putRed "      or: "
+    putRed "      or:"
+    when isInline $ putPlain " "
     printFailure failure
+  where
+    firstFailure = Vector.head failures
+    isInline = failureIsInline firstFailure
 
-printFailureName :: PartName -> Output ()
-printFailureName (ShortName name) =
-  putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-printFailureName (LongName name) = do
-  putRedLn $ fromString ("  " ++ name ++ ":")
+printFailureName :: PartName -> Bool -> Output ()
+printFailureName (ShortName name) isInline = do
+  putRed $ "  " <> Text.pack name <> ":"
+  when isInline $ putPlain $ Text.replicate (outputIndentation - length name - 3) " "
+printFailureName (LongName name) _ = do
+  putRedLn $ "  " <> Text.pack name <> ":"
   putPlain $ fromString $ indentedKey ""
+
+failureIsInline :: AssertionFailure a -> Bool
+failureIsInline AssertionFailureDiff {} = True
+failureIsInline AssertionFailureContains {} = False
 
 printFailure :: AssertionFailure Text -> Output ()
 printFailure (AssertionFailureDiff expected actual) = printDiff expected actual
+printFailure (AssertionFailureContains expected actual) = do
+  putPlainLn ""
+  putRedLn "    expected to contain:"
+  putRedLn $ indentedAll nestedOutputIndentation expected
+  putRed "    actual: "
+  putRedLn $ indented nestedOutputIndentation actual
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

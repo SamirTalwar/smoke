@@ -28,3 +28,13 @@ tests:
       file: io/files-bless-failure.out
     revert:
       - ../fixtures/files
+
+  - name: bottles
+    args:
+      - --bless
+      - fixtures/bottles
+    exit-status: 1
+    stdout:
+      file: io/bottles-bless-failure.out
+    revert:
+      - ../fixtures/bottles

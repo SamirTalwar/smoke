@@ -57,6 +57,7 @@ data SmokeBlessError
   = CouldNotBlessInlineFixture FixtureName Text
   | CouldNotBlessAMissingValue FixtureName
   | CouldNotBlessWithMultipleValues FixtureName
+  | CouldNotBlessContainsAssertion FixtureName Text
   | BlessIOException IOException
   deriving (Show)
 

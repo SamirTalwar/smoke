@@ -71,6 +71,12 @@ printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixture
     "There are multiple expected "
       <> quoteString fixtureName'
       <> " values, so the result cannot be blessed.\n"
+printTestError (BlessError (CouldNotBlessContainsAssertion (FixtureName fixtureName') propertyValue)) =
+  printError $
+    "The fixture "
+      <> quoteString fixtureName'
+      <> " is matching a substring, so the result cannot be blessed.\nActual value:\n"
+      <> indentedAll messageIndentation propertyValue
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 

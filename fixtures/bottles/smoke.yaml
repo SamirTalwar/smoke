@@ -52,3 +52,18 @@ tests:
     stdout:
       equals:
         file: io/1000-broken.out
+
+  - name: "10000-contains"
+    args:
+      - "10000"
+    stdout:
+      contains: |
+        9997 bottles of beer on the wall, 9997 bottles of beer.
+        Take one down and pass it around, 9996 bottles of beer on the wall.
+
+  - name: "10-does-not-contain"
+    args:
+      - "10"
+    stdout:
+      contains: |
+        11 bottles of beer on the wall, 11 bottles of beer.

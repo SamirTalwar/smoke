@@ -50,6 +50,8 @@ serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (Ass
   return $ Just (path, serializeFixture actual)
 serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ actual)) =
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
+serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureContains _ actual)) =
+  throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
 serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 

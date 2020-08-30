@@ -105,5 +105,34 @@ broken
            110 bottles of beer on the wall, 110 bottles of beer.
            Take one down and pass it around, 109 bottles of beer on the wall.
            109 bottles of beer on the wall, 109 bottles of beer.
+10000-contains
+  succeeded
+10-does-not-contain
+  args:   10
+  stdout:
+    expected to contain:
+            11 bottles of beer on the wall, 11 bottles of beer.
+    actual: 10 bottles of beer on the wall, 10 bottles of beer.
+            Take one down and pass it around, 9 bottles of beer on the wall.
+            9 bottles of beer on the wall, 9 bottles of beer.
+            Take one down and pass it around, 8 bottles of beer on the wall.
+            8 bottles of beer on the wall, 8 bottles of beer.
+            Take one down and pass it around, 7 bottles of beer on the wall.
+            7 bottles of beer on the wall, 7 bottles of beer.
+            Take one down and pass it around, 6 bottles of beer on the wall.
+            6 bottles of beer on the wall, 6 bottles of beer.
+            Take one down and pass it around, 5 bottles of beer on the wall.
+            5 bottles of beer on the wall, 5 bottles of beer.
+            Take one down and pass it around, 4 bottles of beer on the wall.
+            4 bottles of beer on the wall, 4 bottles of beer.
+            Take one down and pass it around, 3 bottles of beer on the wall.
+            3 bottles of beer on the wall, 3 bottles of beer.
+            Take one down and pass it around, 2 bottles of beer on the wall.
+            2 bottles of beer on the wall, 2 bottles of beer.
+            Take one down and pass it around, 1 bottle of beer on the wall.
+            1 bottle of beer on the wall, 1 bottle of beer.
+            Take one down and pass it around, no more bottles of beer on the wall.
+            No more bottles of beer on the wall, no more bottles of beer.
+            Go to the store and buy some more, 10 bottles of beer on the wall.
 
-4 tests, 1 failure
+6 tests, 2 failures

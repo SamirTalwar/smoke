@@ -4,6 +4,7 @@ import Control.Monad.Trans.Except (ExceptT (..), runExceptT, withExceptT)
 import Data.Default
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
+import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Filters
@@ -50,16 +51,24 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
         if expected == actual
           then Nothing
           else Just $ AssertionFailureDiff expected actual
+    assert (AssertContains expected) actual =
+      return $
+        if Text.isInfixOf (serializeFixture expected) (serializeFixture actual)
+          then Nothing
+          else Just $ AssertionFailureContains expected actual
     assert (AssertFiltered fixtureFilter expected) actual = do
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
+
     assertSingle :: FixtureType a => Assert a -> a -> Asserting (PartResult a)
     assertSingle expected actual =
       maybe PartSuccess (PartFailure . SingleAssertionFailure) <$> assert expected actual
+
     assertAll :: FixtureType a => Vector (Assert a) -> a -> Asserting (PartResult a)
     assertAll expecteds actual = do
       maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
       return $ maybe PartSuccess (PartFailure . collapseAssertionFailures) maybeFailures
+
     collapseAssertionFailures :: Vector (AssertionFailure a) -> AssertionFailures a
     collapseAssertionFailures failures =
       case Vector.length failures of

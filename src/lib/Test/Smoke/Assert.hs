@@ -45,7 +45,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
           stdErrResult
           fileResults
   where
-    assert :: FixtureType a => Assert a -> a -> Asserting (Maybe (AssertionFailure a))
+    assert :: Assert a -> a -> Asserting (Maybe (AssertionFailure a))
     assert (AssertEquals expected) actual =
       return $
         if expected == actual
@@ -60,11 +60,11 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
 
-    assertSingle :: FixtureType a => Assert a -> a -> Asserting (PartResult a)
+    assertSingle :: Assert a -> a -> Asserting (PartResult a)
     assertSingle expected actual =
       maybe PartSuccess (PartFailure . SingleAssertionFailure) <$> assert expected actual
 
-    assertAll :: FixtureType a => Vector (Assert a) -> a -> Asserting (PartResult a)
+    assertAll :: Vector (Assert a) -> a -> Asserting (PartResult a)
     assertAll expecteds actual = do
       maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
       return $ maybe PartSuccess (PartFailure . collapseAssertionFailures) maybeFailures

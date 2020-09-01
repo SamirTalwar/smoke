@@ -91,13 +91,9 @@ newtype Status = Status
 instance Default Status where
   def = Status 0
 
-instance FixtureType Status where
-  fixtureName = "exit-status"
-  serializeFixture = Text.pack . show . unStatus
-  deserializeFixture = Status . read . Text.unpack
-
 instance FromJSON Status where
-  parseJSON = withScientific (unFixtureName (fixtureName @Status)) (\value -> Status <$> parseJSON (Number value))
+  parseJSON number@(Number _) = Status <$> parseJSON number
+  parseJSON invalid = typeMismatch "status" invalid
 
 newtype StdIn = StdIn
   { unStdIn :: Text

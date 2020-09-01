@@ -12,14 +12,15 @@ import Control.Monad (forM_)
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
+import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult _ (TestResult test (TestFailure _ (PartFailure (SingleAssertionFailure (AssertionFailureDiff _ actualStatus))) _ _ _)) =
-  failed test $ couldNotBlessInlineFixture actualStatus
+blessResult _ (TestResult test (TestFailure _ (PartFailure (SingleAssertionFailure (AssertionFailureDiff _ (Status actualStatus)))) _ _ _)) =
+  failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
 blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files)) =
   do
     serializedStdOut <- serialize (testStdOut test) stdOut
@@ -63,7 +64,3 @@ writeFixture location (Just (path, text)) =
 
 failed :: Applicative f => Test -> SmokeBlessError -> f TestResult
 failed test = pure . TestResult test . TestError . BlessError
-
-couldNotBlessInlineFixture :: forall a. FixtureType a => a -> SmokeBlessError
-couldNotBlessInlineFixture value =
-  CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture value)

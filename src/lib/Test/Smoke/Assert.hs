@@ -46,7 +46,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
           fileResults
   where
     assert :: FixtureType a => Assert a -> a -> Asserting (Maybe (AssertionFailure a))
-    assert (AssertEqual expected) actual =
+    assert (AssertEquals expected) actual =
       return $
         if expected == actual
           then Nothing

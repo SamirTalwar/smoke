@@ -64,7 +64,7 @@ instance FromJSON Test where
         <*> (v .:? "command")
         <*> (v .:? "args")
         <*> (v .:? "stdin")
-        <*> (AssertEqual <$> (v .:? "exit-status" .!= def))
+        <*> (AssertEquals <$> (v .:? "exit-status" .!= def))
         <*> (manyMaybe =<< (v .:? "stdout"))
         <*> (manyMaybe =<< (v .:? "stderr"))
         <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList

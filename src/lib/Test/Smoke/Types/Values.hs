@@ -43,12 +43,12 @@ data TestOutput a = TestOutput
 
 instance (Eq a, FixtureType a, FromJSON a) => FromJSON (TestOutput a) where
   parseJSON value@(Object v) =
-    let equals :: Parser (Maybe (TestOutput a)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEqual <$>))
+    let equals :: Parser (Maybe (TestOutput a)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEquals <$>))
         contains :: Parser (Maybe (TestOutput a)) = (v .:? "contains") >>= (sequence . (parseFiltered AssertContains <$>))
-        fallback :: Parser (TestOutput a) = parseFiltered AssertEqual value
+        fallback :: Parser (TestOutput a) = parseFiltered AssertEquals value
      in equals `orMaybe` contains `orDefinitely` fallback
   parseJSON value =
-    parseFiltered AssertEqual value
+    parseFiltered AssertEquals value
 
 parseFiltered :: (Eq a, FixtureType a, FromJSON a) => (a -> Assert a) -> Value -> Parser (TestOutput a)
 parseFiltered assertion value@(Object v) =

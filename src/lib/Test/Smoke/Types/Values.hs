@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -10,11 +11,11 @@ import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Filters
 
-data Contents a
-  = Inline a
-  | FileLocation (RelativePath File)
+data Contents a where
+  Inline :: a -> Contents a
+  FileLocation :: FixtureType a => RelativePath File -> Contents a
 
-instance FromJSON a => FromJSON (Contents a) where
+instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
   parseJSON s@(String _) =
     Inline <$> parseJSON s
   parseJSON (Object v) = do
@@ -27,14 +28,15 @@ instance FromJSON a => FromJSON (Contents a) where
       (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\"."
   parseJSON invalid = typeMismatch "contents" invalid
 
-data TestInput a = TestInput
-  { testInputFilter :: Maybe Filter,
-    testInputContents :: Contents a
-  }
+data TestInput a where
+  TestInput :: Contents a -> TestInput a
+  TestInputFiltered :: FixtureType a => Filter -> Contents a -> TestInput a
 
-instance FromJSON a => FromJSON (TestInput a) where
-  parseJSON value@(Object v) = TestInput <$> v .:? "filter" <*> parseJSON value
-  parseJSON value = TestInput Nothing <$> parseJSON value
+instance (FixtureType a, FromJSON a) => FromJSON (TestInput a) where
+  parseJSON value@(Object v) =
+    maybe TestInput TestInputFiltered <$> v .:? "filter" <*> parseJSON value
+  parseJSON value =
+    TestInput <$> parseJSON value
 
 data TestOutput a = TestOutput
   { testOutputAssertionConstructor :: a -> Assert a,

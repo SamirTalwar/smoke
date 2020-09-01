@@ -109,19 +109,18 @@ readStdErr location test = mapM (readTestOutput location) (testStdErr test)
 readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
 readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
-readTestInput :: FixtureType a => ResolvedPath Dir -> Maybe Shell -> TestInput a -> Planning a
-readTestInput location fallbackShell (TestInput maybeFilter contents) = do
+readTestInput :: ResolvedPath Dir -> Maybe Shell -> TestInput a -> Planning a
+readTestInput location _ (TestInput contents) =
+  readContents location contents
+readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) = do
   value <- readContents location contents
-  maybe (return value) (filtered value) maybeFilter
-  where
-    filtered :: FixtureType a => a -> Filter -> Planning a
-    filtered value fixtureFilter = withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
+  withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
 
-readTestOutput :: FixtureType a => ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
+readTestOutput :: ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
 readTestOutput location (TestOutput constructor contents) =
   constructor <$> readContents location contents
 
-readContents :: FixtureType a => ResolvedPath Dir -> Contents a -> Planning a
+readContents :: ResolvedPath Dir -> Contents a -> Planning a
 readContents _ (Inline value) =
   return value
 readContents location (FileLocation path) =

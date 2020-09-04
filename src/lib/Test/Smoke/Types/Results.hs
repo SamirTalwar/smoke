@@ -23,18 +23,32 @@ data TestOutcome
   = TestSuccess
   | TestFailure
       TestPlan
-      (PartResult Status)
-      (PartResult StdOut)
-      (PartResult StdErr)
-      (Map (RelativePath File) (PartResult TestFileContents))
+      (EqualityResult Status)
+      (AssertionResult StdOut)
+      (AssertionResult StdErr)
+      (Map (RelativePath File) (AssertionResult TestFileContents))
   | TestError SmokeError
   | TestIgnored
 
-data PartResult a
-  = PartSuccess
-  | PartFailure (AssertionFailures a)
+class IsSuccess a where
+  isSuccess :: a -> Bool
+  isFailure :: a -> Bool
+  isFailure = not . isSuccess
+
+data EqualityResult a
+  = EqualitySuccess
+  | EqualityFailure {equalityFailureExpected :: a, equalityFailureActual :: a}
   deriving (Functor)
 
-isPartSuccess :: PartResult a -> Bool
-isPartSuccess PartSuccess = True
-isPartSuccess PartFailure {} = False
+instance IsSuccess (EqualityResult a) where
+  isSuccess EqualitySuccess = True
+  isSuccess EqualityFailure {} = False
+
+data AssertionResult a
+  = AssertionSuccess
+  | AssertionFailure (AssertionFailures a)
+  deriving (Functor)
+
+instance IsSuccess (AssertionResult a) where
+  isSuccess AssertionSuccess = True
+  isSuccess AssertionFailure {} = False

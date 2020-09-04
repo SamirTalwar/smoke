@@ -24,7 +24,7 @@ assertResult location testPlan (ExecutionSucceeded actualOutputs) =
 
 processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestOutcome
 processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
-  statusResult <- assertSingle expectedStatus actualStatus
+  let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
   fileResults <-
@@ -32,10 +32,10 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
       (\relativePath contents -> assertAll contents (actualFiles ! (location </> relativePath)))
       expectedFiles
   return $
-    if isPartSuccess statusResult
-      && isPartSuccess stdOutResult
-      && isPartSuccess stdErrResult
-      && all isPartSuccess (Map.elems fileResults)
+    if isSuccess statusResult
+      && isSuccess stdOutResult
+      && isSuccess stdErrResult
+      && all isSuccess (Map.elems fileResults)
       then TestSuccess
       else
         TestFailure
@@ -45,6 +45,11 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
           stdErrResult
           fileResults
   where
+    assertEqual :: Eq a => a -> a -> EqualityResult a
+    assertEqual expected actual
+      | expected == actual = EqualitySuccess
+      | otherwise = EqualityFailure expected actual
+
     assert :: Assert a -> a -> Asserting (Maybe (AssertionFailure a))
     assert (AssertEquals expected) actual =
       return $
@@ -60,14 +65,10 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
 
-    assertSingle :: Assert a -> a -> Asserting (PartResult a)
-    assertSingle expected actual =
-      maybe PartSuccess (PartFailure . SingleAssertionFailure) <$> assert expected actual
-
-    assertAll :: Vector (Assert a) -> a -> Asserting (PartResult a)
+    assertAll :: Vector (Assert a) -> a -> Asserting (AssertionResult a)
     assertAll expecteds actual = do
       maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
-      return $ maybe PartSuccess (PartFailure . collapseAssertionFailures) maybeFailures
+      return $ maybe AssertionSuccess (AssertionFailure . collapseAssertionFailures) maybeFailures
 
     collapseAssertionFailures :: Vector (AssertionFailure a) -> AssertionFailures a
     collapseAssertionFailures failures =

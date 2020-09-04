@@ -19,7 +19,7 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult _ (TestResult test (TestFailure _ (PartFailure (SingleAssertionFailure (AssertionFailureDiff _ (Status actualStatus)))) _ _ _)) =
+blessResult _ (TestResult test (TestFailure _ (EqualityFailure _ (Status actualStatus)) _ _ _)) =
   failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
 blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files)) =
   do
@@ -34,10 +34,10 @@ blessResult location (TestResult test (TestFailure _ _ stdOut stdErr files)) =
     `catch` (failed test . BlessIOException)
 blessResult _ result = return result
 
-serialize :: forall a. FixtureType a => Vector (TestOutput a) -> PartResult a -> IO (Maybe (RelativePath File, Text))
-serialize _ PartSuccess =
+serialize :: forall a. FixtureType a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (RelativePath File, Text))
+serialize _ AssertionSuccess =
   return Nothing
-serialize outputs (PartFailure result) =
+serialize outputs (AssertionFailure result) =
   case Vector.length outputs of
     1 ->
       serializeFailure (Vector.head outputs) result

@@ -10,7 +10,6 @@ import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
-import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Values
 
@@ -48,7 +47,7 @@ data Test = Test
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
     testStdIn :: Maybe (TestInput StdIn),
-    testStatus :: Assert Status,
+    testStatus :: Status,
     testStdOut :: Vector (TestOutput StdOut),
     testStdErr :: Vector (TestOutput StdErr),
     testFiles :: Map (RelativePath File) (Vector (TestOutput TestFileContents)),
@@ -64,7 +63,7 @@ instance FromJSON Test where
         <*> (v .:? "command")
         <*> (v .:? "args")
         <*> (v .:? "stdin")
-        <*> (AssertEquals <$> (v .:? "exit-status" .!= def))
+        <*> (v .:? "exit-status" .!= def)
         <*> (manyMaybe =<< (v .:? "stdout"))
         <*> (manyMaybe =<< (v .:? "stderr"))
         <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList

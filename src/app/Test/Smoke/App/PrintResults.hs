@@ -33,7 +33,7 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
         <$> testArgs test
     )
   printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
-  printFailingOutput "status" ((<> "\n") . showInt . unStatus <$> statusResult)
+  printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
   printFailingOutput "stdout" (unStdOut <$> stdOutResult)
   printFailingOutput "stderr" (unStdErr <$> stdErrResult)
   printFailingFilesOutput fileResults
@@ -46,11 +46,11 @@ printFailingInput name value =
     putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
     putPlainLn $ indented outputIndentation v
 
-printFailingOutput :: String -> PartResult Text -> Output ()
+printFailingOutput :: String -> AssertionResult Text -> Output ()
 printFailingOutput name = printFailures (ShortName name)
 
 printFailingFilesOutput ::
-  Map (RelativePath File) (PartResult TestFileContents) -> Output ()
+  Map (RelativePath File) (AssertionResult TestFileContents) -> Output ()
 printFailingFilesOutput fileResults =
   if all isSuccess (Map.elems fileResults)
     then return ()
@@ -58,20 +58,17 @@ printFailingFilesOutput fileResults =
       putRedLn "  files:"
       forM_ (Map.assocs fileResults) $ \(path, fileResult) ->
         printFailingFileOutput path (unTestFileContents <$> fileResult)
-  where
-    isSuccess PartSuccess = True
-    isSuccess (PartFailure _) = False
 
-printFailingFileOutput :: RelativePath File -> PartResult Text -> Output ()
+printFailingFileOutput :: RelativePath File -> AssertionResult Text -> Output ()
 printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
-printFailures :: PartName -> PartResult Text -> Output ()
-printFailures _ PartSuccess =
+printFailures :: PartName -> AssertionResult Text -> Output ()
+printFailures _ AssertionSuccess =
   return ()
-printFailures name (PartFailure (SingleAssertionFailure failure)) = do
+printFailures name (AssertionFailure (SingleAssertionFailure failure)) = do
   printFailureName name (failureIsInline failure)
   printFailure failure
-printFailures name (PartFailure (MultipleAssertionFailures failures)) = do
+printFailures name (AssertionFailure (MultipleAssertionFailures failures)) = do
   printFailureName name isInline
   printFailure firstFailure
   forM_ (Vector.tail failures) $ \failure -> do
@@ -112,6 +109,10 @@ printDiff left right = do
     ask
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
+
+toAssertionResult :: EqualityResult a -> AssertionResult a
+toAssertionResult EqualitySuccess = AssertionSuccess
+toAssertionResult (EqualityFailure expected actual) = AssertionFailure $ SingleAssertionFailure $ AssertionFailureDiff expected actual
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")

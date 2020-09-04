@@ -27,7 +27,7 @@ data TestPlan = TestPlan
     planExecutable :: Executable,
     planArgs :: Args,
     planStdIn :: StdIn,
-    planStatus :: Assert Status,
+    planStatus :: Status,
     planStdOut :: Vector (Assert StdOut),
     planStdErr :: Vector (Assert StdErr),
     planFiles :: Map (RelativePath File) (Vector (Assert TestFileContents)),

@@ -80,6 +80,8 @@ tests:
 
 That's it.
 
+We use the YAML operator `|` to capture the following indented block as a string. This allows us to easily check for multiline output, and includes the trailing newline, which is useful when dealing with software that typically prints a newline at the end of execution. It also guarantees that we parse the value as a string, and not, for example, as a number, as in the case above.
+
 We might want to assert that certain things fail. For example, postfix notation should fail because the second token is expected to be an operator. In this example, our calculator is expected to produce a semi-reasonable error message and exit with a status of `2` to signify a parsing error.
 
 ```yaml
@@ -93,7 +95,7 @@ tests:
       "3" is not a valid operator.
 ```
 
-Sometimes the response might be one of a few different values, in which case, I can specify an array of possible outcomes:
+Sometimes the response might be one of a few different values, in which case, we can specify an array of possible outcomes:
 
 ```yaml
 tests:
@@ -108,9 +110,23 @@ tests:
         -2
 ```
 
-You can ignore tests (temporarily, we hope) by adding `ignored: true`.
+We don't always want to check the full output; sometimes checking that it contains a given substring is more useful. We can use the `contains:` operator to specify this:
 
-You can use files to specify the STDIN, STDOUT or STDERR values:
+```yaml
+tests:
+  # ...
+  - name: big multiplication
+    stdin: |
+      961748927 * 982451653
+    stdout:
+      contains: "1021"
+```
+
+Note that we don't use `|` here, as we don't want to capture the trailing newline, which would make this test fail. Instead we use quotes around the value to ensure that the YAML parser treats it as a string, not a number.
+
+You can also use `equals:` to explicitly specify that we're checking equality, though this is the default.
+
+We can use files to specify the STDIN, STDOUT or STDERR values:
 
 ```yaml
 tests:
@@ -122,6 +138,8 @@ tests:
 ```
 
 Using files gives us one big advantage over specifying the content inline: if the tests fail, but the actual output looks correct, we can "bless" the new STDOUT or STDERR with the `--bless` flag. This means you don't have to spend time copying and pasting, and can instead just approve the results automatically.
+
+We can ignore tests (temporarily, we hope) by adding `ignored: true`.
 
 And, of course, you can combine all these techniques together.
 

@@ -7,23 +7,63 @@ tests:
     args:
       - "10"
     stdout:
-      file: io/10.out
+      equals: |
+        10 bottles of beer on the wall, 10 bottles of beer.
+        Take one down and pass it around, 9 bottles of beer on the wall.
+        9 bottles of beer on the wall, 9 bottles of beer.
+        Take one down and pass it around, 8 bottles of beer on the wall.
+        8 bottles of beer on the wall, 8 bottles of beer.
+        Take one down and pass it around, 7 bottles of beer on the wall.
+        7 bottles of beer on the wall, 7 bottles of beer.
+        Take one down and pass it around, 6 bottles of beer on the wall.
+        6 bottles of beer on the wall, 6 bottles of beer.
+        Take one down and pass it around, 5 bottles of beer on the wall.
+        5 bottles of beer on the wall, 5 bottles of beer.
+        Take one down and pass it around, 4 bottles of beer on the wall.
+        4 bottles of beer on the wall, 4 bottles of beer.
+        Take one down and pass it around, 3 bottles of beer on the wall.
+        3 bottles of beer on the wall, 3 bottles of beer.
+        Take one down and pass it around, 2 bottles of beer on the wall.
+        2 bottles of beer on the wall, 2 bottles of beer.
+        Take one down and pass it around, 1 bottle of beer on the wall.
+        1 bottle of beer on the wall, 1 bottle of beer.
+        Take one down and pass it around, no more bottles of beer on the wall.
+        No more bottles of beer on the wall, no more bottles of beer.
+        Go to the store and buy some more, 10 bottles of beer on the wall.
 
   - name: "100"
     args:
       - "100"
     stdout:
-      file: io/100.out
+      equals:
+        file: io/100.out
 
   - name: "1000"
     args:
       - "1000"
     stdout:
-      file: io/1000.out
+      equals:
+        file: io/1000.out
 
   - name: broken
     args:
       - --broken
       - "1000"
     stdout:
-      file: io/1000-broken.out
+      equals:
+        file: io/1000-broken.out
+
+  - name: "10000-contains"
+    args:
+      - "10000"
+    stdout:
+      contains: |
+        9997 bottles of beer on the wall, 9997 bottles of beer.
+        Take one down and pass it around, 9996 bottles of beer on the wall.
+
+  - name: "10-does-not-contain"
+    args:
+      - "10"
+    stdout:
+      contains: |
+        11 bottles of beer on the wall, 11 bottles of beer.

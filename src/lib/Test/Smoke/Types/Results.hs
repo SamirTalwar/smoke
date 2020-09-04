@@ -1,12 +1,12 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Test.Smoke.Types.Results where
 
-import Data.Bifunctor (bimap)
 import Data.Map.Strict (Map)
-import Data.Vector (Vector)
 import Test.Smoke.Paths
+import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
-import Test.Smoke.Types.Files
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
 
@@ -15,30 +15,40 @@ type Results = [SuiteResult]
 data SuiteResult
   = SuiteResultError SuiteName SuiteError
   | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
-  deriving (Eq, Show)
 
 data TestResult
   = TestResult Test TestOutcome
-  deriving (Eq, Show)
 
 data TestOutcome
   = TestSuccess
   | TestFailure
       TestPlan
-      (PartResult Status)
-      (PartResult StdOut)
-      (PartResult StdErr)
-      (Map (RelativePath File) (PartResult TestFileContents))
+      (EqualityResult Status)
+      (AssertionResult StdOut)
+      (AssertionResult StdErr)
+      (Map (RelativePath File) (AssertionResult TestFileContents))
   | TestError SmokeError
   | TestIgnored
-  deriving (Eq, Show)
 
-data PartResult a
-  = PartSuccess
-  | PartFailure (Vector (a, a))
-  deriving (Eq, Show)
+class IsSuccess a where
+  isSuccess :: a -> Bool
+  isFailure :: a -> Bool
+  isFailure = not . isSuccess
 
-instance Functor PartResult where
-  _ `fmap` PartSuccess = PartSuccess
-  f `fmap` (PartFailure failures) =
-    PartFailure (bimap f f <$> failures)
+data EqualityResult a
+  = EqualitySuccess
+  | EqualityFailure {equalityFailureExpected :: a, equalityFailureActual :: a}
+  deriving (Functor)
+
+instance IsSuccess (EqualityResult a) where
+  isSuccess EqualitySuccess = True
+  isSuccess EqualityFailure {} = False
+
+data AssertionResult a
+  = AssertionSuccess
+  | AssertionFailure (AssertionFailures a)
+  deriving (Functor)
+
+instance IsSuccess (AssertionResult a) where
+  isSuccess AssertionSuccess = True
+  isSuccess AssertionFailure {} = False

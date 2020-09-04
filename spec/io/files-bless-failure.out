@@ -5,7 +5,7 @@ uppercase a file
 lowercase a file
   succeeded
 multiple files
-  The fixture "file contents" is embedded in the test specification, so the result cannot be blessed.
+  The fixture "files" is embedded in the test specification, so the result cannot be blessed.
   Attempted to write:
     three
 multiple possible file contents

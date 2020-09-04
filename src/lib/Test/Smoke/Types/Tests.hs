@@ -2,82 +2,88 @@
 
 module Test.Smoke.Types.Tests where
 
-import Data.Aeson hiding (Options)
+import Data.Aeson
 import Data.Aeson.Types (Parser)
+import Data.Default
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
-import Test.Smoke.Types.Errors
-import Test.Smoke.Types.Files
-import Test.Smoke.Types.Fixtures
+import Test.Smoke.Types.Values
 
 data TestSpecification
   = TestSpecification (Maybe Command) Suites
 
-type Suites = [(SuiteName, Either SmokeDiscoveryError Suite)]
+type Suites = [SuiteWithMetadata]
+
+data SuiteWithMetadata = SuiteWithMetadata
+  { suiteMetaName :: SuiteName,
+    suiteMetaLocation :: ResolvedPath Dir,
+    suiteMetaSuite :: Suite
+  }
 
 data Suite = Suite
-  { suiteLocation :: ResolvedPath Dir,
-    suiteWorkingDirectory :: Maybe WorkingDirectory,
+  { suiteWorkingDirectory :: Maybe (RelativePath Dir),
     suiteShell :: Maybe CommandLine,
     suiteCommand :: Maybe Command,
     suiteTests :: [Test]
   }
-  deriving (Eq, Show)
+
+instance FromJSON Suite where
+  parseJSON =
+    withObject "Suite" $ \v ->
+      Suite
+        <$> (v .:? "working-directory")
+        <*> (v .:? "shell")
+        <*> (v .:? "command")
+        <*> (mapM parseJSON =<< (v .: "tests"))
 
 data Test = Test
   { testName :: TestName,
     testIgnored :: Bool,
-    testWorkingDirectory :: Maybe WorkingDirectory,
+    testWorkingDirectory :: Maybe (RelativePath Dir),
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
-    testStdIn :: Maybe (Fixture StdIn),
-    testStdOut :: Fixtures StdOut,
-    testStdErr :: Fixtures StdErr,
-    testStatus :: Fixture Status,
-    testFiles :: Map (RelativePath File) (Fixtures TestFileContents),
+    testStdIn :: Maybe (TestInput StdIn),
+    testStatus :: Status,
+    testStdOut :: Vector (TestOutput StdOut),
+    testStdErr :: Vector (TestOutput StdErr),
+    testFiles :: Map (RelativePath File) (Vector (TestOutput TestFileContents)),
     testRevert :: Vector (RelativePath Dir)
   }
-  deriving (Eq, Show)
 
-parseSuite :: ResolvedPath Dir -> Value -> Parser Suite
-parseSuite location =
-  withObject "Suite" $ \v ->
-    Suite location
-      <$> (toWorkingDirectory location <$> (v .:? "working-directory"))
-      <*> (v .:? "shell")
-      <*> (v .:? "command")
-      <*> (mapM (parseTest location) =<< (v .: "tests"))
+instance FromJSON Test where
+  parseJSON =
+    withObject "Test" $ \v ->
+      Test <$> (TestName <$> v .: "name")
+        <*> (v .:? "ignored" .!= False)
+        <*> (v .:? "working-directory")
+        <*> (v .:? "command")
+        <*> (v .:? "args")
+        <*> (v .:? "stdin")
+        <*> (v .:? "exit-status" .!= def)
+        <*> (manyMaybe =<< (v .:? "stdout"))
+        <*> (manyMaybe =<< (v .:? "stderr"))
+        <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList
+                <$> (v .:? "files" .!= Vector.empty)
+            )
+        <*> (v .:? "revert" .!= Vector.empty)
 
-parseTest :: ResolvedPath Dir -> Value -> Parser Test
-parseTest location =
-  withObject "Test" $ \v ->
-    Test <$> (TestName <$> v .: "name")
-      <*> (v .:? "ignored" .!= False)
-      <*> (toWorkingDirectory location <$> (v .:? "working-directory"))
-      <*> (v .:? "command")
-      <*> (v .:? "args")
-      <*> (v .:? "stdin")
-      <*> (v .:? "stdout" .!= noFixtures)
-      <*> (v .:? "stderr" .!= noFixtures)
-      <*> ( Fixture <$> (Inline . Status <$> v .:? "exit-status" .!= 0)
-              <*> return Nothing
-          )
-      <*> ( Map.fromList . Vector.toList
-              <$> (Vector.mapM parseTestFile =<< (v .:? "files" .!= Vector.empty))
-          )
-      <*> (v .:? "revert" .!= Vector.empty)
+data TestFile = TestFile
+  { testFilePath :: RelativePath File,
+    testFileContents :: Vector (TestOutput TestFileContents)
+  }
 
-toWorkingDirectory ::
-  ResolvedPath Dir -> Maybe (RelativePath Dir) -> Maybe WorkingDirectory
-toWorkingDirectory location path = WorkingDirectory . (location </>) <$> path
+instance FromJSON TestFile where
+  parseJSON =
+    withObject "TestFile" $ \v ->
+      TestFile <$> (v .: "path") <*> (many =<< (v .: "contents"))
 
-parseTestFile :: Value -> Parser (RelativePath File, Fixtures TestFileContents)
-parseTestFile =
-  withObject "File" $ \v -> do
-    path <- parseFile <$> v .: "path"
-    contents <- v .: "contents"
-    return (path, contents)
+many :: FromJSON a => Value -> Parser (Vector a)
+many (Array v) = mapM parseJSON v
+many v = Vector.singleton <$> parseJSON v
+
+manyMaybe :: FromJSON a => Maybe Value -> Parser (Vector a)
+manyMaybe = maybe (return Vector.empty) many

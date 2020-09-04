@@ -1,5 +1,6 @@
 module Main
   ( main,
+    run,
   )
 where
 
@@ -29,7 +30,7 @@ main = do
 run :: AppOptions -> IO ()
 run options = do
   tests@(TestSpecification _ suites) <- discoverTests (optionsExecution options)
-  let suiteNames = Set.fromList $ map fst suites
+  let suiteNames = Set.fromList $ map suiteMetaName suites
   let showSuiteNames = Set.size suiteNames > 1
   (Plan plannedSuites) <- planTests tests
   results <- withOptions options $ forM plannedSuites $ runSuite showSuiteNames
@@ -66,8 +67,11 @@ runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@T
 
 runTestPlan :: ResolvedPath Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do
+  let test = planTest testPlan
   AppOptions {optionsMode = mode} <- ask
-  testResult <- liftIO $ runTest location testPlan
+  executionResult <- liftIO $ runTest location testPlan
+  testOutcome <- liftIO $ assertResult location testPlan executionResult
+  let testResult = TestResult test testOutcome
   modifiedTestResult <-
     case mode of
       Check -> return testResult

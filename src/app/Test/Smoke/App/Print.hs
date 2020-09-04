@@ -22,6 +22,9 @@ type Output a = ReaderT AppOptions IO a
 outputIndentation :: Int
 outputIndentation = 10
 
+nestedOutputIndentation :: Int
+nestedOutputIndentation = outputIndentation + 2
+
 messageIndentation :: Int
 messageIndentation = 2
 

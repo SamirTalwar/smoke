@@ -53,7 +53,7 @@ printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
 printTestError (ExecutionError (CouldNotRevertDirectory path exception)) =
   printErrorWithException exception $
     "The directory " <> showPath path <> " could not be reverted."
-printTestError (ExecutionError (ExecutionFilterError filterError)) =
+printTestError (AssertionError (AssertionFilterError filterError)) =
   printFilterError filterError
 printTestError (BlessError (CouldNotBlessInlineFixture (FixtureName fixtureName') propertyValue)) =
   printError $
@@ -71,6 +71,12 @@ printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixture
     "There are multiple expected "
       <> quoteString fixtureName'
       <> " values, so the result cannot be blessed.\n"
+printTestError (BlessError (CouldNotBlessContainsAssertion (FixtureName fixtureName') propertyValue)) =
+  printError $
+    "The fixture "
+      <> quoteString fixtureName'
+      <> " is matching a substring, so the result cannot be blessed.\nActual value:\n"
+      <> indentedAll messageIndentation propertyValue
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 
@@ -105,7 +111,7 @@ printFilterError MissingFilterScript =
 printFilterError (CouldNotExecuteFilter executable exception) =
   printErrorWithException exception $
     showExecutable executable <> " could not be executed."
-printFilterError (ExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
+printFilterError (FilterExecutionFailed executable (Status status) (StdOut stdOut) (StdErr stdErr)) =
   printError $
     showExecutable executable
       <> " failed with an exit status of "

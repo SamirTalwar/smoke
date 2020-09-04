@@ -2,6 +2,7 @@ resolver: lts-16.12
 packages:
   - .
 ghc-options:
+  $everything: -haddock
   $locals: -Wall -Werror
 nix:
   shell-file: ./nix/stack.nix

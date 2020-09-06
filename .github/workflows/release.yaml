@@ -4,6 +4,9 @@ on:
     tags:
       - "v*"
 
+env:
+  GHC_VERSION: "8.8.4"
+
 jobs:
   release:
     name: Release
@@ -35,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-haskell@v1
         with:
-          ghc-version: "8.8.3"
+          ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
       - uses: actions/cache@v2

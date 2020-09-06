@@ -5,13 +5,22 @@ let
 in
 with pkgs;
 [
+  # Build
+  gnumake
+  stack
+
+  # Test
+  git
+  ruby
+
+  # Development
+  coreutils
+  dos2unix
+  findutils
   ghc.haskell-language-server
   ghc.hlint
-  git
-  gnumake
+  gnused
   niv
   nixpkgs-fmt
   ormolu
-  ruby
-  stack
 ]

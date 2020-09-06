@@ -26,6 +26,8 @@ BIN_DEBUG := $(OUT_DEBUG)/smoke
 OUT_RELEASE := $(OUT_BUILD)/release
 BIN_RELEASE := $(OUT_RELEASE)/smoke
 
+GHC_VERSION = $(shell $(STACK) ghc -- --version | sed 's/.* version //')
+
 ifdef CI
   STACK := stack --no-terminal
 else
@@ -72,6 +74,11 @@ bless: build
 
 .PHONY: lint
 lint: $(NIX_FILES) $(SRC)
+	@ echo >&2 '> ghc.version'
+	@ if [[ "$$(cat ghc.version)" != "$(GHC_VERSION)" ]]; then \
+		echo >&2 "Expected: $(GHC_VERSION), actual: $$(cat ghc.version)"; \
+		exit 1; \
+	fi
 	@ echo >&2 '> hlint'
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
@@ -91,3 +98,10 @@ reformat: $(NIX_FILES) $(SRC)
 smoke.cabal: $(CONF)
 	$(STACK) install --fast --only-dependencies --test --no-run-tests
 	touch $@
+
+.PHONY: update-ghc-version
+update-ghc-version: ghc.version $(CONF)
+	sed -i -r 's/^  GHC_VERSION: ".+"$$/  GHC_VERSION: "$(GHC_VERSION)"/' .github/workflows/*.yaml
+
+ghc.version: $(CONF)
+	echo $(GHC_VERSION) > $@

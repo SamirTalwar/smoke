@@ -69,12 +69,12 @@ jobs:
           key: v1-windows-latest-chocolatey-lib
       - uses: actions/cache@v2
         with:
-          path: '${{ env.LOCALAPPDATA }}\Programs\stack'
+          path: '${{ env.HOME }}\AppData\Local\Programs\stack'
           key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-programs-stack-
       - uses: actions/cache@v2
         with:
-          path: '${{ env.APPDATA }}\stack'
+          path: '${{ env.HOME }}\AppData\Roaming\stack'
           key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-appdata-stack-
       - run: "choco install --yes --no-progress haskell-stack"

@@ -25,7 +25,7 @@ jobs:
           draft: true
 
   publish-unix:
-    name: Release
+    name: Publish
     needs: release
     strategy:
       fail-fast: false
@@ -49,9 +49,52 @@ jobs:
       - run: make out/build/release/smoke
       - id: asset
         run: |
-          export TAG="${{ github.ref }}"
+          export TAG='${{ github.ref }}'
           echo "::set-output name=asset_name::smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
           echo "::set-output name=asset_path::out/build/release/smoke"
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.release_upload_url }}
+          asset_name: ${{ steps.asset.outputs.asset_name }}
+          asset_path: ${{ steps.asset.outputs.asset_path }}
+          asset_content_type: application/octet-stream
+
+  publish-windows:
+    name: Publish (windows-latest)
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: 'C:\ProgramData\chocolatey\bin'
+          key: v1-windows-latest-chocolatey-bin
+      - uses: actions/cache@v2
+        with:
+          path: 'C:\ProgramData\chocolatey\lib'
+          key: v1-windows-latest-chocolatey-lib
+      - uses: actions/cache@v2
+        with:
+          path: '${{ env.LOCALAPPDATA }}\Programs\stack'
+          key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
+          restore-keys: v1-windows-latest-programs-stack-
+      - uses: actions/cache@v2
+        with:
+          path: '${{ env.APPDATA }}\stack'
+          key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
+          restore-keys: v1-windows-latest-appdata-stack-
+      - run: "choco install --yes --no-progress haskell-stack"
+      - run: "stack --no-terminal setup"
+      - run: 'New-Item -ItemType Directory -Path .\out\build\release'
+      - run: "stack --no-terminal build"
+      - run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
+      - id: asset
+        run: |
+          $Tag = '${{ github.ref }}' -replace '.+/', ''
+          echo "::set-output name=asset_name::smoke-${Tag}-windows-x64.exe"
+          echo '::set-output name=asset_path::out\build\release\smoke.exe'
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

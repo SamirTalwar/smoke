@@ -5,6 +5,7 @@ let
 in
 with pkgs;
 [
+  ghc.haskell-language-server
   ghc.hlint
   git
   gnumake

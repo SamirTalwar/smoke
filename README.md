@@ -1,4 +1,4 @@
-[![GitHub Actions Build Status](https://github.com/SamirTalwar/smoke/workflows/Verify/badge.svg)](https://github.com/SamirTalwar/smoke/actions?query=workflow%3AVerify) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/9m04ffr3h65cviht/branch/master?svg=true)](https://ci.appveyor.com/project/SamirTalwar/smoke)
+[![GitHub Actions Build Status](https://github.com/SamirTalwar/smoke/workflows/Verify/badge.svg)](https://github.com/SamirTalwar/smoke/actions?query=workflow%3AVerify)
 
 # Smoke
 

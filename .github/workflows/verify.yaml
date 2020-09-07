@@ -75,11 +75,11 @@ jobs:
         with:
           path: 'C:\ProgramData\chocolatey\bin'
           key: v1-windows-latest-chocolatey-bin
-      - name: Cache chocolatey/lib
+      - name: Cache chocolatey/lib/haskell-stack
         uses: actions/cache@v2
         with:
-          path: 'C:\ProgramData\chocolatey\lib'
-          key: v1-windows-latest-chocolatey-lib
+          path: 'C:\ProgramData\chocolatey\lib\haskell-stack'
+          key: v1-windows-latest-chocolatey-lib-haskell-stack
       - name: Cache ~/AppData/Local/Programs/stack
         uses: actions/cache@v2
         with:

@@ -15,6 +15,7 @@ jobs:
       release_upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - id: create_release
+        name: Create the release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,24 +36,31 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-haskell@v1
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Set up Haskell
+        uses: actions/setup-haskell@v1
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - uses: actions/cache@v2
+      - name: Cache ~/.stack/snapshots
+        uses: actions/cache@v2
         with:
           path: ~/.stack/snapshots
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - run: make smoke.cabal
-      - run: make out/build/release/smoke
+      - name: Install dependencies
+        run: make smoke.cabal
+      - name: Build for release
+        run: make out/build/release/smoke
       - id: asset
+        name: Set the asset information
         run: |
           export TAG='${{ github.ref }}'
           echo "::set-output name=asset_name::smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
           echo "::set-output name=asset_path::out/build/release/smoke"
-      - uses: actions/upload-release-asset@v1
+      - name: Upload the asset
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -66,36 +74,44 @@ jobs:
     needs: release
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Cache chocolatey/bin
+        uses: actions/cache@v2
         with:
           path: 'C:\ProgramData\chocolatey\bin'
           key: v1-windows-latest-chocolatey-bin
-      - uses: actions/cache@v2
+      - name: Cache chocolatey/lib
+        uses: actions/cache@v2
         with:
           path: 'C:\ProgramData\chocolatey\lib'
           key: v1-windows-latest-chocolatey-lib
-      - uses: actions/cache@v2
+      - name: Cache ~/AppData/Local/Programs/stack
+        uses: actions/cache@v2
         with:
           path: '${{ env.HOME }}\AppData\Local\Programs\stack'
           key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-programs-stack-
-      - uses: actions/cache@v2
+      - name: Cache ~/AppData/Roaming/stack
+        uses: actions/cache@v2
         with:
           path: '${{ env.HOME }}\AppData\Roaming\stack'
           key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-appdata-stack-
-      - run: "choco install --yes --no-progress haskell-stack"
-      - run: "stack --no-terminal setup"
-      - run: 'New-Item -ItemType Directory -Path .\out\build\release'
-      - run: "stack --no-terminal build"
-      - run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
+      - name: Install Stack
+        run: "choco install --yes --no-progress haskell-stack"
+      - name: Install Haskell
+        run: "stack --no-terminal setup"
+      - name: Build for release
+        run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
       - id: asset
+        name: Set the asset information
         run: |
           $Tag = '${{ github.ref }}' -replace '.+/', ''
           echo "::set-output name=asset_name::smoke-${Tag}-windows-x64.exe"
           echo '::set-output name=asset_path::out\build\release\smoke.exe'
-      - uses: actions/upload-release-asset@v1
+      - name: Upload the asset
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

@@ -17,18 +17,23 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-haskell@v1
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Set up Haskell
+        uses: actions/setup-haskell@v1
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - uses: actions/cache@v2
+      - name: Cache ~/.stack/snapshots
+        uses: actions/cache@v2
         with:
           path: ~/.stack/snapshots
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - run: make smoke.cabal
-      - run: make build
+      - name: Install dependencies
+        run: make smoke.cabal
+      - name: Build
+        run: make build
 
   test-unix:
     name: Build and Test
@@ -41,57 +46,75 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-haskell@v1
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Set up Haskell
+        uses: actions/setup-haskell@v1
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - uses: actions/cache@v2
+      - name: Cache ~/.stack/snapshots
+        uses: actions/cache@v2
         with:
           path: ~/.stack/snapshots
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-      - run: make smoke.cabal
-      - run: make test
+      - name: Install dependencies
+        run: make smoke.cabal
+      - name: Test
+        run: make test
 
   test-windows:
     name: Build and Test (windows-latest)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Cache chocolatey/bin
+        uses: actions/cache@v2
         with:
           path: 'C:\ProgramData\chocolatey\bin'
           key: v1-windows-latest-chocolatey-bin
-      - uses: actions/cache@v2
+      - name: Cache chocolatey/lib
+        uses: actions/cache@v2
         with:
           path: 'C:\ProgramData\chocolatey\lib'
           key: v1-windows-latest-chocolatey-lib
-      - uses: actions/cache@v2
+      - name: Cache ~/AppData/Local/Programs/stack
+        uses: actions/cache@v2
         with:
           path: '${{ env.HOME }}\AppData\Local\Programs\stack'
           key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-programs-stack-
-      - uses: actions/cache@v2
+      - name: Cache ~/AppData/Roaming/stack
+        uses: actions/cache@v2
         with:
           path: '${{ env.HOME }}\AppData\Roaming\stack'
           key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-appdata-stack-
-      - run: "choco install --yes --no-progress haskell-stack"
-      - run: "stack --no-terminal setup"
-      - run: "stack --no-terminal build --fast"
-      - run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
-      - run: "stack --no-terminal test"
-      - run: '.\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+      - name: Install Stack
+        run: "choco install --yes --no-progress haskell-stack"
+      - name: Install Haskell
+        run: "stack --no-terminal setup"
+      - name: Build
+        run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
+      - name: Test
+        run: "stack --no-terminal test"
+      - name: Spec
+        run: '.\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
 
   lint:
     name: Lint
     needs: build-unix
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: cachix/install-nix-action@v10
-      - uses: cachix/cachix-action@v6
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Install Nix
+        uses: cachix/install-nix-action@v10
+      - name: Set up the Nix cache
+        uses: cachix/cachix-action@v6
         with:
           name: samirtalwar
-      - run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make lint'
+      - name: Lint
+        run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make lint'

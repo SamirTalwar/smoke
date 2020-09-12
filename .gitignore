@@ -2,6 +2,7 @@
 out
 
 # Local
+.direnv
 .envrc.local
 
 # Stack

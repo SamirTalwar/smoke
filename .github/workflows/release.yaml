@@ -89,13 +89,13 @@ jobs:
       - name: Cache ~/AppData/Local/Programs/stack
         uses: actions/cache@v2
         with:
-          path: '${{ env.HOME }}\AppData\Local\Programs\stack'
+          path: 'C:\Users\runneradmin\AppData\Local\Programs\stack'
           key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-programs-stack-
       - name: Cache ~/AppData/Roaming/stack
         uses: actions/cache@v2
         with:
-          path: '${{ env.HOME }}\AppData\Roaming\stack'
+          path: 'C:\Users\runneradmin\AppData\Roaming\stack'
           key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-appdata-stack-
       - name: Install Stack

@@ -57,7 +57,6 @@ data SmokeBlessError
   | CouldNotBlessAMissingValue FixtureName
   | CouldNotBlessWithMultipleValues FixtureName
   | CouldNotBlessContainsAssertion FixtureName Text
-  | CouldNotBlessAssertionFileError FixtureName SmokeFileError
   | BlessIOException IOException
   deriving (Show)
 

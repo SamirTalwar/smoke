@@ -74,8 +74,6 @@ printTestError (BlessError (CouldNotBlessContainsAssertion (FixtureName fixtureN
       <> quoteString fixtureName'
       <> " is matching a substring, so the result cannot be blessed.\nActual value:\n"
       <> indentedAll messageIndentation propertyValue
-printTestError (BlessError (CouldNotBlessAssertionFileError (FixtureName fixtureName') (CouldNotReadFile _ exception))) =
-  printErrorWithException exception $ "The fixture " <> quoteString fixtureName' <> " had an error during file processing."
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 

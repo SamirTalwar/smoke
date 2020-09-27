@@ -19,9 +19,9 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult _ (TestFailure TestPlan {planTest = test} (EqualityFailure _ (Status actualStatus)) _ _ _) =
+blessResult _ (TestResult TestPlan {planTest = test} (EqualityFailure _ (Status actualStatus)) _ _ _) =
   failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
-blessResult location (TestFailure TestPlan {planTest = test} _ stdOut stdErr files) =
+blessResult location (TestResult testPlan@TestPlan {planTest = test} status stdOut stdErr files) =
   do
     serializedStdOut <- serialize (testStdOut test) stdOut
     serializedStdErr <- serialize (testStdErr test) stdErr
@@ -29,7 +29,7 @@ blessResult location (TestFailure TestPlan {planTest = test} _ stdOut stdErr fil
     writeFixture location serializedStdOut
     writeFixture location serializedStdErr
     forM_ serializedFiles $ writeFixture location
-    return $ TestSuccess test
+    return $ TestResult testPlan status AssertionSuccess AssertionSuccess (Map.map (const AssertionSuccess) files)
     `catch` (\(e :: SmokeBlessError) -> failed test e)
     `catch` (failed test . BlessIOException)
 blessResult _ result = return result

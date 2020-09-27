@@ -23,7 +23,7 @@ assertResult location testPlan@TestPlan {planTest = test} (ExecutionSucceeded ac
   either (TestError test . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
 
 processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestResult
-processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
+processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
@@ -31,19 +31,7 @@ processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedSt
     Map.traverseWithKey
       (\relativePath assertions -> assertFile assertions (actualFiles ! (location </> relativePath)))
       expectedFiles
-  return $
-    if isSuccess statusResult
-      && isSuccess stdOutResult
-      && isSuccess stdErrResult
-      && all isSuccess (Map.elems fileResults)
-      then TestSuccess test
-      else
-        TestFailure
-          testPlan
-          statusResult
-          stdOutResult
-          stdErrResult
-          fileResults
+  return $ TestResult testPlan statusResult stdOutResult stdErrResult fileResults
   where
     assertEqual :: Eq a => a -> a -> EqualityResult a
     assertEqual expected actual

@@ -26,18 +26,20 @@ import Text.Printf (printf)
 data PartName = ShortName String | LongName String
 
 printResult :: TestResult -> Output ()
-printResult (TestSuccess _) = putGreenLn "  succeeded"
-printResult (TestFailure testPlan@TestPlan {planTest = test} statusResult stdOutResult stdErrResult fileResults) = do
-  printFailingInput
-    "args"
-    ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
-        <$> testArgs test
-    )
-  printFailingInput "input" (planStdIn testPlan <$ testStdIn test)
-  printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
-  printFailingOutput "stdout" stdOutResult
-  printFailingOutput "stderr" stdErrResult
-  printFailingFilesOutput fileResults
+printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult stdOutResult stdErrResult fileResults)
+  | isSuccess result =
+    putGreenLn "  succeeded"
+  | otherwise = do
+    printFailingInput
+      "args"
+      ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
+          <$> testArgs test
+      )
+    printFailingInput "input" (planStdIn testPlan <$ testStdIn test)
+    printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
+    printFailingOutput "stdout" stdOutResult
+    printFailingOutput "stderr" stdErrResult
+    printFailingFilesOutput fileResults
 printResult (TestError _ testError) = printTestError testError
 printResult (TestIgnored _) = putYellowLn "  ignored"
 

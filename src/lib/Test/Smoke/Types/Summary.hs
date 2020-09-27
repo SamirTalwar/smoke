@@ -5,6 +5,3 @@ data Summary = Summary
     summaryFailures :: Int,
     summaryIgnored :: Int
   }
-
-summaryTotal :: Summary -> Int
-summaryTotal (Summary successes failures ignored) = successes + failures + ignored

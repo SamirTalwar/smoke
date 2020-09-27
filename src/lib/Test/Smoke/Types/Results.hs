@@ -24,11 +24,12 @@ data SuiteResult
 
 data TestResult
   = TestResult
-      TestPlan
-      (EqualityResult Status)
-      (AssertionResult StdOut)
-      (AssertionResult StdErr)
-      (Map (RelativePath File) (AssertionResult TestFileContents))
+      { resultPlan :: TestPlan,
+        resultStatus :: EqualityResult Status,
+        resultStdOut :: AssertionResult StdOut,
+        resultStdErr :: AssertionResult StdErr,
+        resultFiles :: Map (RelativePath File) (AssertionResult TestFileContents)
+      }
   | TestError Test SmokeError
   | TestIgnored Test
 

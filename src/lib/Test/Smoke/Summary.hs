@@ -23,7 +23,7 @@ summarizeResults results = Summary successes failures ignored
     ignored = length $ filter (== Ignored) allResults
 
 summarizeResult :: TestResult -> SummaryResult
-summarizeResult (TestResult _ TestSuccess) = Success
-summarizeResult (TestResult _ TestFailure {}) = Failure
-summarizeResult (TestResult _ TestError {}) = Failure
-summarizeResult (TestResult _ TestIgnored) = Ignored
+summarizeResult TestSuccess {} = Success
+summarizeResult TestFailure {} = Failure
+summarizeResult TestError {} = Failure
+summarizeResult TestIgnored {} = Ignored

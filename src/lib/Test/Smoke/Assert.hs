@@ -14,16 +14,16 @@ import Test.Smoke.Types
 type Asserting = ExceptT SmokeAssertionError IO
 
 assertResult ::
-  ResolvedPath Dir -> TestPlan -> ExecutionResult -> IO TestOutcome
-assertResult _ _ ExecutionIgnored =
-  return TestIgnored
-assertResult _ _ (ExecutionFailed exception) =
-  return $ TestError (ExecutionError exception)
-assertResult location testPlan (ExecutionSucceeded actualOutputs) =
-  either (TestError . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
+  ResolvedPath Dir -> TestPlan -> ExecutionResult -> IO TestResult
+assertResult _ TestPlan {planTest = test} ExecutionIgnored =
+  return $ TestIgnored test
+assertResult _ TestPlan {planTest = test} (ExecutionFailed exception) =
+  return $ TestError test (ExecutionError exception)
+assertResult location testPlan@TestPlan {planTest = test} (ExecutionSucceeded actualOutputs) =
+  either (TestError test . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
 
-processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestOutcome
-processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
+processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestResult
+processOutputs location testPlan@(TestPlan test _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
@@ -36,7 +36,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
       && isSuccess stdOutResult
       && isSuccess stdErrResult
       && all isSuccess (Map.elems fileResults)
-      then TestSuccess
+      then TestSuccess test
       else
         TestFailure
           testPlan

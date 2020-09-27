@@ -60,18 +60,16 @@ runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError)
   printTitle showSuiteNames suiteName (Just (testName test))
   let testError = PlanningError planningError
   printTestError testError
-  return $ TestResult test $ TestError testError
+  return $ TestError test testError
 runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@TestPlan {planTest = test}) = do
   printTitle showSuiteNames suiteName (Just (testName test))
   runTestPlan location testPlan
 
 runTestPlan :: ResolvedPath Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do
-  let test = planTest testPlan
   AppOptions {optionsMode = mode} <- ask
   executionResult <- liftIO $ runTest location testPlan
-  testOutcome <- liftIO $ assertResult location testPlan executionResult
-  let testResult = TestResult test testOutcome
+  testResult <- liftIO $ assertResult location testPlan executionResult
   modifiedTestResult <-
     case mode of
       Check -> return testResult

@@ -26,8 +26,8 @@ import Text.Printf (printf)
 data PartName = ShortName String | LongName String
 
 printResult :: TestResult -> Output ()
-printResult (TestResult _ TestSuccess) = putGreenLn "  succeeded"
-printResult (TestResult test (TestFailure testPlan statusResult stdOutResult stdErrResult fileResults)) = do
+printResult (TestSuccess _) = putGreenLn "  succeeded"
+printResult (TestFailure testPlan@TestPlan {planTest = test} statusResult stdOutResult stdErrResult fileResults) = do
   printFailingInput
     "args"
     ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
@@ -38,8 +38,8 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
   printFailingOutput "stdout" stdOutResult
   printFailingOutput "stderr" stdErrResult
   printFailingFilesOutput fileResults
-printResult (TestResult _ (TestError testError)) = printTestError testError
-printResult (TestResult _ TestIgnored) = putYellowLn "  ignored"
+printResult (TestError _ testError) = printTestError testError
+printResult (TestIgnored _) = putYellowLn "  ignored"
 
 printFailingInput :: (Foldable f, FixtureType a) => String -> f a -> Output ()
 printFailingInput name value =

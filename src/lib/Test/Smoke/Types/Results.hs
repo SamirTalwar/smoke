@@ -17,18 +17,15 @@ data SuiteResult
   | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
 
 data TestResult
-  = TestResult Test TestOutcome
-
-data TestOutcome
-  = TestSuccess
+  = TestSuccess Test
   | TestFailure
       TestPlan
       (EqualityResult Status)
       (AssertionResult StdOut)
       (AssertionResult StdErr)
       (Map (RelativePath File) (AssertionResult TestFileContents))
-  | TestError SmokeError
-  | TestIgnored
+  | TestError Test SmokeError
+  | TestIgnored Test
 
 class IsSuccess a where
   isSuccess :: a -> Bool

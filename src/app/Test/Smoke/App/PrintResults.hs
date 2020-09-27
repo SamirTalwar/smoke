@@ -102,7 +102,7 @@ printFailure (AssertionFailureContains expected actual) = do
   putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
-printFailure (AssertionFailureFileError (CouldNotReadFile _ exception)) = do
+printFailure (AssertionFailureFileError (SmokeFileError exception)) = do
   putRedLn $ fromString (ioeGetErrorString exception)
 
 printDiff :: Text -> Text -> Output ()

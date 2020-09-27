@@ -51,7 +51,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
       let absolutePath = location </> path
       contents <-
         either
-          (ActualFileError . CouldNotReadFile path)
+          (ActualFileError . SmokeFileError)
           (ActualFileContents . TestFileContents)
           <$> tryIOError (readFromPath absolutePath)
       return (absolutePath, contents)

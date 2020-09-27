@@ -71,8 +71,7 @@ data SmokeFilterError
 
 instance Exception SmokeFilterError
 
-data SmokeFileError
-  = CouldNotReadFile (RelativePath File) IOError
+newtype SmokeFileError = SmokeFileError IOError
   deriving (Show)
 
 instance Exception SmokeFileError

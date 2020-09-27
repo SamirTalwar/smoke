@@ -29,7 +29,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
   fileResults <-
     Map.traverseWithKey
-      (\relativePath contents -> assertAll contents (actualFiles ! (location </> relativePath)))
+      (\relativePath assertions -> assertFile assertions (actualFiles ! (location </> relativePath)))
       expectedFiles
   return $
     if isSuccess statusResult
@@ -69,6 +69,12 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
     assertAll expecteds actual = do
       maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
       return $ maybe AssertionSuccess (AssertionFailure . collapseAssertionFailures) maybeFailures
+
+    assertFile :: Vector (Assert TestFileContents) -> ActualFile -> Asserting (AssertionResult TestFileContents)
+    assertFile assertions (ActualFileContents contents) =
+      assertAll assertions contents
+    assertFile _ (ActualFileError fileError) =
+      return . AssertionFailure . SingleAssertionFailure $ AssertionFailureFileError fileError
 
     collapseAssertionFailures :: Vector (AssertionFailure a) -> AssertionFailures a
     collapseAssertionFailures failures =

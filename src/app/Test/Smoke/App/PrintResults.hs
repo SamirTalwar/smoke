@@ -14,6 +14,7 @@ import Data.String (fromString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
+import System.IO.Error (ioeGetErrorString)
 import Test.Smoke
 import Test.Smoke.App.Diff
 import Test.Smoke.App.OptionTypes
@@ -90,6 +91,7 @@ printFailureName (LongName name) _ = do
 failureIsInline :: AssertionFailure a -> Bool
 failureIsInline AssertionFailureDiff {} = True
 failureIsInline AssertionFailureContains {} = False
+failureIsInline AssertionFailureFileError {} = True
 
 printFailure :: AssertionFailure Text -> Output ()
 printFailure (AssertionFailureDiff expected actual) = printDiff expected actual
@@ -99,6 +101,8 @@ printFailure (AssertionFailureContains expected actual) = do
   putRedLn $ indentedAll nestedOutputIndentation expected
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation actual
+printFailure (AssertionFailureFileError (CouldNotReadFile _ exception)) = do
+  putRedLn $ fromString (ioeGetErrorString exception)
 
 printDiff :: Text -> Text -> Output ()
 printDiff left right = do

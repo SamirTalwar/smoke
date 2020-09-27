@@ -14,5 +14,8 @@ increment a number
   succeeded
 write to two files
   succeeded
+check the wrong file
+  The fixture "files" had an error during file processing.
+  /Users/samir/src/smoke/fixtures/files/wrong.file: openFile: does not exist (No such file or directory)
 
-7 tests, 2 failures
+8 tests, 3 failures

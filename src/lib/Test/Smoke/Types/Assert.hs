@@ -6,6 +6,7 @@ module Test.Smoke.Types.Assert where
 import Data.Default (Default (..))
 import Data.Vector (Vector)
 import Test.Smoke.Types.Base
+import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Filters
 
 data Assert a where
@@ -19,6 +20,7 @@ instance (Default a, Eq a) => Default (Assert a) where
 data AssertionFailure a
   = AssertionFailureDiff a a
   | AssertionFailureContains a a
+  | AssertionFailureFileError SmokeFileError
   deriving (Functor)
 
 data AssertionFailures a

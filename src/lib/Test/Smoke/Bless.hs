@@ -53,6 +53,8 @@ serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFai
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureContains _ actual)) =
   throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
+serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureFileError fileError)) =
+  throwIO $ CouldNotBlessAssertionFileError (fixtureName @a) fileError
 serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 

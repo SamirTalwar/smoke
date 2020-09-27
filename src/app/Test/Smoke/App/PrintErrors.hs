@@ -44,9 +44,6 @@ printTestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory pa
 printTestError (ExecutionError (CouldNotExecuteCommand executable exception)) =
   printErrorWithException exception $
     showExecutable executable <> " could not be executed."
-printTestError (ExecutionError (CouldNotReadFile path exception)) =
-  printErrorWithException exception $
-    "The output file " <> showPath path <> " does not exist."
 printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
   printErrorWithException exception $
     "The directory " <> showPath path <> " could not be stored."
@@ -77,6 +74,8 @@ printTestError (BlessError (CouldNotBlessContainsAssertion (FixtureName fixtureN
       <> quoteString fixtureName'
       <> " is matching a substring, so the result cannot be blessed.\nActual value:\n"
       <> indentedAll messageIndentation propertyValue
+printTestError (BlessError (CouldNotBlessAssertionFileError (FixtureName fixtureName') (CouldNotReadFile _ exception))) =
+  printErrorWithException exception $ "The fixture " <> quoteString fixtureName' <> " had an error during file processing."
 printTestError (BlessError (BlessIOException exception)) =
   printErrorWithException exception "Blessing failed."
 

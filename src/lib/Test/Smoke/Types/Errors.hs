@@ -40,7 +40,6 @@ instance Exception SmokePlanningError
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | CouldNotExecuteCommand Executable IOError
-  | CouldNotReadFile (RelativePath File) IOError
   | CouldNotStoreDirectory (ResolvedPath Dir) IOError
   | CouldNotRevertDirectory (ResolvedPath Dir) IOError
   deriving (Show)
@@ -58,6 +57,7 @@ data SmokeBlessError
   | CouldNotBlessAMissingValue FixtureName
   | CouldNotBlessWithMultipleValues FixtureName
   | CouldNotBlessContainsAssertion FixtureName Text
+  | CouldNotBlessAssertionFileError FixtureName SmokeFileError
   | BlessIOException IOException
   deriving (Show)
 
@@ -71,6 +71,12 @@ data SmokeFilterError
   deriving (Show)
 
 instance Exception SmokeFilterError
+
+data SmokeFileError
+  = CouldNotReadFile (RelativePath File) IOError
+  deriving (Show)
+
+instance Exception SmokeFileError
 
 data SuiteError
   = SuiteDiscoveryError SmokeDiscoveryError

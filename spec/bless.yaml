@@ -26,6 +26,10 @@ tests:
     exit-status: 1
     stdout:
       file: io/files-bless-failure.out
+    files:
+      - path: ../fixtures/files/expected/lowercase.output.file
+        contents: |
+          HERE IS SOME TEXT.
     revert:
       - ../fixtures/files
 

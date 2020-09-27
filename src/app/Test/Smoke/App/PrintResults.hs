@@ -33,21 +33,21 @@ printResult (TestResult test (TestFailure testPlan statusResult stdOutResult std
     ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
         <$> testArgs test
     )
-  printFailingInput "input" (unStdIn <$> (planStdIn testPlan <$ testStdIn test))
+  printFailingInput "input" (planStdIn testPlan <$ testStdIn test)
   printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
-  printFailingOutput "stdout" (unStdOut <$> stdOutResult)
-  printFailingOutput "stderr" (unStdErr <$> stdErrResult)
+  printFailingOutput "stdout" stdOutResult
+  printFailingOutput "stderr" stdErrResult
   printFailingFilesOutput fileResults
 printResult (TestResult _ (TestError testError)) = printTestError testError
 printResult (TestResult _ TestIgnored) = putYellowLn "  ignored"
 
-printFailingInput :: Foldable f => String -> f Text -> Output ()
+printFailingInput :: (Foldable f, FixtureType a) => String -> f a -> Output ()
 printFailingInput name value =
   forM_ value $ \v -> do
     putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
-    putPlainLn $ indented outputIndentation v
+    putPlainLn $ indented outputIndentation (serializeFixture v)
 
-printFailingOutput :: String -> AssertionResult Text -> Output ()
+printFailingOutput :: FixtureType a => String -> AssertionResult a -> Output ()
 printFailingOutput name = printFailures (ShortName name)
 
 printFailingFilesOutput ::
@@ -57,13 +57,12 @@ printFailingFilesOutput fileResults =
     then return ()
     else do
       putRedLn "  files:"
-      forM_ (Map.assocs fileResults) $ \(path, fileResult) ->
-        printFailingFileOutput path (unTestFileContents <$> fileResult)
+      forM_ (Map.assocs fileResults) $ uncurry printFailingFileOutput
 
-printFailingFileOutput :: RelativePath File -> AssertionResult Text -> Output ()
+printFailingFileOutput :: FixtureType a => RelativePath File -> AssertionResult a -> Output ()
 printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
-printFailures :: PartName -> AssertionResult Text -> Output ()
+printFailures :: FixtureType a => PartName -> AssertionResult a -> Output ()
 printFailures _ AssertionSuccess =
   return ()
 printFailures name (AssertionFailure (SingleAssertionFailure failure)) = do
@@ -93,14 +92,14 @@ failureIsInline AssertionFailureDiff {} = True
 failureIsInline AssertionFailureContains {} = False
 failureIsInline AssertionFailureFileError {} = True
 
-printFailure :: AssertionFailure Text -> Output ()
-printFailure (AssertionFailureDiff expected actual) = printDiff expected actual
+printFailure :: FixtureType a => AssertionFailure a -> Output ()
+printFailure (AssertionFailureDiff expected actual) = printDiff (serializeFixture expected) (serializeFixture actual)
 printFailure (AssertionFailureContains expected actual) = do
   putPlainLn ""
   putRedLn "    expected to contain:"
-  putRedLn $ indentedAll nestedOutputIndentation expected
+  putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
-  putRedLn $ indented nestedOutputIndentation actual
+  putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
 printFailure (AssertionFailureFileError (CouldNotReadFile _ exception)) = do
   putRedLn $ fromString (ioeGetErrorString exception)
 
@@ -114,7 +113,7 @@ printDiff left right = do
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
 
-toAssertionResult :: EqualityResult a -> AssertionResult a
+toAssertionResult :: FixtureType a => EqualityResult a -> AssertionResult a
 toAssertionResult EqualitySuccess = AssertionSuccess
 toAssertionResult (EqualityFailure expected actual) = AssertionFailure $ SingleAssertionFailure $ AssertionFailureDiff expected actual
 

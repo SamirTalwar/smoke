@@ -12,4 +12,6 @@ data ExecutionResult
 
 data ActualOutputs = ActualOutputs Status StdOut StdErr ActualFiles
 
-type ActualFiles = Map (ResolvedPath File) TestFileContents
+type ActualFiles = Map (ResolvedPath File) ActualFile
+
+data ActualFile = ActualFileContents TestFileContents | ActualFileError SmokeFileError

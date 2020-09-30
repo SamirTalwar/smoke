@@ -34,5 +34,11 @@ increment a number
   succeeded
 write to two files
   succeeded
+check the wrong file
+  args:   input.file
+          output.file
+  files:
+    wrong.file:
+          does not exist
 
-7 tests, 3 failures
+8 tests, 4 failures

@@ -8,7 +8,6 @@ import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
 import qualified Data.Map.Strict as Map
-import Data.Text (Text)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Directory
@@ -44,15 +43,17 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
     (exitCode, processStdOut, processStdErr) <-
       tryIO (CouldNotExecuteCommand executable) $
         runExecutable executable args processStdIn (Just workingDirectory)
-    actualFiles <-
-      Map.map TestFileContents . Map.fromList
-        <$> mapM readTestFile (Map.keys files)
+    actualFiles <- Map.fromList <$> mapM (liftIO . readTestFile) (Map.keys files)
     return $ ActualOutputs (convertExitCode exitCode) (StdOut processStdOut) (StdErr processStdErr) actualFiles
   where
-    readTestFile :: RelativePath File -> Execution (ResolvedPath File, Text)
+    readTestFile :: RelativePath File -> IO (ResolvedPath File, ActualFile)
     readTestFile path = do
       let absolutePath = location </> path
-      contents <- tryIO (CouldNotReadFile path) $ readFromPath absolutePath
+      contents <-
+        either
+          (ActualFileError . SmokeFileError)
+          (ActualFileContents . TestFileContents)
+          <$> tryIOError (readFromPath absolutePath)
       return (absolutePath, contents)
 
 revertingDirectories :: Vector (ResolvedPath Dir) -> Execution a -> Execution a

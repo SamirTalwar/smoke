@@ -44,9 +44,6 @@ printTestError (ExecutionError (NonExistentWorkingDirectory (WorkingDirectory pa
 printTestError (ExecutionError (CouldNotExecuteCommand executable exception)) =
   printErrorWithException exception $
     showExecutable executable <> " could not be executed."
-printTestError (ExecutionError (CouldNotReadFile path exception)) =
-  printErrorWithException exception $
-    "The output file " <> showPath path <> " does not exist."
 printTestError (ExecutionError (CouldNotStoreDirectory path exception)) =
   printErrorWithException exception $
     "The directory " <> showPath path <> " could not be stored."

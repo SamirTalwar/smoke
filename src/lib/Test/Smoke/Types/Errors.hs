@@ -40,7 +40,6 @@ instance Exception SmokePlanningError
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | CouldNotExecuteCommand Executable IOError
-  | CouldNotReadFile (RelativePath File) IOError
   | CouldNotStoreDirectory (ResolvedPath Dir) IOError
   | CouldNotRevertDirectory (ResolvedPath Dir) IOError
   deriving (Show)
@@ -71,6 +70,11 @@ data SmokeFilterError
   deriving (Show)
 
 instance Exception SmokeFilterError
+
+newtype SmokeFileError = SmokeFileError IOError
+  deriving (Show)
+
+instance Exception SmokeFileError
 
 data SuiteError
   = SuiteDiscoveryError SmokeDiscoveryError

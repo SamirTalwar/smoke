@@ -3,12 +3,18 @@
 module Test.Smoke.Types.Results where
 
 import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Plans
 import Test.Smoke.Types.Tests
+
+class IsSuccess a where
+  isSuccess :: a -> Bool
+  isFailure :: a -> Bool
+  isFailure = not . isSuccess
 
 type Results = [SuiteResult]
 
@@ -17,23 +23,23 @@ data SuiteResult
   | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
 
 data TestResult
-  = TestResult Test TestOutcome
+  = TestResult
+      { resultPlan :: TestPlan,
+        resultStatus :: EqualityResult Status,
+        resultStdOut :: AssertionResult StdOut,
+        resultStdErr :: AssertionResult StdErr,
+        resultFiles :: Map (RelativePath File) (AssertionResult TestFileContents)
+      }
+  | TestError Test SmokeError
+  | TestIgnored Test
 
-data TestOutcome
-  = TestSuccess
-  | TestFailure
-      TestPlan
-      (EqualityResult Status)
-      (AssertionResult StdOut)
-      (AssertionResult StdErr)
-      (Map (RelativePath File) (AssertionResult TestFileContents))
-  | TestError SmokeError
-  | TestIgnored
-
-class IsSuccess a where
-  isSuccess :: a -> Bool
-  isFailure :: a -> Bool
-  isFailure = not . isSuccess
+instance IsSuccess TestResult where
+  isSuccess (TestResult _ statusResult stdOutResult stdErrResult filesResults) =
+    isSuccess statusResult && isSuccess stdOutResult && isSuccess stdErrResult && all isSuccess (Map.elems filesResults)
+  isSuccess TestError {} =
+    False
+  isSuccess TestIgnored {} =
+    False
 
 data EqualityResult a
   = EqualitySuccess

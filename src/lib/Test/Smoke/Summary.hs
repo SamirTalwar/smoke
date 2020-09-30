@@ -1,5 +1,6 @@
 module Test.Smoke.Summary
   ( summarizeResults,
+    summaryTotal,
   )
 where
 
@@ -23,7 +24,11 @@ summarizeResults results = Summary successes failures ignored
     ignored = length $ filter (== Ignored) allResults
 
 summarizeResult :: TestResult -> SummaryResult
-summarizeResult (TestResult _ TestSuccess) = Success
-summarizeResult (TestResult _ TestFailure {}) = Failure
-summarizeResult (TestResult _ TestError {}) = Failure
-summarizeResult (TestResult _ TestIgnored) = Ignored
+summarizeResult result@TestResult {}
+  | isSuccess result = Success
+  | otherwise = Failure
+summarizeResult TestError {} = Failure
+summarizeResult TestIgnored {} = Ignored
+
+summaryTotal :: Summary -> Int
+summaryTotal (Summary successes failures ignored) = successes + failures + ignored

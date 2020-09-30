@@ -102,3 +102,16 @@ tests:
     revert:
       - ./single
       - ./multiple
+
+  - name: check the wrong file
+    command:
+      - cp
+    args:
+      - input.file
+      - output.file
+    files:
+      - path: wrong.file
+        contents:
+          file: input.file
+    revert:
+      - .

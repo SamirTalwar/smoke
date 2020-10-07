@@ -18,9 +18,15 @@ data Assert a where
 instance (Default a, Eq a) => Default (Assert a) where
   def = AssertEquals def
 
+newtype Expected a = Expected a
+  deriving (Functor)
+
+newtype Actual a = Actual a
+  deriving (Functor)
+
 data AssertionFailure a
-  = AssertionFailureDiff a a
-  | AssertionFailureContains a a
+  = AssertionFailureDiff (Expected a) (Actual a)
+  | AssertionFailureContains (Expected a) (Actual a)
   | AssertionFailureFileError SmokeFileError
   deriving (Functor)
 

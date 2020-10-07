@@ -36,19 +36,19 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
     assertEqual :: Eq a => a -> a -> EqualityResult a
     assertEqual expected actual
       | expected == actual = EqualitySuccess
-      | otherwise = EqualityFailure expected actual
+      | otherwise = EqualityFailure (Expected expected) (Actual actual)
 
     assert :: Assert a -> a -> Asserting (Maybe (AssertionFailure a))
     assert (AssertEquals expected) actual =
       return $
         if expected == actual
           then Nothing
-          else Just $ AssertionFailureDiff expected actual
+          else Just $ AssertionFailureDiff (Expected expected) (Actual actual)
     assert (AssertContains expected) actual =
       return $
         if Text.isInfixOf (serializeFixture expected) (serializeFixture actual)
           then Nothing
-          else Just $ AssertionFailureContains expected actual
+          else Just $ AssertionFailureContains (Expected expected) (Actual actual)
     assert (AssertFiltered fixtureFilter expected) actual = do
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual

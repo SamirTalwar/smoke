@@ -95,8 +95,9 @@ failureIsInline AssertionFailureContains {} = False
 failureIsInline AssertionFailureFileError {} = True
 
 printFailure :: FixtureType a => AssertionFailure a -> Output ()
-printFailure (AssertionFailureDiff expected actual) = printDiff (serializeFixture expected) (serializeFixture actual)
-printFailure (AssertionFailureContains expected actual) = do
+printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
+  printDiff (serializeFixture expected) (serializeFixture actual)
+printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
   putPlainLn ""
   putRedLn "    expected to contain:"
   putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)

@@ -43,7 +43,7 @@ instance IsSuccess TestResult where
 
 data EqualityResult a
   = EqualitySuccess
-  | EqualityFailure {equalityFailureExpected :: a, equalityFailureActual :: a}
+  | EqualityFailure (Expected a) (Actual a)
   deriving (Functor)
 
 instance IsSuccess (EqualityResult a) where

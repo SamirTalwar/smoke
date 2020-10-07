@@ -27,6 +27,6 @@ tests:
 
   - name: missing-error-file
     command: |
-      echo "This is some standard error." >&2
+      echo "This is some standard error.">&2
     stderr:
       file: io/missing.err

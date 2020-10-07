@@ -49,13 +49,17 @@ tests:
       - fixtures/broken-specs
     exit-status: 1
     stdout:
-      file: io/broken-specs-bless-failure.out
+      - file: io/broken-specs-bless-failure.out-unix
+      - file: io/broken-specs-bless-failure.out-windows
     files:
       - path: ../fixtures/broken-specs/io/missing.out
         contents: |
           This is some standard output.
       - path: ../fixtures/broken-specs/io/missing.err
-        contents: |
-          This is some standard error.
+        contents:
+          - |
+            This is some standard error.
+          - |
+            "This is some standard error."
     revert:
       - ../fixtures/broken-specs

@@ -12,6 +12,6 @@ missing-output-file
 missing-error-file
   stderr: 
     The fixture "io\missing.err" does not exist.
-    actual: This is some standard error.
+    actual: "This is some standard error."
 
 5 tests, 5 failures

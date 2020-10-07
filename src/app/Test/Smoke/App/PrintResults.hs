@@ -92,7 +92,8 @@ printFailureName (LongName name) _ = do
 failureIsInline :: AssertionFailure a -> Bool
 failureIsInline AssertionFailureDiff {} = True
 failureIsInline AssertionFailureContains {} = False
-failureIsInline AssertionFailureFileError {} = True
+failureIsInline AssertionFailureExpectedFileError {} = True
+failureIsInline AssertionFailureActualFileError {} = True
 
 printFailure :: FixtureType a => AssertionFailure a -> Output ()
 printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
@@ -103,10 +104,18 @@ printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
   putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
-printFailure (AssertionFailureFileError (MissingFile path)) = do
+printFailure (AssertionFailureExpectedFileError fileError (Actual actual)) = do
+  printFailureFileError fileError
+  putRed "    actual: "
+  putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
+printFailure (AssertionFailureActualFileError fileError) =
+  printFailureFileError fileError
+
+printFailureFileError :: SmokeFileError -> Output ()
+printFailureFileError (MissingFile path) = do
   putPlainLn ""
   putRedLn $ "    The fixture " <> showPath path <> " does not exist."
-printFailure (AssertionFailureFileError (CouldNotReadFile _ exception)) = do
+printFailureFileError (CouldNotReadFile _ exception) = do
   putRedLn $ fromString (ioeGetErrorString exception)
 
 printDiff :: Text -> Text -> Output ()

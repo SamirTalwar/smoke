@@ -8,11 +8,13 @@ missing-output-file
   args:   something
   stdout: 
     The fixture "io/missing.out" does not exist.
+    actual: something
 missing-error-file
   args:   something
   stdout: @@ -0,0 +1 @@
           +something
   stderr: 
     The fixture "io/missing.err" does not exist.
+    actual: 
 
 5 tests, 5 failures

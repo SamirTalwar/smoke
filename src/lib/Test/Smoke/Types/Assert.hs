@@ -27,7 +27,8 @@ newtype Actual a = Actual a
 data AssertionFailure a
   = AssertionFailureDiff (Expected a) (Actual a)
   | AssertionFailureContains (Expected a) (Actual a)
-  | AssertionFailureFileError SmokeFileError
+  | AssertionFailureExpectedFileError SmokeFileError (Actual a)
+  | AssertionFailureActualFileError SmokeFileError
   deriving (Functor)
 
 data AssertionFailures a

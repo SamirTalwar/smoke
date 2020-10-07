@@ -10,6 +10,8 @@ module Test.Smoke.Paths
     ResolvedPath,
     PathError (..),
     (</>),
+    createDirectory,
+    createParent,
     findExecutable,
     findFilesInPath,
     getCurrentWorkingDirectory,
@@ -164,6 +166,12 @@ readFromPath = Text.IO.readFile . toFilePath
 
 writeToPath :: ResolvedPath File -> Text -> IO ()
 writeToPath = Text.IO.writeFile . toFilePath
+
+createDirectory :: ResolvedPath Dir -> IO ()
+createDirectory = Directory.createDirectoryIfMissing True . toFilePath
+
+createParent :: ResolvedPath File -> IO ()
+createParent = createDirectory . parent
 
 -- Errors
 data PathError

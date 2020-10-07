@@ -19,6 +19,16 @@ tests:
     revert:
       - ../fixtures/calculator
 
+  - name: bottles
+    args:
+      - --bless
+      - fixtures/bottles
+    exit-status: 1
+    stdout:
+      file: io/bottles-bless-failure.out
+    revert:
+      - ../fixtures/bottles
+
   - name: files
     args:
       - --bless
@@ -33,12 +43,19 @@ tests:
     revert:
       - ../fixtures/files
 
-  - name: bottles
+  - name: broken-specs
     args:
       - --bless
-      - fixtures/bottles
+      - fixtures/broken-specs
     exit-status: 1
     stdout:
-      file: io/bottles-bless-failure.out
+      file: io/broken-specs-bless-failure.out
+    files:
+      - path: ../fixtures/broken-specs/io/missing.out
+        contents: |
+          This is some standard output.
+      - path: ../fixtures/broken-specs/io/missing.err
+        contents: |
+          This is some standard error.
     revert:
-      - ../fixtures/bottles
+      - ../fixtures/broken-specs

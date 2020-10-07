@@ -21,14 +21,12 @@ tests:
     command:
       - echo
     args:
-      - something
+      - "This is some standard output."
     stdout:
       file: io/missing.out
 
   - name: missing-error-file
-    command:
-      - echo
-    args:
-      - something
+    command: |
+      echo "This is some standard error." >&2
     stderr:
       file: io/missing.err

@@ -40,6 +40,7 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
     writeFixture Nothing _ before =
       return before
     writeFixture (Just (path, text)) makeAfter before = do
+      createParent (location </> path)
       writeToPath (location </> path) text
       return $ makeAfter AssertionSuccess before
 blessResult _ result = return result
@@ -63,8 +64,10 @@ serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFai
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureContains _ (Actual actual))) =
   throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
-serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureExpectedFileError _ _)) =
-  return Nothing
+serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
+  return $ Just (path, serializeFixture actual)
+serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
+  throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureActualFileError _)) =
   return Nothing
 serializeFailure _ (MultipleAssertionFailures _) =

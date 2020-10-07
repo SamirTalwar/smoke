@@ -11,8 +11,7 @@ import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import System.Directory
-  ( createDirectory,
-    doesDirectoryExist,
+  ( doesDirectoryExist,
     removeDirectoryRecursive,
   )
 import System.Exit (ExitCode (..))
@@ -70,7 +69,7 @@ revertingDirectory path execution = do
     result <- execution
     tryIO (CouldNotRevertDirectory path) $ do
       removeDirectoryRecursive filePath
-      createDirectory filePath
+      createDirectory path
       Tar.extract filePath tarFile
     return result
 

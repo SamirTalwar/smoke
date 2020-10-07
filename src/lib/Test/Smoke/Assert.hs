@@ -52,6 +52,8 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
     assert (AssertFiltered fixtureFilter expected) actual = do
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
+    assert (AssertFileError fileError) _ =
+      return $ Just $ AssertionFailureFileError fileError
 
     assertAll :: Vector (Assert a) -> a -> Asserting (AssertionResult a)
     assertAll expecteds actual = do

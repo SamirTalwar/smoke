@@ -102,7 +102,10 @@ printFailure (AssertionFailureContains expected actual) = do
   putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
-printFailure (AssertionFailureFileError (CouldNotReadFile exception)) = do
+printFailure (AssertionFailureFileError (MissingFile path)) = do
+  putPlainLn ""
+  putRedLn $ "    The fixture " <> showPath path <> " does not exist."
+printFailure (AssertionFailureFileError (CouldNotReadFile _ exception)) = do
   putRedLn $ fromString (ioeGetErrorString exception)
 
 printDiff :: Text -> Text -> Output ()

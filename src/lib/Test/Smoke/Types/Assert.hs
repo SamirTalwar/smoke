@@ -13,6 +13,7 @@ data Assert a where
   AssertEquals :: Eq a => a -> Assert a
   AssertContains :: FixtureType a => a -> Assert a
   AssertFiltered :: FixtureType a => Filter -> Assert a -> Assert a
+  AssertFileError :: SmokeFileError -> Assert a
 
 instance (Default a, Eq a) => Default (Assert a) where
   def = AssertEquals def

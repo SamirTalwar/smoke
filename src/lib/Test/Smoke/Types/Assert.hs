@@ -13,14 +13,22 @@ data Assert a where
   AssertEquals :: Eq a => a -> Assert a
   AssertContains :: FixtureType a => a -> Assert a
   AssertFiltered :: FixtureType a => Filter -> Assert a -> Assert a
+  AssertFileError :: SmokeFileError -> Assert a
 
 instance (Default a, Eq a) => Default (Assert a) where
   def = AssertEquals def
 
+newtype Expected a = Expected a
+  deriving (Functor)
+
+newtype Actual a = Actual a
+  deriving (Functor)
+
 data AssertionFailure a
-  = AssertionFailureDiff a a
-  | AssertionFailureContains a a
-  | AssertionFailureFileError SmokeFileError
+  = AssertionFailureDiff (Expected a) (Actual a)
+  | AssertionFailureContains (Expected a) (Actual a)
+  | AssertionFailureExpectedFileError SmokeFileError (Actual a)
+  | AssertionFailureActualFileError SmokeFileError
   deriving (Functor)
 
 data AssertionFailures a

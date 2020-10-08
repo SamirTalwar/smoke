@@ -5,8 +5,13 @@ no-outputs
 missing-input-file
   The fixture "io\missing.in" does not exist.
 missing-output-file
-  The fixture "io\missing.out" does not exist.
+  args:   This is some standard output.
+  stdout: 
+    The fixture "io\missing.out" does not exist.
+    actual: This is some standard output.
 missing-error-file
-  The fixture "io\missing.err" does not exist.
+  stderr: 
+    The fixture "io\missing.err" does not exist.
+    actual: "This is some standard error."
 
 5 tests, 5 failures

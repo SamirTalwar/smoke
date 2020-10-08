@@ -19,7 +19,7 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
-blessResult _ (TestResult TestPlan {planTest = test} (EqualityFailure _ (Status actualStatus)) _ _ _) =
+blessResult _ (TestResult TestPlan {planTest = test} (EqualityFailure _ (Actual (Status actualStatus))) _ _ _) =
   failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
 blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdErr files) =
   do
@@ -40,6 +40,7 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
     writeFixture Nothing _ before =
       return before
     writeFixture (Just (path, text)) makeAfter before = do
+      createParent (location </> path)
       writeToPath (location </> path) text
       return $ makeAfter AssertionSuccess before
 blessResult _ result = return result
@@ -57,13 +58,17 @@ serialize outputs (AssertionFailure result) =
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
 serializeFailure :: forall a. FixtureType a => TestOutput a -> AssertionFailures a -> IO (Maybe (RelativePath File, Text))
-serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureDiff _ actual)) =
+serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   return $ Just (path, serializeFixture actual)
-serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ actual)) =
+serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
-serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureContains _ actual)) =
+serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureContains _ (Actual actual))) =
   throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
-serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureFileError _)) =
+serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
+  return $ Just (path, serializeFixture actual)
+serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
+  throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
+serializeFailure (TestOutput _ _) (SingleAssertionFailure (AssertionFailureActualFileError _)) =
   return Nothing
 serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)

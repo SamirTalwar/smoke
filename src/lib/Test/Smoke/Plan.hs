@@ -5,6 +5,7 @@ where
 
 import Control.Applicative ((<|>))
 import Control.Monad (forM, when)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -111,16 +112,16 @@ readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
 readTestInput :: ResolvedPath Dir -> Maybe Shell -> TestInput a -> Planning a
 readTestInput location _ (TestInput contents) =
-  readContents location contents
+  withExceptT PlanningFixtureFileError $ readContents location contents
 readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) = do
-  value <- readContents location contents
+  value <- withExceptT PlanningFixtureFileError $ readContents location contents
   withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
 
 readTestOutput :: ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
 readTestOutput location (TestOutput constructor contents) =
-  constructor <$> readContents location contents
+  liftIO (either AssertFileError constructor <$> runExceptT (readContents location contents))
 
-readContents :: ResolvedPath Dir -> Contents a -> Planning a
+readContents :: ResolvedPath Dir -> Contents a -> ExceptT SmokeFileError IO a
 readContents _ (Inline value) =
   return value
 readContents location (FileLocation path) =
@@ -129,8 +130,8 @@ readContents location (FileLocation path) =
       (handleMissingFileError path)
       (ExceptT $ tryIOError $ readFromPath (location </> path))
 
-handleMissingFileError :: RelativePath File -> IOError -> SmokePlanningError
+handleMissingFileError :: RelativePath File -> IOError -> SmokeFileError
 handleMissingFileError path e =
   if isDoesNotExistError e
-    then NonExistentFixture path
-    else CouldNotReadFixture path e
+    then MissingFile path
+    else CouldNotReadFile path e

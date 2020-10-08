@@ -1,0 +1,12 @@
+no-command
+  There is no command.
+no-outputs
+  There are no STDOUT or STDERR values, or files, in the specification.
+missing-input-file
+  The fixture "io/missing.in" does not exist.
+missing-output-file
+  succeeded
+missing-error-file
+  succeeded
+
+5 tests, 3 failures

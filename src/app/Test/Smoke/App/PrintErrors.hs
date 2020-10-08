@@ -30,9 +30,9 @@ printTestError (PlanningError NoInput) =
 printTestError (PlanningError NoOutput) =
   printError
     "There are no STDOUT or STDERR values, or files, in the specification."
-printTestError (PlanningError (NonExistentFixture path)) =
+printTestError (PlanningError (PlanningFixtureFileError (MissingFile path))) =
   printError $ "The fixture " <> showPath path <> " does not exist."
-printTestError (PlanningError (CouldNotReadFixture path exception)) =
+printTestError (PlanningError (PlanningFixtureFileError (CouldNotReadFile path exception))) =
   printErrorWithException exception $
     "The fixture " <> showPath path <> " could not be read."
 printTestError (PlanningError (PlanningFilterError filterError)) =

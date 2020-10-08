@@ -92,17 +92,30 @@ printFailureName (LongName name) _ = do
 failureIsInline :: AssertionFailure a -> Bool
 failureIsInline AssertionFailureDiff {} = True
 failureIsInline AssertionFailureContains {} = False
-failureIsInline AssertionFailureFileError {} = True
+failureIsInline AssertionFailureExpectedFileError {} = True
+failureIsInline AssertionFailureActualFileError {} = True
 
 printFailure :: FixtureType a => AssertionFailure a -> Output ()
-printFailure (AssertionFailureDiff expected actual) = printDiff (serializeFixture expected) (serializeFixture actual)
-printFailure (AssertionFailureContains expected actual) = do
+printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
+  printDiff (serializeFixture expected) (serializeFixture actual)
+printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
   putPlainLn ""
   putRedLn "    expected to contain:"
   putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
-printFailure (AssertionFailureFileError (SmokeFileError exception)) = do
+printFailure (AssertionFailureExpectedFileError fileError (Actual actual)) = do
+  printFailureFileError fileError
+  putRed "    actual: "
+  putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
+printFailure (AssertionFailureActualFileError fileError) =
+  printFailureFileError fileError
+
+printFailureFileError :: SmokeFileError -> Output ()
+printFailureFileError (MissingFile path) = do
+  putPlainLn ""
+  putRedLn $ "    The fixture " <> showPath path <> " does not exist."
+printFailureFileError (CouldNotReadFile _ exception) = do
   putRedLn $ fromString (ioeGetErrorString exception)
 
 printDiff :: Text -> Text -> Output ()

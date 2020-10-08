@@ -29,8 +29,7 @@ data SmokePlanningError
   = NoCommand
   | NoInput
   | NoOutput
-  | NonExistentFixture (RelativePath File)
-  | CouldNotReadFixture (RelativePath File) IOError
+  | PlanningFixtureFileError SmokeFileError
   | PlanningPathError PathError
   | PlanningFilterError SmokeFilterError
   deriving (Show)
@@ -71,7 +70,7 @@ data SmokeFilterError
 
 instance Exception SmokeFilterError
 
-newtype SmokeFileError = SmokeFileError IOError
+data SmokeFileError = MissingFile (RelativePath File) | CouldNotReadFile (RelativePath File) IOError
   deriving (Show)
 
 instance Exception SmokeFileError

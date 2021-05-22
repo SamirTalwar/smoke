@@ -72,11 +72,6 @@ bless: build
 
 .PHONY: lint
 lint: $(NIX_FILES) $(SRC)
-	@ echo >&2 '> ghc.version'
-	@ if [[ "$$(cat ghc.version)" != "$$($(STACK) ghc -- --version | sed 's/.* version //')" ]]; then \
-		echo >&2 "Expected: $(GHC_VERSION), actual: $$(cat ghc.version)"; \
-		exit 1; \
-	fi
 	@ echo >&2 '> hlint'
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'

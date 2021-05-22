@@ -100,5 +100,5 @@ smoke.cabal: $(CONF)
 .PHONY: update-resolver
 update-resolver:
 	sed -i -r "s/^(resolver:) .*/\1 $$(curl -fsSI 'https://www.stackage.org/lts' | grep '^location: ' | sed 's#^location: /##' | dos2unix)/" stack.yaml
-	echo $$($(STACK) ghc -- --version | sed 's/.* version //') > ghc.version
+	$(STACK) ghc -- --version | sed 's/.* version //' > ghc.version
 	sed -i -r "s/^  GHC_VERSION: \".*\"$$/  GHC_VERSION: \"$$(cat ghc.version)\"/" .github/workflows/*.yaml

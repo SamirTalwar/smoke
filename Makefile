@@ -66,6 +66,10 @@ unit-test: build
 spec: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) spec
 
+.PHONY: spec-nix
+spec-nix: $(BIN_NIX)
+	$(BIN_NIX) --command=$(BIN_NIX) spec
+
 .PHONY: bless
 bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless spec
@@ -93,7 +97,20 @@ smoke.cabal: $(CONF)
 	touch $@
 
 .PHONY: update-resolver
-update-resolver:
+update-resolver: update-resolver-in-stack.yaml update-ghc-version
+
+.PHONY: update-resolver-in-stack.yaml
+update-resolver-in-stack.yaml:
 	sed -i -r "s/^(resolver:) .*/\1 $$(curl -fsSI 'https://www.stackage.org/lts' | grep '^location: ' | sed 's#^location: /##' | dos2unix)/" stack.yaml
-	$(STACK) ghc -- --version | sed 's/.* version //' > ghc.version
+
+.PHONY: update-ghc-version
+update-ghc-version: ghc.version update-github-workflow-ghc-version
+
+.PHONY: update-github-workflow-ghc-version
+update-github-workflow-ghc-version:
 	sed -i -r "s/^  GHC_VERSION: \".*\"$$/  GHC_VERSION: \"$$(cat ghc.version)\"/" .github/workflows/*.yaml
+
+ghc.version: $(CONF)
+	curl -fsSL "https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/$$(yq -r '.resolver | gsub("[-\\.]"; "/")' stack.yaml).yaml" \
+		| yq -r '.resolver.compiler | sub("^ghc-"; "")' \
+		> $@

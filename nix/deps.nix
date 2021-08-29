@@ -21,4 +21,5 @@ with pkgs;
   niv
   nixpkgs-fmt
   ormolu
+  yq
 ]

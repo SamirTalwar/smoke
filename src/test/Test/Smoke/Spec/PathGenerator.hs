@@ -20,10 +20,10 @@ data FilePathSegment
   | Parent
   | Named String
 
-genRelativeDir :: Range Int -> Gen (RelativePath Dir)
+genRelativeDir :: Range Int -> Gen (Path Relative Dir)
 genRelativeDir segmentRange = parseDir <$> genRelativeFilePath segmentRange
 
-genRelativeFile :: Range Int -> Gen (RelativePath File)
+genRelativeFile :: Range Int -> Gen (Path Relative File)
 genRelativeFile segmentRange = parseFile <$> genRelativeFilePath segmentRange
 
 genAbsoluteFilePath :: Range Int -> Gen FilePath

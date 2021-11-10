@@ -3,6 +3,6 @@ packages:
   - .
 ghc-options:
   $everything: -haddock
-  $locals: -Wall -Werror
+  $locals: -Wall -Werror -Wno-unticked-promoted-constructors -XDataKinds
 nix:
   shell-file: ./nix/stack.nix

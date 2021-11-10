@@ -58,7 +58,7 @@ validateTest fallbackCommand test = do
     isInvalid = Vector.null (testStdOut test) && Vector.null (testStdErr test) && Map.null (testFiles test)
 
 readTest ::
-  ResolvedPath Dir ->
+  Path Resolved Dir ->
   WorkingDirectory ->
   Maybe Shell ->
   Maybe Command ->
@@ -93,35 +93,35 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         planRevert = revert
       }
 
-determineWorkingDirectory :: ResolvedPath Dir -> Maybe (RelativePath Dir) -> WorkingDirectory -> WorkingDirectory
+determineWorkingDirectory :: Path Resolved Dir -> Maybe (Path Relative Dir) -> WorkingDirectory -> WorkingDirectory
 determineWorkingDirectory location workingDirectory fallbackWorkingDirectory =
   maybe fallbackWorkingDirectory (WorkingDirectory . (location </>)) workingDirectory
 
-readStdIn :: ResolvedPath Dir -> Maybe Shell -> Test -> Planning StdIn
+readStdIn :: Path Resolved Dir -> Maybe Shell -> Test -> Planning StdIn
 readStdIn location fallbackShell test =
   fromMaybe (StdIn Text.empty) <$> sequence (readTestInput location fallbackShell <$> testStdIn test)
 
-readStdOut :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdOut))
+readStdOut :: Path Resolved Dir -> Test -> Planning (Vector (Assert StdOut))
 readStdOut location test = mapM (readTestOutput location) (testStdOut test)
 
-readStdErr :: ResolvedPath Dir -> Test -> Planning (Vector (Assert StdErr))
+readStdErr :: Path Resolved Dir -> Test -> Planning (Vector (Assert StdErr))
 readStdErr location test = mapM (readTestOutput location) (testStdErr test)
 
-readFiles :: ResolvedPath Dir -> Test -> Planning (Map (RelativePath File) (Vector (Assert TestFileContents)))
+readFiles :: Path Resolved Dir -> Test -> Planning (Map (Path Relative File) (Vector (Assert TestFileContents)))
 readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
-readTestInput :: ResolvedPath Dir -> Maybe Shell -> TestInput a -> Planning a
+readTestInput :: Path Resolved Dir -> Maybe Shell -> TestInput a -> Planning a
 readTestInput location _ (TestInput contents) =
   withExceptT PlanningFixtureFileError $ readContents location contents
 readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) = do
   value <- withExceptT PlanningFixtureFileError $ readContents location contents
   withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
 
-readTestOutput :: ResolvedPath Dir -> TestOutput a -> Planning (Assert a)
+readTestOutput :: Path Resolved Dir -> TestOutput a -> Planning (Assert a)
 readTestOutput location (TestOutput constructor contents) =
   liftIO (either AssertFileError constructor <$> runExceptT (readContents location contents))
 
-readContents :: ResolvedPath Dir -> Contents a -> ExceptT SmokeFileError IO a
+readContents :: Path Resolved Dir -> Contents a -> ExceptT SmokeFileError IO a
 readContents _ (Inline value) =
   return value
 readContents location (FileLocation path) =
@@ -130,7 +130,7 @@ readContents location (FileLocation path) =
       (handleMissingFileError path)
       (ExceptT $ tryIOError $ readFromPath (location </> path))
 
-handleMissingFileError :: RelativePath File -> IOError -> SmokeFileError
+handleMissingFileError :: Path Relative File -> IOError -> SmokeFileError
 handleMissingFileError path e =
   if isDoesNotExistError e
     then MissingFile path

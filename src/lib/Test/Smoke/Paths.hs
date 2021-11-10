@@ -1,19 +1,21 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Test.Smoke.Paths
-  ( File,
-    Dir,
-    Path,
-    RelativePath,
-    ResolvedPath,
+  ( Path,
+    PathFormat (..),
+    PathObject (..),
     PathError (..),
     (</>),
     createDirectory,
     createParent,
     findExecutable,
     findFilesInPath,
+    fromFilePath,
     getCurrentWorkingDirectory,
     parent,
     parseDir,
@@ -30,6 +32,7 @@ import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT, throwE)
 import Data.Aeson
+import Data.Kind
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text.IO
@@ -37,49 +40,36 @@ import qualified System.Directory as Directory
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
 
-data Dir
-
-data File
-
-newtype RelativePath t
-  = RelativePath FilePath
+data PathFormat = Relative | Resolved
   deriving (Eq, Ord, Show)
 
-newtype ResolvedPath t
-  = ResolvedPath FilePath
+data PathObject = Dir | File
   deriving (Eq, Ord, Show)
 
-class Path p t where
-  fromFilePath :: FilePath -> p t
-  toFilePath :: p t -> FilePath
+data Path :: PathFormat -> PathObject -> Type where
+  Path :: FilePath -> Path f o
 
-instance Path RelativePath Dir where
-  fromFilePath = RelativePath . normalizeFilePath
-  toFilePath (RelativePath filePath) = filePath ++ pure FilePath.pathSeparator
+deriving instance Eq (Path f o)
 
-instance Path RelativePath File where
-  fromFilePath = RelativePath . normalizeFilePath
-  toFilePath (RelativePath filePath) = filePath
+deriving instance Ord (Path f o)
 
-instance Path ResolvedPath Dir where
-  fromFilePath = ResolvedPath . normalizeFilePath
-  toFilePath (ResolvedPath filePath) = filePath ++ pure FilePath.pathSeparator
+instance Show (Path f o) where
+  show (Path filePath) = filePath
 
-instance Path ResolvedPath File where
-  fromFilePath = ResolvedPath . normalizeFilePath
-  toFilePath (ResolvedPath filePath) = filePath
+fromFilePath :: FilePath -> Path f o
+fromFilePath = Path . normalizeFilePath
 
-instance FromJSON (RelativePath Dir) where
-  parseJSON = withText "path" (return . parseDir . Text.unpack)
+toFilePath :: Path f o -> FilePath
+toFilePath (Path filePath) = filePath
 
-instance FromJSON (RelativePath File) where
-  parseJSON = withText "path" (return . parseFile . Text.unpack)
+instance FromJSON (Path f o) where
+  parseJSON = withText "path" (return . fromFilePath . Text.unpack)
 
 -- Construct
-parseDir :: FilePath -> RelativePath Dir
+parseDir :: FilePath -> Path Relative Dir
 parseDir = fromFilePath
 
-parseFile :: FilePath -> RelativePath File
+parseFile :: FilePath -> Path Relative File
 parseFile = fromFilePath
 
 normalizeFilePath :: FilePath -> FilePath
@@ -115,68 +105,60 @@ normalizeFilePath filePath =
       interpretParentAccess' (x : before) xs
 
 -- Manipulate
-(</>) ::
-  (Path RelativePath t, Path ResolvedPath t) =>
-  ResolvedPath Dir ->
-  RelativePath t ->
-  ResolvedPath t
-ResolvedPath a </> RelativePath b = fromFilePath (a FilePath.</> b)
+(</>) :: Path Resolved Dir -> Path Relative t -> Path Resolved t
+Path a </> Path b = fromFilePath (a FilePath.</> b)
 
-parent :: (Path p t, Path p Dir) => p t -> p Dir
-parent = fromFilePath . FilePath.dropFileName . toFilePath
+parent :: Path p t -> Path p Dir
+parent (Path filePath) = fromFilePath (FilePath.dropFileName filePath)
 
 -- Resolve
-resolve ::
-  (Path RelativePath t, Path ResolvedPath t) =>
-  RelativePath t ->
-  IO (ResolvedPath t)
+resolve :: Path Relative t -> IO (Path Resolved t)
 resolve path = do
   currentWorkingDirectory <- getCurrentWorkingDirectory
   return $ currentWorkingDirectory </> path
 
-getCurrentWorkingDirectory :: IO (ResolvedPath Dir)
-getCurrentWorkingDirectory = ResolvedPath <$> Directory.getCurrentDirectory
+getCurrentWorkingDirectory :: IO (Path Resolved Dir)
+getCurrentWorkingDirectory = Path <$> Directory.getCurrentDirectory
 
-findExecutable :: RelativePath File -> ExceptT PathError IO (ResolvedPath File)
-findExecutable path = do
-  exists <- liftIO $ Directory.doesFileExist (toFilePath path)
+findExecutable :: Path Relative File -> ExceptT PathError IO (Path Resolved File)
+findExecutable path@(Path filePath) = do
+  exists <- liftIO $ Directory.doesFileExist filePath
   if exists
     then do
-      permissions <- liftIO $ Directory.getPermissions (toFilePath path)
+      permissions <- liftIO $ Directory.getPermissions filePath
       unless (Directory.executable permissions) $
         throwE $
           FileIsNotExecutable path
       liftIO $ resolve path
     else do
-      executable <- liftIO $ Directory.findExecutable (toFilePath path)
+      executable <- liftIO $ Directory.findExecutable filePath
       maybe
         (throwE $ CouldNotFindExecutable path)
         (liftIO . resolve . parseFile)
         executable
 
 -- Search
-findFilesInPath ::
-  (Path p Dir, Path p File) => Glob.Pattern -> p Dir -> IO [p File]
-findFilesInPath filePattern path =
-  map fromFilePath <$> Glob.globDir1 filePattern (toFilePath path)
+findFilesInPath :: Glob.Pattern -> Path p Dir -> IO [Path p File]
+findFilesInPath filePattern (Path filePath) =
+  map fromFilePath <$> Glob.globDir1 filePattern filePath
 
 -- I/O
-readFromPath :: ResolvedPath File -> IO Text
-readFromPath = Text.IO.readFile . toFilePath
+readFromPath :: Path Resolved File -> IO Text
+readFromPath (Path filePath) = Text.IO.readFile filePath
 
-writeToPath :: ResolvedPath File -> Text -> IO ()
-writeToPath = Text.IO.writeFile . toFilePath
+writeToPath :: Path Resolved File -> Text -> IO ()
+writeToPath (Path filePath) = Text.IO.writeFile filePath
 
-createDirectory :: ResolvedPath Dir -> IO ()
-createDirectory = Directory.createDirectoryIfMissing True . toFilePath
+createDirectory :: Path Resolved Dir -> IO ()
+createDirectory (Path filePath) = Directory.createDirectoryIfMissing True filePath
 
-createParent :: ResolvedPath File -> IO ()
+createParent :: Path Resolved File -> IO ()
 createParent = createDirectory . parent
 
 -- Errors
 data PathError
-  = CouldNotFindExecutable (RelativePath File)
-  | FileIsNotExecutable (RelativePath File)
+  = CouldNotFindExecutable (Path Relative File)
+  | FileIsNotExecutable (Path Relative File)
   deriving (Eq, Show)
 
 instance Exception PathError

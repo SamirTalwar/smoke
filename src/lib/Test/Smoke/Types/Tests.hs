@@ -20,12 +20,12 @@ type Suites = [SuiteWithMetadata]
 
 data SuiteWithMetadata = SuiteWithMetadata
   { suiteMetaName :: SuiteName,
-    suiteMetaLocation :: ResolvedPath Dir,
+    suiteMetaLocation :: Path Resolved Dir,
     suiteMetaSuite :: Suite
   }
 
 data Suite = Suite
-  { suiteWorkingDirectory :: Maybe (RelativePath Dir),
+  { suiteWorkingDirectory :: Maybe (Path Relative Dir),
     suiteShell :: Maybe CommandLine,
     suiteCommand :: Maybe Command,
     suiteTests :: [Test]
@@ -43,15 +43,15 @@ instance FromJSON Suite where
 data Test = Test
   { testName :: TestName,
     testIgnored :: Bool,
-    testWorkingDirectory :: Maybe (RelativePath Dir),
+    testWorkingDirectory :: Maybe (Path Relative Dir),
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
     testStdIn :: Maybe (TestInput StdIn),
     testStatus :: Status,
     testStdOut :: Vector (TestOutput StdOut),
     testStdErr :: Vector (TestOutput StdErr),
-    testFiles :: Map (RelativePath File) (Vector (TestOutput TestFileContents)),
-    testRevert :: Vector (RelativePath Dir)
+    testFiles :: Map (Path Relative File) (Vector (TestOutput TestFileContents)),
+    testRevert :: Vector (Path Relative Dir)
   }
 
 instance FromJSON Test where
@@ -72,7 +72,7 @@ instance FromJSON Test where
         <*> (v .:? "revert" .!= Vector.empty)
 
 data TestFile = TestFile
-  { testFilePath :: RelativePath File,
+  { testFilePath :: Path Relative File,
     testFileContents :: Vector (TestOutput TestFileContents)
   }
 

@@ -22,9 +22,9 @@ import Test.Smoke.Types
 type Discovery = ExceptT SmokeDiscoveryError IO
 
 data Root
-  = DirectoryRoot (RelativePath Dir)
-  | FileRoot (RelativePath File)
-  | SingleRoot (RelativePath File) TestName
+  = DirectoryRoot (Path Relative Dir)
+  | FileRoot (Path Relative File)
+  | SingleRoot (Path Relative File) TestName
 
 discoverTests :: Options -> IO TestSpecification
 discoverTests options =
@@ -44,14 +44,14 @@ discoverTestsInLocations locations = do
       SingleRoot path selectedTestName -> return <$> discoverSingleTest path selectedTestName
   return $ List.sortOn suiteMetaName $ concat testsBySuite
 
-discoverTestsInSpecificationFile :: RelativePath File -> Discovery SuiteWithMetadata
+discoverTestsInSpecificationFile :: Path Relative File -> Discovery SuiteWithMetadata
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   location <- liftIO $ resolve directory
   suite <- decodeSpecificationFile path
   return $ SuiteWithMetadata suiteName location suite
 
-discoverSingleTest :: RelativePath File -> TestName -> Discovery SuiteWithMetadata
+discoverSingleTest :: Path Relative File -> TestName -> Discovery SuiteWithMetadata
 discoverSingleTest path selectedTestName = do
   SuiteWithMetadata suiteName location fullSuite <- discoverTestsInSpecificationFile path
   selectedTest <-
@@ -60,13 +60,13 @@ discoverSingleTest path selectedTestName = do
   let suite = fullSuite {suiteTests = [selectedTest]}
   return $ SuiteWithMetadata suiteName location suite
 
-splitSuitePath :: RelativePath File -> (RelativePath Dir, SuiteName)
+splitSuitePath :: Path Relative File -> (Path Relative Dir, SuiteName)
 splitSuitePath path =
   ( parent path,
     SuiteName $ FilePath.dropExtension $ FilePath.takeFileName $ toFilePath path
   )
 
-decodeSpecificationFile :: RelativePath File -> Discovery Suite
+decodeSpecificationFile :: Path Relative File -> Discovery Suite
 decodeSpecificationFile path = do
   resolvedPath <- liftIO $ resolve path
   withExceptT (InvalidSpecification path . prettyPrintParseException) $

@@ -24,13 +24,13 @@ import Test.Smoke.Types
 
 type Execution = ExceptT SmokeExecutionError IO
 
-runTest :: ResolvedPath Dir -> TestPlan -> IO ExecutionResult
+runTest :: Path Resolved Dir -> TestPlan -> IO ExecutionResult
 runTest location testPlan =
   if testIgnored (planTest testPlan)
     then return ExecutionIgnored
     else either ExecutionFailed ExecutionSucceeded <$> runExceptT (executeTest location testPlan)
 
-executeTest :: ResolvedPath Dir -> TestPlan -> Execution ActualOutputs
+executeTest :: Path Resolved Dir -> TestPlan -> Execution ActualOutputs
 executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
@@ -45,7 +45,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
     actualFiles <- Map.fromList <$> mapM (liftIO . readTestFile) (Map.keys files)
     return $ ActualOutputs (convertExitCode exitCode) (StdOut processStdOut) (StdErr processStdErr) actualFiles
   where
-    readTestFile :: RelativePath File -> IO (ResolvedPath File, ActualFile)
+    readTestFile :: Path Relative File -> IO (Path Resolved File, ActualFile)
     readTestFile path = do
       let absolutePath = location </> path
       contents <-
@@ -55,11 +55,11 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
           <$> tryIOError (readFromPath absolutePath)
       return (absolutePath, contents)
 
-revertingDirectories :: Vector (ResolvedPath Dir) -> Execution a -> Execution a
+revertingDirectories :: Vector (Path Resolved Dir) -> Execution a -> Execution a
 revertingDirectories paths execution =
   Vector.foldr revertingDirectory execution paths
 
-revertingDirectory :: ResolvedPath Dir -> Execution a -> Execution a
+revertingDirectory :: Path Resolved Dir -> Execution a -> Execution a
 revertingDirectory path execution = do
   let filePath = toFilePath path
   withSystemTempFile "smoke-revert.tar" $ \tarFile handle -> do

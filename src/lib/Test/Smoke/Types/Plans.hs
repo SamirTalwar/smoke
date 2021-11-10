@@ -14,7 +14,7 @@ newtype Plan
 
 data SuitePlan
   = SuitePlanError SuiteName SuiteError
-  | SuitePlan SuiteName (ResolvedPath Dir) [TestPlanOutcome]
+  | SuitePlan SuiteName (Path Resolved Dir) [TestPlanOutcome]
 
 data TestPlanOutcome
   = TestPlanError Test SmokePlanningError
@@ -30,6 +30,6 @@ data TestPlan = TestPlan
     planStatus :: Status,
     planStdOut :: Vector (Assert StdOut),
     planStdErr :: Vector (Assert StdErr),
-    planFiles :: Map (RelativePath File) (Vector (Assert TestFileContents)),
-    planRevert :: Vector (ResolvedPath Dir)
+    planFiles :: Map (Path Relative File) (Vector (Assert TestFileContents)),
+    planRevert :: Vector (Path Resolved Dir)
   }

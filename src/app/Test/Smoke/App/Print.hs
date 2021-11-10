@@ -31,7 +31,7 @@ messageIndentation = 2
 showInt :: Int -> Text
 showInt = fromString . show
 
-showPath :: ConvertPath p t => Path p t -> Text
+showPath :: Path p t -> Text
 showPath = quote . Text.pack . toFilePath
 
 showExecutable :: Executable -> Text

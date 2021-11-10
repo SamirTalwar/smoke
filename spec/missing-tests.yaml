@@ -35,8 +35,8 @@ tests:
     exit-status: 2
     stderr:
       - |
-        The test "thing" cannot be selected from the directory "fixtures/calculator/".
+        The test "thing" cannot be selected from the directory "fixtures/calculator".
         Tests must be selected from a single specification file.
       - |
-        The test "thing" cannot be selected from the directory "fixtures\calculator\".
+        The test "thing" cannot be selected from the directory "fixtures\calculator".
         Tests must be selected from a single specification file.

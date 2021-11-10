@@ -10,18 +10,19 @@ module Test.Smoke.Paths
     PathFormat (..),
     PathObject (..),
     PathError (..),
-    ConvertPath (..),
     (</>),
     createDirectory,
     createParent,
     findExecutable,
     findFilesInPath,
+    fromFilePath,
     getCurrentWorkingDirectory,
     parent,
     parseDir,
     parseFile,
     readFromPath,
     resolve,
+    toFilePath,
     writeToPath,
   )
 where
@@ -58,14 +59,8 @@ instance Show (Path f o) where
 fromFilePath :: FilePath -> Path f o
 fromFilePath = Path . normalizeFilePath
 
-class ConvertPath (f :: PathFormat) (o :: PathObject) where
-  toFilePath :: Path f o -> FilePath
-
-instance ConvertPath f Dir where
-  toFilePath (Path filePath) = filePath ++ pure FilePath.pathSeparator
-
-instance ConvertPath f File where
-  toFilePath (Path filePath) = filePath
+toFilePath :: Path f o -> FilePath
+toFilePath (Path filePath) = filePath
 
 instance FromJSON (Path f o) where
   parseJSON = withText "path" (return . fromFilePath . Text.unpack)

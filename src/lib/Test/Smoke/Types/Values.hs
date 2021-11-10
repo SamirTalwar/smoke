@@ -13,7 +13,7 @@ import Test.Smoke.Types.Filters
 
 data Contents a where
   Inline :: a -> Contents a
-  FileLocation :: FixtureType a => RelativePath File -> Contents a
+  FileLocation :: FixtureType a => Path Relative File -> Contents a
 
 instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
   parseJSON s@(String _) =

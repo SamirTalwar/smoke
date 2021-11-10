@@ -28,7 +28,7 @@ newtype TestName = TestName
   deriving (Eq, Ord, Show)
 
 newtype WorkingDirectory = WorkingDirectory
-  { unWorkingDirectory :: ResolvedPath Dir
+  { unWorkingDirectory :: Path Resolved Dir
   }
   deriving (Eq, Show)
 
@@ -43,7 +43,7 @@ newtype Script = Script
   deriving (Eq, Show, FromJSON)
 
 data CommandLine
-  = CommandLine (RelativePath File) Args
+  = CommandLine (Path Relative File) Args
   deriving (Eq, Show)
 
 instance FromJSON CommandLine where

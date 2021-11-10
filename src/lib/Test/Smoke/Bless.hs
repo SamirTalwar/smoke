@@ -18,7 +18,7 @@ import qualified Data.Vector as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types
 
-blessResult :: ResolvedPath Dir -> TestResult -> IO TestResult
+blessResult :: Path Resolved Dir -> TestResult -> IO TestResult
 blessResult _ (TestResult TestPlan {planTest = test} (EqualityFailure _ (Actual (Status actualStatus))) _ _ _) =
   failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
 blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdErr files) =
@@ -36,7 +36,7 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
     `catch` (\(e :: SmokeBlessError) -> failed test e)
     `catch` (failed test . BlessIOException)
   where
-    writeFixture :: Maybe (RelativePath File, Text) -> (AssertionResult a -> TestResult -> TestResult) -> TestResult -> IO TestResult
+    writeFixture :: Maybe (Path Relative File, Text) -> (AssertionResult a -> TestResult -> TestResult) -> TestResult -> IO TestResult
     writeFixture Nothing _ before =
       return before
     writeFixture (Just (path, text)) makeAfter before = do
@@ -45,7 +45,7 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
       return $ makeAfter AssertionSuccess before
 blessResult _ result = return result
 
-serialize :: forall a. FixtureType a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (RelativePath File, Text))
+serialize :: forall a. FixtureType a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
 serialize _ AssertionSuccess =
   return Nothing
 serialize outputs (AssertionFailure result) =
@@ -57,7 +57,7 @@ serialize outputs (AssertionFailure result) =
     _ ->
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
-serializeFailure :: forall a. FixtureType a => TestOutput a -> AssertionFailures a -> IO (Maybe (RelativePath File, Text))
+serializeFailure :: forall a. FixtureType a => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
 serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   return $ Just (path, serializeFixture actual)
 serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =

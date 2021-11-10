@@ -4,10 +4,10 @@ import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 
 data Shell
-  = Shell (ResolvedPath File) Args
+  = Shell (Path Resolved File) Args
   deriving (Eq, Show)
 
 data Executable
-  = ExecutableProgram (ResolvedPath File) Args
+  = ExecutableProgram (Path Resolved File) Args
   | ExecutableScript Shell Script
   deriving (Eq, Show)

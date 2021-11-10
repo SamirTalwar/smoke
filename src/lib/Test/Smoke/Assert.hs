@@ -14,7 +14,7 @@ import Test.Smoke.Types
 type Asserting = ExceptT SmokeAssertionError IO
 
 assertResult ::
-  ResolvedPath Dir -> TestPlan -> ExecutionResult -> IO TestResult
+  Path Resolved Dir -> TestPlan -> ExecutionResult -> IO TestResult
 assertResult _ TestPlan {planTest = test} ExecutionIgnored =
   return $ TestIgnored test
 assertResult _ TestPlan {planTest = test} (ExecutionFailed exception) =
@@ -22,7 +22,7 @@ assertResult _ TestPlan {planTest = test} (ExecutionFailed exception) =
 assertResult location testPlan@TestPlan {planTest = test} (ExecutionSucceeded actualOutputs) =
   either (TestError test . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
 
-processOutputs :: ResolvedPath Dir -> TestPlan -> ActualOutputs -> Asserting TestResult
+processOutputs :: Path Resolved Dir -> TestPlan -> ActualOutputs -> Asserting TestResult
 processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut

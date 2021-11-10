@@ -53,7 +53,7 @@ printFailingOutput :: FixtureType a => String -> AssertionResult a -> Output ()
 printFailingOutput name = printFailures (ShortName name)
 
 printFailingFilesOutput ::
-  Map (RelativePath File) (AssertionResult TestFileContents) -> Output ()
+  Map (Path Relative File) (AssertionResult TestFileContents) -> Output ()
 printFailingFilesOutput fileResults =
   if all isSuccess (Map.elems fileResults)
     then return ()
@@ -61,7 +61,7 @@ printFailingFilesOutput fileResults =
       putRedLn "  files:"
       forM_ (Map.assocs fileResults) $ uncurry printFailingFileOutput
 
-printFailingFileOutput :: FixtureType a => RelativePath File -> AssertionResult a -> Output ()
+printFailingFileOutput :: FixtureType a => Path Relative File -> AssertionResult a -> Output ()
 printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
 printFailures :: FixtureType a => PartName -> AssertionResult a -> Output ()

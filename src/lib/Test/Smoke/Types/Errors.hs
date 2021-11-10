@@ -18,9 +18,9 @@ instance Exception SmokeError
 
 data SmokeDiscoveryError
   = NoSuchLocation FilePath
-  | NoSuchTest (RelativePath File) TestName
-  | CannotSelectTestInDirectory (RelativePath Dir) TestName
-  | InvalidSpecification (RelativePath File) String
+  | NoSuchTest (Path Relative File) TestName
+  | CannotSelectTestInDirectory (Path Relative Dir) TestName
+  | InvalidSpecification (Path Relative File) String
   deriving (Show)
 
 instance Exception SmokeDiscoveryError
@@ -39,8 +39,8 @@ instance Exception SmokePlanningError
 data SmokeExecutionError
   = NonExistentWorkingDirectory WorkingDirectory
   | CouldNotExecuteCommand Executable IOError
-  | CouldNotStoreDirectory (ResolvedPath Dir) IOError
-  | CouldNotRevertDirectory (ResolvedPath Dir) IOError
+  | CouldNotStoreDirectory (Path Resolved Dir) IOError
+  | CouldNotRevertDirectory (Path Resolved Dir) IOError
   deriving (Show)
 
 instance Exception SmokeExecutionError
@@ -70,7 +70,7 @@ data SmokeFilterError
 
 instance Exception SmokeFilterError
 
-data SmokeFileError = MissingFile (RelativePath File) | CouldNotReadFile (RelativePath File) IOError
+data SmokeFileError = MissingFile (Path Relative File) | CouldNotReadFile (Path Relative File) IOError
   deriving (Show)
 
 instance Exception SmokeFileError

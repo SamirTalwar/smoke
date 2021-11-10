@@ -20,7 +20,7 @@ type Results = [SuiteResult]
 
 data SuiteResult
   = SuiteResultError SuiteName SuiteError
-  | SuiteResult SuiteName (ResolvedPath Dir) [TestResult]
+  | SuiteResult SuiteName (Path Resolved Dir) [TestResult]
 
 data TestResult
   = TestResult
@@ -28,7 +28,7 @@ data TestResult
         resultStatus :: EqualityResult Status,
         resultStdOut :: AssertionResult StdOut,
         resultStdErr :: AssertionResult StdErr,
-        resultFiles :: Map (RelativePath File) (AssertionResult TestFileContents)
+        resultFiles :: Map (Path Relative File) (AssertionResult TestFileContents)
       }
   | TestError Test SmokeError
   | TestIgnored Test

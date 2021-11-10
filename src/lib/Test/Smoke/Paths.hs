@@ -7,8 +7,6 @@
 
 module Test.Smoke.Paths
   ( Path,
-    RelativePath,
-    ResolvedPath,
     PathFormat (..),
     PathObject (..),
     PathError (..),
@@ -56,10 +54,6 @@ deriving instance Ord (Path f o)
 
 instance Show (Path f o) where
   show (Path filePath) = filePath
-
-type RelativePath = Path Relative
-
-type ResolvedPath = Path Resolved
 
 fromFilePath :: FilePath -> Path f o
 fromFilePath = Path . normalizeFilePath

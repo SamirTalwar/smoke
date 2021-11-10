@@ -53,7 +53,7 @@ runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
 runTestPlanOutcome ::
   ShowSuiteNames ->
   SuiteName ->
-  ResolvedPath Dir ->
+  Path Resolved Dir ->
   TestPlanOutcome ->
   Output TestResult
 runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError) = do
@@ -65,7 +65,7 @@ runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@T
   printTitle showSuiteNames suiteName (Just (testName test))
   runTestPlan location testPlan
 
-runTestPlan :: ResolvedPath Dir -> TestPlan -> Output TestResult
+runTestPlan :: Path Resolved Dir -> TestPlan -> Output TestResult
 runTestPlan location testPlan = do
   AppOptions {optionsMode = mode} <- ask
   executionResult <- liftIO $ runTest location testPlan

@@ -64,6 +64,23 @@ jobs:
       - name: Test
         run: make test
 
+  text-nix:
+    name: Build and Test with Nix
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+      - name: Set up the Nix cache
+        uses: cachix/cachix-action@v10
+        with:
+          name: samirtalwar
+      - name: Build and Test
+        run: make out/build/nix/bin/smoke
+      - name: Spec
+        run: ./out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec
+
   test-windows:
     name: Build and Test (windows-latest)
     runs-on: windows-latest
@@ -111,7 +128,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
       - name: Install Nix
-        uses: cachix/install-nix-action@v13
+        uses: cachix/install-nix-action@v16
       - name: Set up the Nix cache
         uses: cachix/cachix-action@v10
         with:

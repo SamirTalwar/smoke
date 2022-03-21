@@ -1,7 +1,9 @@
-resolver: lts-18.13
+resolver: lts-19.0
 packages:
   - .
 ghc-options:
   $everything: -haddock
 nix:
   shell-file: ./nix/stack.nix
+extra-deps:
+  - hw-hspec-hedgehog-0.1.1.1@sha256:4a373bcfabb6bfb232f379babab2fbec7d59f4ccbe89539dbd9b07ee0b46a056,3212

@@ -40,6 +40,9 @@ library:
   ghc-options:
     - -Wall
     - -Werror
+    - -Wno-unticked-promoted-constructors
+  default-extensions:
+    - DataKinds
   when:
     condition: os(windows)
     then:
@@ -63,9 +66,12 @@ executables:
     ghc-options:
       - -Wall
       - -Werror
+      - -Wno-unticked-promoted-constructors
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+    default-extensions:
+      - DataKinds
     when:
       condition: os(windows)
       then:
@@ -82,9 +88,14 @@ tests:
     main: Spec.hs
     source-dirs: src/test
     ghc-options:
+      - -Wall
+      - -Werror
+      - -Wno-unticked-promoted-constructors
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+    default-extensions:
+      - DataKinds
     dependencies:
       - smoke
       - hedgehog

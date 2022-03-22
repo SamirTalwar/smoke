@@ -44,11 +44,11 @@ jobs:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - name: Cache ~/.stack/snapshots
+      - name: Cache ~/.stack
         uses: actions/cache@v2
         with:
-          path: ~/.stack/snapshots
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          path: ~/.stack
+          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install dependencies
         run: make smoke.cabal
       - name: Build for release

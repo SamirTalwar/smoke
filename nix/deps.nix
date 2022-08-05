@@ -17,6 +17,7 @@ with pkgs;
   findutils
   ghc.haskell-language-server
   ghc.hlint
+  ghc.hspec-discover
   gnused
   niv
   nixpkgs-fmt

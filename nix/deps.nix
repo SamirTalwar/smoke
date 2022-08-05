@@ -1,4 +1,4 @@
-{ pkgs ? import (import ./sources.nix).nixpkgs { }
+{ pkgs
 , ghc ? import ./ghc.nix { inherit (pkgs) lib haskell; }
 }:
 with pkgs;

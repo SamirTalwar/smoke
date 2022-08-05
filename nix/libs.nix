@@ -1,5 +1,4 @@
-{ pkgs ? import (import ./sources.nix).nixpkgs { }
-}:
+{ pkgs }:
 let
   gmp6 = pkgs.gmp6.override { withStatic = true; };
   libffi = pkgs.libffi.overrideAttrs (old: { dontDisableStatic = true; });

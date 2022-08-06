@@ -100,7 +100,7 @@ tests:
       - smoke
       - hedgehog
       - hspec
-      - hw-hspec-hedgehog
+      - hspec-hedgehog
     when:
       condition: os(windows)
       then:

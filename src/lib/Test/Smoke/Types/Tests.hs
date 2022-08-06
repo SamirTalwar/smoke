@@ -3,8 +3,7 @@
 module Test.Smoke.Types.Tests where
 
 import Data.Aeson
-import Data.Aeson.Types (Parser)
-import Data.Default
+import Data.Default (def)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -38,7 +37,7 @@ instance FromJSON Suite where
         <$> (v .:? "working-directory")
         <*> (v .:? "shell")
         <*> (v .:? "command")
-        <*> (mapM parseJSON =<< (v .: "tests"))
+        <*> (v .: "tests")
 
 data Test = Test
   { testName :: TestName,
@@ -64,8 +63,8 @@ instance FromJSON Test where
         <*> (v .:? "args")
         <*> (v .:? "stdin")
         <*> (v .:? "exit-status" .!= def)
-        <*> (manyMaybe =<< (v .:? "stdout"))
-        <*> (manyMaybe =<< (v .:? "stderr"))
+        <*> (manyMaybe <$> (v .:? "stdout"))
+        <*> (manyMaybe <$> (v .:? "stderr"))
         <*> ( Map.fromList . map (\(TestFile path contents) -> (path, contents)) . Vector.toList
                 <$> (v .:? "files" .!= Vector.empty)
             )
@@ -79,11 +78,14 @@ data TestFile = TestFile
 instance FromJSON TestFile where
   parseJSON =
     withObject "TestFile" $ \v ->
-      TestFile <$> (v .: "path") <*> (many =<< (v .: "contents"))
+      TestFile <$> (v .: "path") <*> (unMany <$> (v .: "contents"))
 
-many :: FromJSON a => Value -> Parser (Vector a)
-many (Array v) = mapM parseJSON v
-many v = Vector.singleton <$> parseJSON v
+newtype Many a = Many {unMany :: Vector a}
 
-manyMaybe :: FromJSON a => Maybe Value -> Parser (Vector a)
-manyMaybe = maybe (return Vector.empty) many
+instance FromJSON a => FromJSON (Many a) where
+  parseJSON a@(Array _) = Many <$> parseJSON a
+  parseJSON v = Many . Vector.singleton <$> parseJSON v
+
+manyMaybe :: FromJSON a => Maybe (Many a) -> Vector a
+manyMaybe Nothing = Vector.empty
+manyMaybe (Just v) = unMany v

@@ -22,7 +22,7 @@ name = "git"
 
 command :: ColorOutput -> Command
 command color =
-  NonEmpty.fromList $ [executable, "diff", "--no-index"] ++ colorFlags
+  NonEmpty.fromList $ [executable, "diff", "--no-ext-diff", "--no-index"] ++ colorFlags
   where
     colorFlags =
       case color of

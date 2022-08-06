@@ -19,8 +19,6 @@ with pkgs;
   ghc.hlint
   ghc.hspec-discover
   gnused
-  niv
-  nixpkgs-fmt
   ormolu
   yq
 ]

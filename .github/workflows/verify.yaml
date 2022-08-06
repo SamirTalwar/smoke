@@ -134,4 +134,4 @@ jobs:
         with:
           name: samirtalwar
       - name: Lint
-        run: nix-shell --pure --keep LANG ./nix/ci.nix --run 'make lint'
+        run: nix develop --command make lint

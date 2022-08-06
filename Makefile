@@ -80,8 +80,8 @@ lint: $(NIX_FILES) $(SRC)
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
-	@ echo >&2 '> nixpkgs-fmt'
-	@ nixpkgs-fmt --check $(NIX_FILES)
+	@ echo >&2 'nix fmt'
+	@ nix fmt -- --check $(NIX_FILES)
 	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check
@@ -90,7 +90,7 @@ check: test lint
 .PHONY: reformat
 reformat: $(NIX_FILES) $(SRC)
 	ormolu --mode=inplace $(SRC)
-	nixpkgs-fmt $(NIX_FILES)
+	nix fmt -- $(NIX_FILES)
 
 smoke.cabal: $(CONF)
 	$(STACK) install --fast --only-dependencies --test --no-run-tests

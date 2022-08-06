@@ -1,4 +1,4 @@
-{ pkgs ? import (import ./sources.nix).nixpkgs { }
+{ pkgs
 , ghc ? import ./ghc.nix { inherit (pkgs) lib haskell; }
 }:
 with pkgs;
@@ -17,6 +17,7 @@ with pkgs;
   findutils
   ghc.haskell-language-server
   ghc.hlint
+  ghc.hspec-discover
   gnused
   niv
   nixpkgs-fmt

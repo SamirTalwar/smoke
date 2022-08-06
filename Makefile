@@ -42,7 +42,7 @@ $(OUT)/smoke-$(OS): $(BIN_RELEASE)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
 $(BIN_NIX): $(CONF) $(SRC)
-	nix-build --out-link $(OUT_NIX)
+	nix build --out-link $(OUT_NIX)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)

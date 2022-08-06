@@ -1,6 +1,6 @@
 let
-  sources = import ./sources.nix;
-  pkgs = import sources.nixpkgs { };
+  flake = builtins.getFlake (toString ./..);
+  pkgs = flake.inputs.nixpkgs.legacyPackages."${builtins.currentSystem}";
   ghc = import ./ghc.nix { inherit (pkgs) lib haskell; };
   deps = import ./deps.nix { inherit pkgs; };
   extraLibraries = import ./libs.nix { inherit pkgs; };

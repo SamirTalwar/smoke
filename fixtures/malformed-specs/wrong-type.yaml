@@ -1,0 +1,9 @@
+command:
+  - ruby
+  - fixtures/calculator.rb
+
+tests:
+  - name: addition
+    stdin: |
+      2 + 2
+    stdout: [4]

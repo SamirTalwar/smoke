@@ -6,11 +6,9 @@ tests:
     stderr:
       - |
         The test specification "fixtures/malformed-specs/empty.yaml" is invalid:
-          Aeson exception:
           Error in $: parsing Suite failed, expected Object, but encountered Null
       - |
         The test specification "fixtures\malformed-specs\empty.yaml" is invalid:
-          Aeson exception:
           Error in $: parsing Suite failed, expected Object, but encountered Null
 
   - name: invalid-yaml
@@ -36,9 +34,31 @@ tests:
     stderr:
       - |
         The test specification "fixtures/malformed-specs/test-as-dict.yaml" is invalid:
-          Aeson exception:
           Error in $.tests: parsing [] failed, expected Array, but encountered Object
       - |
         The test specification "fixtures\malformed-specs\test-as-dict.yaml" is invalid:
-          Aeson exception:
           Error in $.tests: parsing [] failed, expected Array, but encountered Object
+
+  - name: wrong-type
+    args:
+      - fixtures/malformed-specs/wrong-type.yaml
+    exit-status: 2
+    stderr:
+      - |
+        The test specification "fixtures/malformed-specs/wrong-type.yaml" is invalid:
+          Error in $.tests[0].stdout[0]: expected "contents" or a "file", but encountered Number
+      - |
+        The test specification "fixtures\malformed-specs\wrong-type.yaml" is invalid:
+          Error in $.tests[0].stdout[0]: expected "contents" or a "file", but encountered Number
+
+  - name: unknown-matcher
+    args:
+      - fixtures/malformed-specs/unknown-matcher.yaml
+    exit-status: 2
+    stderr:
+      - |
+        The test specification "fixtures/malformed-specs/unknown-matcher.yaml" is invalid:
+          Error in $.tests[0].stdout: Expected "contents" or a "file"
+      - |
+        The test specification "fixtures\malformed-specs\unknown-matcher.yaml" is invalid:
+          Error in $.tests[0].stdout: Expected "contents" or a "file"

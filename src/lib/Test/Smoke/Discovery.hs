@@ -7,11 +7,13 @@ where
 
 import Control.Monad (forM, unless)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT (..), throwE, withExceptT)
+import Control.Monad.Trans.Except (ExceptT (..), except, throwE, withExceptT)
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Internal as Aeson.Internal
 import qualified Data.List as List
 import qualified Data.Text as Text
 import Data.Vector (Vector)
-import Data.Yaml
+import qualified Data.Yaml as Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
 import qualified System.FilePath as FilePath
 import qualified System.FilePath.Glob as Glob
@@ -67,10 +69,14 @@ splitSuitePath path =
   )
 
 decodeSpecificationFile :: Path Relative File -> Discovery Suite
-decodeSpecificationFile path = do
+decodeSpecificationFile path = withExceptT (InvalidSpecification path) $ do
   resolvedPath <- liftIO $ resolve path
-  withExceptT (InvalidSpecification path . prettyPrintParseException) $
-    ExceptT $ decodeFileEither (toFilePath resolvedPath)
+  value :: Aeson.Value <-
+    withExceptT Yaml.prettyPrintParseException $
+      ExceptT $ Yaml.decodeFileEither (toFilePath resolvedPath)
+  except $ case Aeson.Internal.ifromJSON value of
+    Aeson.Internal.IError jsonPath message -> Left $ Aeson.Internal.formatError jsonPath message
+    Aeson.Internal.ISuccess suite -> Right suite
 
 parseRoot :: String -> Discovery Root
 parseRoot location = do

@@ -42,3 +42,17 @@ tests:
         The test specification "fixtures\malformed-specs\test-as-dict.yaml" is invalid:
           Aeson exception:
           Error in $.tests: parsing [] failed, expected Array, but encountered Object
+
+  - name: unknown-matcher
+    args:
+      - fixtures/malformed-specs/unknown-matcher.yaml
+    exit-status: 2
+    stderr:
+      - |
+        The test specification "fixtures/malformed-specs/unknown-matcher.yaml" is invalid:
+          Aeson exception:
+          Error in $: Expected "contents" or a "file".
+      - |
+        The test specification "fixtures\malformed-specs\unknown-matcher.yaml" is invalid:
+          Aeson exception:
+          Error in $: Expected "contents" or a "file".

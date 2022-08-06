@@ -39,11 +39,6 @@
       devShells.default = pkgs.mkShell {
         buildInputs = deps;
       };
-      devShells.ci = pkgs.mkShell {
-        buildInputs = deps ++ [ pkgs.nix ];
-
-        CI = "true";
-      };
     }
     );
 }

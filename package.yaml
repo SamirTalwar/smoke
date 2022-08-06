@@ -13,6 +13,10 @@ synopsis: An integration test framework for console applications.
 category: Testing
 description: Please see README.md
 
+default-extensions:
+  - DataKinds
+  - ScopedTypeVariables
+
 dependencies:
   - base >= 4.13 && < 5
   - aeson
@@ -41,8 +45,6 @@ library:
     - -Wall
     - -Werror
     - -Wno-unticked-promoted-constructors
-  default-extensions:
-    - DataKinds
   when:
     condition: os(windows)
     then:
@@ -70,8 +72,6 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-    default-extensions:
-      - DataKinds
     when:
       condition: os(windows)
       then:
@@ -94,8 +94,6 @@ tests:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
-    default-extensions:
-      - DataKinds
     dependencies:
       - smoke
       - hedgehog

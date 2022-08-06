@@ -22,11 +22,11 @@ instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
     maybeContents <- v .:? "contents"
     maybeFile <- v .:? "file"
     case (maybeContents, maybeFile) of
-      (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both."
+      (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both"
       (Just contents, Nothing) -> Inline <$> parseJSON contents
       (Nothing, Just file) -> return $ FileLocation file
-      (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\"."
-  parseJSON invalid = typeMismatch "contents" invalid
+      (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\""
+  parseJSON invalid = typeMismatch "\"contents\" or a \"file\"" invalid
 
 data TestInput a where
   TestInput :: Contents a -> TestInput a

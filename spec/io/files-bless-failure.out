@@ -20,5 +20,7 @@ check the wrong file
   files:
     wrong.file:
           does not exist
+revert an executable file
+  succeeded
 
-8 tests, 3 failures
+9 tests, 3 failures

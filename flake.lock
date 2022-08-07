@@ -15,6 +15,23 @@
         "type": "github"
       }
     },
+    "haskellTar": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1657046996,
+        "narHash": "sha256-gDxF+1L0sMzwogCCTGtiYnPgZMIg5fTWV8d062F7iR0=",
+        "owner": "haskell",
+        "repo": "tar",
+        "rev": "dbf8c995153c8a80450724d9f94cf33403740c80",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell",
+        "repo": "tar",
+        "rev": "dbf8c995153c8a80450724d9f94cf33403740c80",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1659739520,
@@ -34,6 +51,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "haskellTar": "haskellTar",
         "nixpkgs": "nixpkgs"
       }
     }

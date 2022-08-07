@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: tar
+    pantry-tree:
+      sha256: 1a97f1a4e4e2e86e338c2629c75af9efbb64eb087efcb6adce6c19f22bfd4de0
+      size: 1985
+    commit: dbf8c995153c8a80450724d9f94cf33403740c80
+    git: https://github.com/haskell/tar.git
+    version: 0.6.0.0
+  original:
+    commit: dbf8c995153c8a80450724d9f94cf33403740c80
+    git: https://github.com/haskell/tar.git
 snapshots:
 - completed:
     sha256: 7f47507fd037228a8d23cf830f5844e1f006221acebdd7cb49f2f5fb561e0546

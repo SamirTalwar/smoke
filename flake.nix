@@ -2,15 +2,25 @@
   description = "Smoke";
 
   inputs = {
-    flake-utils.url = github:numtide/flake-utils;
+    flake-utils = {
+      url = github:numtide/flake-utils;
+    };
 
-    nixpkgs.url = github:NixOS/nixpkgs/master;
+    nixpkgs = {
+      url = github:NixOS/nixpkgs/master;
+    };
+
+    haskellTar = {
+      url = github:haskell/tar/dbf8c995153c8a80450724d9f94cf33403740c80;
+      flake = false;
+    };
   };
 
   outputs =
     { self
     , flake-utils
     , nixpkgs
+    , haskellTar
     }:
     let
       name = "smoke";
@@ -22,6 +32,9 @@
       ghc = import ./nix/ghc.nix {
         inherit (pkgs) lib haskell;
         ghcVersion = pkgs.lib.strings.fileContents ./ghc.version;
+        overrides = hself: hsuper: {
+          tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { };
+        };
       };
       drv = import ./nix/smoke.nix { inherit ghc pkgs; };
     in

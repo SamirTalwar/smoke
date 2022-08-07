@@ -5,3 +5,6 @@ ghc-options:
   $everything: -haddock
 nix:
   shell-file: ./nix/stack.nix
+extra-deps:
+  - git: https://github.com/haskell/tar.git
+    commit: dbf8c995153c8a80450724d9f94cf33403740c80

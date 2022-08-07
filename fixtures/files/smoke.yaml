@@ -115,3 +115,10 @@ tests:
           file: input.file
     revert:
       - .
+
+  - name: revert an executable file
+    command: ./hello
+    stdout: |
+      Hello, world!
+    revert:
+      - .

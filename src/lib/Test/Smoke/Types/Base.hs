@@ -70,7 +70,7 @@ newtype FixtureName = FixtureName
   }
   deriving (Eq, Show, IsString)
 
-class FixtureType a where
+class Eq a => FixtureType a where
   fixtureName :: FixtureName
   serializeFixture :: a -> Text
   deserializeFixture :: Text -> a

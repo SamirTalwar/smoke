@@ -38,21 +38,22 @@ instance (FixtureType a, FromJSON a) => FromJSON (TestInput a) where
   parseJSON value =
     TestInput <$> parseJSON value
 
-data TestOutput a = TestOutput
-  { testOutputAssertionConstructor :: a -> Assert a,
-    testOutputContents :: Contents a
+data TestOutput actual = forall expected.
+  TestOutput
+  { testOutputAssertionConstructor :: expected -> Assert actual,
+    testOutputContents :: Contents expected
   }
 
-instance (Eq a, FixtureType a, FromJSON a) => FromJSON (TestOutput a) where
+instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
-    let equals :: Parser (Maybe (TestOutput a)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEquals <$>))
-        contains :: Parser (Maybe (TestOutput a)) = (v .:? "contains") >>= (sequence . (parseFiltered AssertContains <$>))
-        fallback :: Parser (TestOutput a) = parseFiltered AssertEquals value
+    let equals :: Parser (Maybe (TestOutput actual)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEquals <$>))
+        contains :: Parser (Maybe (TestOutput actual)) = (v .:? "contains") >>= (sequence . (parseFiltered AssertContains <$>))
+        fallback :: Parser (TestOutput actual) = parseFiltered AssertEquals value
      in equals `orMaybe` contains `orDefinitely` fallback
   parseJSON value =
     parseFiltered AssertEquals value
 
-parseFiltered :: (Eq a, FixtureType a, FromJSON a) => (a -> Assert a) -> Value -> Parser (TestOutput a)
+parseFiltered :: (FixtureType expected, FromJSON expected, FixtureType actual) => (expected -> Assert actual) -> Value -> Parser (TestOutput actual)
 parseFiltered assertion value@(Object v) =
   TestOutput
     <$> (maybe assertion filteredAssertion <$> v .:? "filter")

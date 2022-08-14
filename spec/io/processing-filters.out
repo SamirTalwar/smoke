@@ -9,6 +9,8 @@ test failure after STDIN pre-processing
   stdout: @@ -1 +1 @@
           -a b c
           +A B C
+STDIN pre-processing, from a file
+  succeeded
 STDOUT post-processing, inline
   succeeded
 STDOUT post-processing, inline, with a custom shell
@@ -24,7 +26,9 @@ test failure after STDOUT post-processing
   stdout: @@ -1 +1 @@
           -a b c
           +A B C
+STDOUT post-processing, from a file
+  succeeded
 STDERR post-processing, inline
   succeeded
 
-10 tests, 2 failures
+12 tests, 2 failures

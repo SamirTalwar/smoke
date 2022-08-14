@@ -52,6 +52,16 @@ tests:
     stdout: |
       a b c
 
+  - name: STDIN pre-processing, from a file
+    command:
+      - cat
+    stdin:
+      file: ./input.txt
+      filter: |
+        tr '[:lower:]' '[:upper:]'
+    stdout: |
+      A B C
+
   - name: STDOUT post-processing, inline
     command:
       - echo
@@ -123,6 +133,18 @@ tests:
       filter:
         - ruby
         - fixtures/processing-filters/shout.rb
+
+  - name: STDOUT post-processing, from a file
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      file: ./output.txt
+      filter: |
+        tr '[:lower:]' '[:upper:]'
 
   - name: STDERR post-processing, inline
     command: |

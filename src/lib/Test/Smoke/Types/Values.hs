@@ -46,8 +46,12 @@ data TestOutput actual = forall expected.
 
 instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
-    let equals :: Parser (Maybe (TestOutput actual)) = (v .:? "equals") >>= (sequence . (parseFiltered AssertEquals <$>))
-        contains :: Parser (Maybe (TestOutput actual)) = (v .:? "contains") >>= (sequence . (parseFiltered AssertContains <$>))
+    let equals :: Parser (Maybe (TestOutput actual)) = do
+          expected <- v .:? "equals"
+          sequence $ parseFiltered AssertEquals <$> expected
+        contains :: Parser (Maybe (TestOutput actual)) = do
+          expected <- v .:? "contains"
+          sequence $ parseFiltered AssertContains <$> expected
         fallback :: Parser (TestOutput actual) = parseFiltered AssertEquals value
      in equals `orMaybe` contains `orDefinitely` fallback
   parseJSON value =

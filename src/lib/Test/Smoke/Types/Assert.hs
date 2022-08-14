@@ -4,6 +4,7 @@
 module Test.Smoke.Types.Assert where
 
 import Data.Default (Default (..))
+import Data.Text (Text)
 import Data.Vector (Vector)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
@@ -11,7 +12,7 @@ import Test.Smoke.Types.Filters
 
 data Assert a where
   AssertEquals :: Eq a => a -> Assert a
-  AssertContains :: FixtureType a => a -> Assert a
+  AssertContains :: FixtureType a => Text -> Assert a
   AssertFiltered :: FixtureType a => Filter -> Assert a -> Assert a
   AssertFileError :: SmokeFileError -> Assert a
 
@@ -26,7 +27,7 @@ newtype Actual a = Actual a
 
 data AssertionFailure a
   = AssertionFailureDiff (Expected a) (Actual a)
-  | AssertionFailureContains (Expected a) (Actual a)
+  | AssertionFailureContains (Expected Text) (Actual a)
   | AssertionFailureExpectedFileError SmokeFileError (Actual a)
   | AssertionFailureActualFileError SmokeFileError
   deriving (Functor)

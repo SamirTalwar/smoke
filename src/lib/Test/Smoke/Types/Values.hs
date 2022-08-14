@@ -23,8 +23,8 @@ instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
     maybeFile <- v .:? "file"
     case (maybeContents, maybeFile) of
       (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both"
-      (Just contents, Nothing) -> Inline <$> parseJSON contents
-      (Nothing, Just file) -> return $ FileLocation file
+      (Just contents, Nothing) -> pure $ Inline contents
+      (Nothing, Just file) -> pure $ FileLocation file
       (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\""
   parseJSON invalid = typeMismatch "\"contents\" or a \"file\"" invalid
 
@@ -52,7 +52,8 @@ instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) w
         contains :: Parser (Maybe (TestOutput actual)) = do
           expected <- v .:? "contains"
           sequence $ parseFiltered AssertContains <$> expected
-        fallback :: Parser (TestOutput actual) = parseFiltered AssertEquals value
+        fallback :: Parser (TestOutput actual) =
+          parseFiltered AssertEquals value
      in equals `orMaybe` contains `orDefinitely` fallback
   parseJSON value =
     parseFiltered AssertEquals value
@@ -68,11 +69,7 @@ parseFiltered assertion value =
   TestOutput assertion <$> parseJSON value
 
 orMaybe :: Monad m => m (Maybe a) -> m (Maybe a) -> m (Maybe a)
-a `orMaybe` b = do
-  aValue <- a
-  maybe b (return . Just) aValue
+a `orMaybe` b = a >>= maybe b (pure . Just)
 
 orDefinitely :: Monad m => m (Maybe a) -> m a -> m a
-a `orDefinitely` b = do
-  aValue <- a
-  maybe b return aValue
+a `orDefinitely` b = a >>= maybe b pure

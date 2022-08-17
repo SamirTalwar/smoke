@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Test.Smoke.App.PrintResults
   ( printResult,
@@ -30,27 +31,23 @@ printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult 
   | isSuccess result =
     putGreenLn "  succeeded"
   | otherwise = do
-    printFailingInput
-      "args"
-      ( Text.unlines . Vector.toList . Vector.map fromString . unArgs
-          <$> testArgs test
-      )
-    printFailingInput "input" (planStdIn testPlan <$ testStdIn test)
-    printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
-    printFailingOutput "stdout" stdOutResult
-    printFailingOutput "stderr" stdErrResult
+    printFailingInput (testArgs test)
+    printFailingInput (planStdIn testPlan <$ testStdIn test)
+    printFailingOutput (toAssertionResult statusResult)
+    printFailingOutput stdOutResult
+    printFailingOutput stdErrResult
     printFailingFilesOutput fileResults
 printResult (TestError _ testError) = printTestError testError
 printResult (TestIgnored _) = putYellowLn "  ignored"
 
-printFailingInput :: (Foldable f, FixtureType a) => String -> f a -> Output ()
-printFailingInput name value =
+printFailingInput :: forall f a. (Foldable f, FromFixture a) => f a -> Output ()
+printFailingInput value =
   forM_ value $ \v -> do
-    putRed $ fromString $ indentedKey ("  " ++ name ++ ":")
+    putRed $ fromString $ indentedKey ("  " ++ unFixtureName (fixtureName @a) ++ ":")
     putPlainLn $ indented outputIndentation (serializeFixture v)
 
-printFailingOutput :: FixtureType a => String -> AssertionResult a -> Output ()
-printFailingOutput name = printFailures (ShortName name)
+printFailingOutput :: forall a. FromFixture a => AssertionResult a -> Output ()
+printFailingOutput = printFailures (ShortName (unFixtureName (fixtureName @a)))
 
 printFailingFilesOutput ::
   Map (Path Relative File) (AssertionResult TestFileContents) -> Output ()
@@ -61,10 +58,10 @@ printFailingFilesOutput fileResults =
       putRedLn "  files:"
       forM_ (Map.assocs fileResults) $ uncurry printFailingFileOutput
 
-printFailingFileOutput :: FixtureType a => Path Relative File -> AssertionResult a -> Output ()
+printFailingFileOutput :: FromFixture a => Path Relative File -> AssertionResult a -> Output ()
 printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
-printFailures :: FixtureType a => PartName -> AssertionResult a -> Output ()
+printFailures :: FromFixture a => PartName -> AssertionResult a -> Output ()
 printFailures _ AssertionSuccess =
   return ()
 printFailures name (AssertionFailure (SingleAssertionFailure failure)) = do
@@ -95,7 +92,7 @@ failureIsInline AssertionFailureContains {} = False
 failureIsInline AssertionFailureExpectedFileError {} = True
 failureIsInline AssertionFailureActualFileError {} = True
 
-printFailure :: FixtureType a => AssertionFailure a -> Output ()
+printFailure :: FromFixture a => AssertionFailure a -> Output ()
 printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
   printDiff (serializeFixture expected) (serializeFixture actual)
 printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
@@ -127,10 +124,6 @@ printDiff left right = do
     ask
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
-
-toAssertionResult :: FixtureType a => EqualityResult a -> AssertionResult a
-toAssertionResult EqualitySuccess = AssertionSuccess
-toAssertionResult (EqualityFailure expected actual) = AssertionFailure $ SingleAssertionFailure $ AssertionFailureDiff expected actual
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")

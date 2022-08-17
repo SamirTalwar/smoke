@@ -1,10 +1,10 @@
 word
-  input:  word
+  stdin:  word
   stdout: @@ -1 +1 @@
           -xpse
           +jbeq
 lines
-  input:  one
+  stdin:  one
           two
           three
           four
@@ -18,7 +18,7 @@ lines
           +guerr
           +sbhe
 color
-  input:  this is a [32mgreen[0m word
+  stdin:  this is a [32mgreen[0m word
   stdout: @@ -1 +1 @@
           -uijt jt b [32mhsffo[0m xpse
           +guvf vf n [32mterra[0m jbeq

@@ -5,7 +5,7 @@ STDIN pre-processing, inline, with a custom shell
 STDIN pre-processing, with a script
   succeeded
 test failure after STDIN pre-processing
-  input:  A B C
+  stdin:  A B C
   stdout: @@ -1 +1 @@
           -a b c
           +A B C

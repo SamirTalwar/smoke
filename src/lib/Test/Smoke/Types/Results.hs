@@ -58,3 +58,7 @@ data AssertionResult a
 instance IsSuccess (AssertionResult a) where
   isSuccess AssertionSuccess = True
   isSuccess AssertionFailure {} = False
+
+toAssertionResult :: EqualityResult a -> AssertionResult a
+toAssertionResult EqualitySuccess = AssertionSuccess
+toAssertionResult (EqualityFailure expected actual) = AssertionFailure $ SingleAssertionFailure $ AssertionFailureDiff expected actual

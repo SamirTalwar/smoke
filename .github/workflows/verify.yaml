@@ -113,6 +113,10 @@ jobs:
         run: "choco install --yes --no-progress haskell-stack"
       - name: Install Haskell
         run: "stack --no-terminal setup"
+      - name: Update MSYS2
+        run: "stack exec -- pacman --noconfirm -Syuu"
+      - name: Install ICU
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
       - name: Build
         run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
       - name: Test

@@ -1,8 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Test.Smoke.Types.Base where
 
@@ -20,20 +18,15 @@ import Test.Smoke.Paths
 newtype FixtureName = FixtureName {unFixtureName :: String}
   deriving (Eq, Show, IsString)
 
-class Eq a => IsFixture a where
-  fixtureName :: FixtureName
-
-class IsFixture a => ToFixture a where
+class ToFixture a where
   deserializeFixture :: Text -> a
 
-class IsFixture a => FromFixture a where
+class Eq a => FromFixture a where
+  fixtureName :: FixtureName
   serializeFixture :: a -> Text
 
-parseFixtureJSON :: forall a. ToFixture a => Value -> Parser a
-parseFixtureJSON = withText (unFixtureName (fixtureName @a)) (return . deserializeFixture)
-
-instance IsFixture Text where
-  fixtureName = "text"
+parseFixtureJSON :: ToFixture a => String -> Value -> Parser a
+parseFixtureJSON name = withText name (return . deserializeFixture)
 
 instance ToFixture Text where
   deserializeFixture = id
@@ -58,10 +51,8 @@ newtype Args = Args
   }
   deriving (Eq, Show, Semigroup, Monoid, FromJSON)
 
-instance IsFixture Args where
-  fixtureName = "args"
-
 instance FromFixture Args where
+  fixtureName = "args"
   serializeFixture = Text.unlines . Vector.toList . Vector.map Text.pack . unArgs
 
 newtype Script = Script
@@ -100,10 +91,8 @@ newtype Status = Status
 instance Default Status where
   def = Status 0
 
-instance IsFixture Status where
-  fixtureName = "status"
-
 instance FromFixture Status where
+  fixtureName = "status"
   serializeFixture = (<> "\n") . Text.pack . show . unStatus
 
 instance FromJSON Status where
@@ -118,17 +107,15 @@ newtype StdIn = StdIn
 instance Default StdIn where
   def = StdIn Text.empty
 
-instance IsFixture StdIn where
-  fixtureName = "stdin"
-
 instance ToFixture StdIn where
   deserializeFixture = StdIn
 
 instance FromFixture StdIn where
+  fixtureName = "stdin"
   serializeFixture = unStdIn
 
 instance FromJSON StdIn where
-  parseJSON = parseFixtureJSON
+  parseJSON = parseFixtureJSON "stdin"
 
 newtype StdOut = StdOut
   { unStdOut :: Text
@@ -138,17 +125,15 @@ newtype StdOut = StdOut
 instance Default StdOut where
   def = StdOut Text.empty
 
-instance IsFixture StdOut where
-  fixtureName = "stdout"
-
 instance ToFixture StdOut where
   deserializeFixture = StdOut
 
 instance FromFixture StdOut where
+  fixtureName = "stdout"
   serializeFixture = unStdOut
 
 instance FromJSON StdOut where
-  parseJSON = parseFixtureJSON
+  parseJSON = parseFixtureJSON "stdout"
 
 newtype StdErr = StdErr
   { unStdErr :: Text
@@ -158,31 +143,27 @@ newtype StdErr = StdErr
 instance Default StdErr where
   def = StdErr Text.empty
 
-instance IsFixture StdErr where
-  fixtureName = "stderr"
-
 instance ToFixture StdErr where
   deserializeFixture = StdErr
 
 instance FromFixture StdErr where
+  fixtureName = "stderr"
   serializeFixture = unStdErr
 
 instance FromJSON StdErr where
-  parseJSON = parseFixtureJSON
+  parseJSON = parseFixtureJSON "stderr"
 
 newtype TestFileContents = TestFileContents
   { unTestFileContents :: Text
   }
   deriving (Eq, Show)
 
-instance IsFixture TestFileContents where
-  fixtureName = "files"
-
 instance ToFixture TestFileContents where
   deserializeFixture = TestFileContents
 
 instance FromFixture TestFileContents where
+  fixtureName = "files"
   serializeFixture = unTestFileContents
 
 instance FromJSON TestFileContents where
-  parseJSON = parseFixtureJSON
+  parseJSON = parseFixtureJSON "file"

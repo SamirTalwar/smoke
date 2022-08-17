@@ -46,7 +46,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
           else Just $ AssertionFailureDiff (Expected expected) (Actual actual)
     assert (AssertContains expected) actual =
       return $
-        if Text.isInfixOf (serializeFixture expected) (serializeFixture actual)
+        if Text.isInfixOf expected (serializeFixture actual)
           then Nothing
           else Just $ AssertionFailureContains (Expected expected) (Actual actual)
     assert (AssertFiltered fixtureFilter expected) actual = do

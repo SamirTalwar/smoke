@@ -1,7 +1,7 @@
 copy to STDERR
   succeeded
 copy to STDOUT
-  input:  here is some text
+  stdin:  here is some text
   stdout: @@ -1 +0,0 @@
           -here is some text
   stderr: @@ -0,0 +1 @@

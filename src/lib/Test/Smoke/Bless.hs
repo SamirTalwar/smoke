@@ -45,7 +45,7 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
       return $ makeAfter AssertionSuccess before
 blessResult _ result = return result
 
-serialize :: forall a. FixtureType a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
+serialize :: forall a. FromFixture a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
 serialize _ AssertionSuccess =
   return Nothing
 serialize outputs (AssertionFailure result) =
@@ -57,7 +57,7 @@ serialize outputs (AssertionFailure result) =
     _ ->
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
-serializeFailure :: forall a. FixtureType a => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
+serializeFailure :: forall a. FromFixture a => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
 serializeFailure (TestOutput _ (FileLocation path)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   return $ Just (path, serializeFixture actual)
 serializeFailure (TestOutput _ (Inline _)) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =

@@ -7,17 +7,17 @@ addition
 [0mdivision
 [32m  succeeded
 [0mthree-numbers
-[31m  input:  [0m5 + 7 + 12
+[31m  stdin:  [0m5 + 7 + 12
 [31m  stdout:[0m [36m@@ -1 +1 @@[m
           [31m-24[m
           [32m+[m[32m12[m
 parentheses
-[31m  input:  [0m(6 + 3) * 2
+[31m  stdin:  [0m(6 + 3) * 2
 [31m  stdout:[0m [36m@@ -1 +1 @@[m
           [31m-18[m
           [32m+[m[32m3[m
 complex
-[31m  input:  [0m(8 + 2i) + (7 - 4i)
+[31m  stdin:  [0m(8 + 2i) + (7 - 4i)
 [31m  stdout:[0m [36m@@ -1 +1 @@[m
           [31m-15 - 2i[m
           [32m+[m[32m2[m

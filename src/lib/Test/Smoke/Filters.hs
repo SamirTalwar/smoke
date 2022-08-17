@@ -8,7 +8,7 @@ import Test.Smoke.Types
 
 type Filtering = ExceptT SmokeFilterError IO
 
-applyFilters :: FixtureType a => Maybe Shell -> Filter -> a -> Filtering a
+applyFilters :: (FromFixture a, ToFixture a) => Maybe Shell -> Filter -> a -> Filtering a
 applyFilters fallbackShell (Filter command) value = do
   executable <-
     withExceptT FilterPathError $

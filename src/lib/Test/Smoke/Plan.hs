@@ -110,7 +110,7 @@ readStdErr location test = mapM (readTestOutput location) (testStdErr test)
 readFiles :: Path Resolved Dir -> Test -> Planning (Map (Path Relative File) (Vector (Assert TestFileContents)))
 readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
-readTestInput :: Path Resolved Dir -> Maybe Shell -> TestInput a -> Planning a
+readTestInput :: (ToFixture a, FromFixture a) => Path Resolved Dir -> Maybe Shell -> TestInput a -> Planning a
 readTestInput location _ (TestInput contents) =
   withExceptT PlanningFixtureFileError $ readContents location contents
 readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) = do
@@ -119,9 +119,9 @@ readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) 
 
 readTestOutput :: Path Resolved Dir -> TestOutput a -> Planning (Assert a)
 readTestOutput location (TestOutput constructor contents) =
-  liftIO (either AssertFileError constructor <$> runExceptT (readContents location contents))
+  liftIO $ either AssertFileError constructor <$> runExceptT (readContents location contents)
 
-readContents :: Path Resolved Dir -> Contents a -> ExceptT SmokeFileError IO a
+readContents :: ToFixture a => Path Resolved Dir -> Contents a -> ExceptT SmokeFileError IO a
 readContents _ (Inline value) =
   return value
 readContents location (FileLocation path) =

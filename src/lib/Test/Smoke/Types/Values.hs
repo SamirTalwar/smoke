@@ -14,9 +14,9 @@ import Test.Smoke.Types.Filters
 
 data Contents a where
   Inline :: a -> Contents a
-  FileLocation :: FixtureType a => Path Relative File -> Contents a
+  FileLocation :: Path Relative File -> Contents a
 
-instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
+instance FromJSON a => FromJSON (Contents a) where
   parseJSON s@(String _) =
     Inline <$> parseJSON s
   parseJSON (Object v) = do
@@ -31,21 +31,22 @@ instance (FixtureType a, FromJSON a) => FromJSON (Contents a) where
 
 data TestInput a where
   TestInput :: Contents a -> TestInput a
-  TestInputFiltered :: FixtureType a => Filter -> Contents a -> TestInput a
+  TestInputFiltered :: Filter -> Contents a -> TestInput a
 
-instance (FixtureType a, FromJSON a) => FromJSON (TestInput a) where
+instance FromJSON a => FromJSON (TestInput a) where
   parseJSON value@(Object v) =
     maybe TestInput TestInputFiltered <$> v .:? "filter" <*> parseJSON value
   parseJSON value =
     TestInput <$> parseJSON value
 
 data TestOutput actual = forall expected.
+  ToFixture expected =>
   TestOutput
   { testOutputAssertionConstructor :: expected -> Assert actual,
     testOutputContents :: Contents expected
   }
 
-instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) where
+instance (ToFixture actual, FromFixture actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
     let contents :: Parser Object =
           v .: "contents"
@@ -61,7 +62,11 @@ instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) w
   parseJSON value =
     parseFiltered AssertEquals value
 
-parseFiltered :: (FixtureType expected, FromJSON expected, FixtureType actual) => (expected -> Assert actual) -> Value -> Parser (TestOutput actual)
+parseFiltered ::
+  (ToFixture expected, FromJSON expected, ToFixture actual, FromFixture actual, FromJSON actual) =>
+  (expected -> Assert actual) ->
+  Value ->
+  Parser (TestOutput actual)
 parseFiltered assertion value@(Object v) =
   TestOutput
     <$> (maybe assertion filteredAssertion <$> v .:? "filter")

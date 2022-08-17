@@ -7,19 +7,19 @@ multiplication
 division
   succeeded
 three-numbers
-  input:  5 + 7 + 12
+  stdin:  5 + 7 + 12
   stdout: 1c1
           < 24
           ---
           > 12
 parentheses
-  input:  (6 + 3) * 2
+  stdin:  (6 + 3) * 2
   stdout: 1c1
           < 18
           ---
           > 3
 complex
-  input:  (8 + 2i) + (7 - 4i)
+  stdin:  (8 + 2i) + (7 - 4i)
   stdout: 1c1
           < 15 - 2i
           ---

@@ -101,7 +101,7 @@ printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
 printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
   putPlainLn ""
   putRedLn "    expected to contain:"
-  putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
+  putRedLn $ indentedAll nestedOutputIndentation expected
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
 printFailure (AssertionFailureExpectedFileError fileError (Actual actual)) = do

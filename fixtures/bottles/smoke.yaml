@@ -67,3 +67,11 @@ tests:
     stdout:
       contains: |
         11 bottles of beer on the wall, 11 bottles of beer.
+
+  - name: "10-contents-contains"
+    args:
+      - "10"
+    stdout:
+      contents:
+        contains: |
+          9 bottles of beer on the wall, 9 bottles of beer.

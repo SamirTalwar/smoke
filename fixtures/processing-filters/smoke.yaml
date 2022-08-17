@@ -134,6 +134,19 @@ tests:
         - ruby
         - fixtures/processing-filters/shout.rb
 
+  - name: STDOUT post-processing, with a `contains` matcher
+    command:
+      - echo
+    args:
+      - a
+      - b
+      - c
+    stdout:
+      contents:
+        contains: B
+      filter: |
+        tr '[:lower:]' '[:upper:]'
+
   - name: STDOUT post-processing, from a file
     command:
       - echo

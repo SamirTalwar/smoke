@@ -4,6 +4,7 @@
 
 module Test.Smoke.Types.Values (Contents (..), TestInput (..), TestOutput (..)) where
 
+import Control.Applicative ((<|>))
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import Test.Smoke.Paths
@@ -46,15 +47,17 @@ data TestOutput actual = forall expected.
 
 instance (FixtureType actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
-    let equals :: Parser (Maybe (TestOutput actual)) = do
-          expected <- v .:? "equals"
-          sequence $ parseFiltered AssertEquals <$> expected
-        contains :: Parser (Maybe (TestOutput actual)) = do
-          expected <- v .:? "contains"
-          sequence $ parseFiltered AssertContains <$> expected
+    let contents :: Parser Object =
+          v .: "contents"
+        equals :: Parser (TestOutput actual) = do
+          expected <- v .: "equals" <|> (contents >>= (.: "equals"))
+          parseFiltered AssertEquals expected
+        contains :: Parser (TestOutput actual) = do
+          expected <- v .: "contains" <|> (contents >>= (.: "contains"))
+          parseFiltered AssertContains expected
         fallback :: Parser (TestOutput actual) =
           parseFiltered AssertEquals value
-     in equals `orMaybe` contains `orDefinitely` fallback
+     in equals <|> contains <|> fallback
   parseJSON value =
     parseFiltered AssertEquals value
 
@@ -67,9 +70,3 @@ parseFiltered assertion value@(Object v) =
     filteredAssertion fixtureFilter expected = AssertFiltered fixtureFilter (assertion expected)
 parseFiltered assertion value =
   TestOutput assertion <$> parseJSON value
-
-orMaybe :: Monad m => m (Maybe a) -> m (Maybe a) -> m (Maybe a)
-a `orMaybe` b = a >>= maybe b (pure . Just)
-
-orDefinitely :: Monad m => m (Maybe a) -> m a -> m a
-a `orDefinitely` b = a >>= maybe b pure

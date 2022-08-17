@@ -18,14 +18,17 @@ tests:
   - name: multiplication
     stdin: |
       25 * 16
-    stdout: |
-      400
+    stdout:
+      equals: |
+        400
 
   - name: division
     stdin: |
       24 / 6
-    stdout: |
-      4
+    stdout:
+      contents:
+        equals: |
+          4
 
   - name: three-numbers
     stdin: |

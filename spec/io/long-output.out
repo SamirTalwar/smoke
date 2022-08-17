@@ -134,5 +134,7 @@ broken
             Take one down and pass it around, no more bottles of beer on the wall.
             No more bottles of beer on the wall, no more bottles of beer.
             Go to the store and buy some more, 10 bottles of beer on the wall.
+10-contents-contains
+  succeeded
 
-6 tests, 2 failures
+7 tests, 2 failures

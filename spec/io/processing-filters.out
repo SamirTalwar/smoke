@@ -26,9 +26,17 @@ test failure after STDOUT post-processing
   stdout: @@ -1 +1 @@
           -a b c
           +A B C
+STDOUT post-processing, with a `contains` matcher
+  args:   a
+          b
+          c
+  stdout:
+    expected to contain:
+            B
+    actual: a b c
 STDOUT post-processing, from a file
   succeeded
 STDERR post-processing, inline
   succeeded
 
-12 tests, 2 failures
+13 tests, 3 failures

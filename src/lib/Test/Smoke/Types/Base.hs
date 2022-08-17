@@ -91,6 +91,11 @@ newtype Status = Status
 instance Default Status where
   def = Status 0
 
+instance FixtureType Status where
+  fixtureName = "status"
+  serializeFixture = (<> "\n") . Text.pack . show . unStatus
+  deserializeFixture = Status . read . Text.unpack
+
 instance FromJSON Status where
   parseJSON number@(Number _) = Status <$> parseJSON number
   parseJSON invalid = typeMismatch "status" invalid

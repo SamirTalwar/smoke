@@ -36,7 +36,7 @@ printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult 
           <$> testArgs test
       )
     printFailingInput "input" (planStdIn testPlan <$ testStdIn test)
-    printFailingOutput "status" (toAssertionResult ((<> "\n") . showInt . unStatus <$> statusResult))
+    printFailingOutput "status" (toAssertionResult statusResult)
     printFailingOutput "stdout" stdOutResult
     printFailingOutput "stderr" stdErrResult
     printFailingFilesOutput fileResults
@@ -127,10 +127,6 @@ printDiff left right = do
     ask
   diff <- liftIO $ renderDiff color left right
   putPlainLn $ indented outputIndentation diff
-
-toAssertionResult :: FixtureType a => EqualityResult a -> AssertionResult a
-toAssertionResult EqualitySuccess = AssertionSuccess
-toAssertionResult (EqualityFailure expected actual) = AssertionFailure $ SingleAssertionFailure $ AssertionFailureDiff expected actual
 
 indentedKey :: String -> String
 indentedKey = printf ("%-" ++ show outputIndentation ++ "s")

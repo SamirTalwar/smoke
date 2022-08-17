@@ -21,7 +21,7 @@ newtype FixtureName = FixtureName {unFixtureName :: String}
 class ToFixture a where
   deserializeFixture :: Text -> a
 
-class Eq a => FromFixture a where
+class FromFixture a where
   fixtureName :: FixtureName
   serializeFixture :: a -> Text
 

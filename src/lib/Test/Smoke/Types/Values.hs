@@ -46,7 +46,7 @@ data TestOutput actual = forall expected.
     testOutputContents :: Contents expected
   }
 
-instance (ToFixture actual, FromFixture actual, FromJSON actual) => FromJSON (TestOutput actual) where
+instance (Eq actual, ToFixture actual, FromFixture actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
     let contents :: Parser Object =
           v .: "contents"

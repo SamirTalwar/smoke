@@ -56,7 +56,8 @@ data Test = Test
 instance FromJSON Test where
   parseJSON =
     withObject "Test" $ \v ->
-      Test <$> (TestName <$> v .: "name")
+      Test
+        <$> (TestName <$> v .: "name")
         <*> (v .:? "ignored" .!= False)
         <*> (v .:? "working-directory")
         <*> (v .:? "command")

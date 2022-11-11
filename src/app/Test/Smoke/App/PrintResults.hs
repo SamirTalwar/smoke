@@ -29,14 +29,14 @@ data PartName = ShortName String | LongName String
 printResult :: TestResult -> Output ()
 printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult stdOutResult stdErrResult fileResults)
   | isSuccess result =
-    putGreenLn "  succeeded"
+      putGreenLn "  succeeded"
   | otherwise = do
-    printFailingInput (testArgs test)
-    printFailingInput (planStdIn testPlan <$ testStdIn test)
-    printFailingOutput (toAssertionResult statusResult)
-    printFailingOutput stdOutResult
-    printFailingOutput stdErrResult
-    printFailingFilesOutput fileResults
+      printFailingInput (testArgs test)
+      printFailingInput (planStdIn testPlan <$ testStdIn test)
+      printFailingOutput (toAssertionResult statusResult)
+      printFailingOutput stdOutResult
+      printFailingOutput stdErrResult
+      printFailingFilesOutput fileResults
 printResult (TestError _ testError) = printTestError testError
 printResult (TestIgnored _) = putYellowLn "  ignored"
 

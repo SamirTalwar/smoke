@@ -99,7 +99,7 @@ determineWorkingDirectory location workingDirectory fallbackWorkingDirectory =
 
 readStdIn :: Path Resolved Dir -> Maybe Shell -> Test -> Planning StdIn
 readStdIn location fallbackShell test =
-  fromMaybe (StdIn Text.empty) <$> sequence (readTestInput location fallbackShell <$> testStdIn test)
+  fromMaybe (StdIn Text.empty) <$> mapM (readTestInput location fallbackShell) (testStdIn test)
 
 readStdOut :: Path Resolved Dir -> Test -> Planning (Vector (Assert StdOut))
 readStdOut location test = mapM (readTestOutput location) (testStdOut test)

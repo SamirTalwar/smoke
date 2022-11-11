@@ -1,4 +1,4 @@
-resolver: lts-19.17
+resolver: lts-19.32
 packages:
   - .
 ghc-options:
@@ -6,5 +6,7 @@ ghc-options:
 nix:
   shell-file: ./nix/stack.nix
 extra-deps:
+  # There was a bug in the `tar` package that is fixed in https://github.com/haskell/tar/pull/26.
+  # However, this code has not been released, so we need to grab the latest commit instead.
   - git: https://github.com/haskell/tar.git
     commit: dbf8c995153c8a80450724d9f94cf33403740c80

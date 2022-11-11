@@ -12,12 +12,24 @@ Smoke works especially well for testing large applications, especially after the
 
 It's not a replacement for other, smaller tests. We recommend writing unit tests ([perhaps even first][test-driven development]), especially for new code.
 
+Smoke is distributed under [the MIT license][mit license].
+
 [testing legacy code with golden master]: https://craftedsw.blogspot.co.uk/2012/11/testing-legacy-code-with-golden-master.html
 [test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
 
 ## Installation
 
 You can download the latest release from the [Releases][] page.
+
+- The latest Windows release was built on Windows Server 2022.
+- The latest macOS release was built on macOS 11 (Big Sur), on x86_64 hardware.
+  - If you need native arm64 support, you will need to build it yourself.
+- The latest Linux release was built on Ubuntu 20.04, on x86_64 hardware.
+  - The binary depends on the dynamic libraries `glibc` and `gmp`.
+  - If you're running on a non-glibc-based OS such as Alpine Linux, you will either need to build it yourself or install both `gcompat` and `gmp`.
+  - If you need native arm64 support, you will need to build it yourself.
+
+## Building
 
 You can also build it yourself, using either Nix or Stack.
 
@@ -32,8 +44,6 @@ With [Stack][]:
 1.  Install Stack.
 2.  Run `stack install --local-bin-path=./out/build`.
 3.  Find Smoke at `./out/build/smoke`.
-
-Smoke is distributed under [the MIT license][mit license].
 
 [mit license]: http://samirtalwar.mit-license.org/
 [releases]: https://github.com/SamirTalwar/smoke/releases

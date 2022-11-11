@@ -18,15 +18,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Haskell
-        uses: haskell/actions/setup@v1
+        uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
       - name: Cache ~/.stack
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.stack
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
@@ -47,15 +47,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Haskell
-        uses: haskell/actions/setup@v1
+        uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
       - name: Cache ~/.stack
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.stack
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
@@ -69,11 +69,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Nix
-        uses: cachix/install-nix-action@v16
+        uses: cachix/install-nix-action@v18
       - name: Set up the Nix cache
-        uses: cachix/cachix-action@v10
+        uses: cachix/cachix-action@v12
         with:
           name: samirtalwar
       - name: Build and Test
@@ -86,25 +86,25 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Cache chocolatey/bin
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: 'C:\ProgramData\chocolatey\bin'
           key: v1-windows-latest-chocolatey-bin
       - name: Cache chocolatey/lib/haskell-stack
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: 'C:\ProgramData\chocolatey\lib\haskell-stack'
           key: v1-windows-latest-chocolatey-lib-haskell-stack
       - name: Cache ~/AppData/Local/Programs/stack
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: 'C:\Users\runneradmin\AppData\Local\Programs\stack'
           key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
           restore-keys: v1-windows-latest-programs-stack-
       - name: Cache ~/AppData/Roaming/stack
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: 'C:\Users\runneradmin\AppData\Roaming\stack'
           key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
@@ -126,11 +126,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Nix
-        uses: cachix/install-nix-action@v16
+        uses: cachix/install-nix-action@v18
       - name: Set up the Nix cache
-        uses: cachix/cachix-action@v10
+        uses: cachix/cachix-action@v12
         with:
           name: samirtalwar
       - name: Lint

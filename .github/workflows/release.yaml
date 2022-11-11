@@ -57,8 +57,8 @@ jobs:
         name: Set the asset information
         run: |
           export TAG='${{ github.ref }}'
-          echo "::set-output name=asset_name::smoke-${TAG##*/}-$(uname -s)-$(uname -m)"
-          echo "::set-output name=asset_path::out/build/release/smoke"
+          echo "asset_name=smoke-${TAG##*/}-$(uname -s)-$(uname -m)" >> "$GITHUB_OUTPUT"
+          echo "asset_path=out/build/release/smoke" >> "$GITHUB_OUTPUT"
       - name: Upload the asset
         uses: actions/upload-release-asset@v1
         env:
@@ -108,8 +108,8 @@ jobs:
         name: Set the asset information
         run: |
           $Tag = '${{ github.ref }}' -replace '.+/', ''
-          echo "::set-output name=asset_name::smoke-${Tag}-windows-x64.exe"
-          echo '::set-output name=asset_path::out\build\release\smoke.exe'
+          echo "asset_name=smoke-${Tag}-windows-x64.exe" >> "$GITHUB_OUTPUT"
+          echo "asset_path=out\build\release\smoke.exe" >> "$GITHUB_OUTPUT"
       - name: Upload the asset
         uses: actions/upload-release-asset@v1
         env:

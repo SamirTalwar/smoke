@@ -36,6 +36,20 @@ dependencies:
   - vector
   - yaml
 
+extra-libraries:
+  - icuuc
+when:
+  - condition: os(mingw32)
+    then:
+      extra-libraries:
+        - icuin
+        - icudt
+        - icuio
+    else:
+      extra-libraries:
+        - icui18n
+        - icudata
+
 library:
   source-dirs:
     - src/lib

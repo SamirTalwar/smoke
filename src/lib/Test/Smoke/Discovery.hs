@@ -73,7 +73,8 @@ decodeSpecificationFile path = withExceptT (InvalidSpecification path) $ do
   resolvedPath <- liftIO $ resolve path
   value :: Aeson.Value <-
     withExceptT Yaml.prettyPrintParseException $
-      ExceptT $ Yaml.decodeFileEither (toFilePath resolvedPath)
+      ExceptT $
+        Yaml.decodeFileEither (toFilePath resolvedPath)
   except $ case Aeson.Internal.ifromJSON value of
     Aeson.Internal.IError jsonPath message -> Left $ Aeson.Internal.formatError jsonPath message
     Aeson.Internal.ISuccess suite -> Right suite

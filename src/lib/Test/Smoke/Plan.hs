@@ -111,20 +111,22 @@ readFiles :: Path Resolved Dir -> Test -> Planning (Map (Path Relative File) (Ve
 readFiles location test = mapM (mapM (readTestOutput location)) (testFiles test)
 
 readTestInput :: (ToFixture a, FromFixture a) => Path Resolved Dir -> Maybe Shell -> TestInput a -> Planning a
-readTestInput location _ (TestInput contents) =
-  withExceptT PlanningFixtureFileError $ readContents location contents
-readTestInput location fallbackShell (TestInputFiltered fixtureFilter contents) = do
-  value <- withExceptT PlanningFixtureFileError $ readContents location contents
+readTestInput _ _ (TestInputInline contents) =
+  pure contents
+readTestInput location _ (TestInputFromFile path) =
+  withExceptT PlanningFixtureFileError $ readPath location path
+readTestInput location fallbackShell (TestInputFiltered inner fixtureFilter) = do
+  value <- readTestInput location fallbackShell inner
   withExceptT PlanningFilterError $ applyFilters fallbackShell fixtureFilter value
 
 readTestOutput :: Path Resolved Dir -> TestOutput a -> Planning (Assert a)
-readTestOutput location (TestOutput constructor contents) =
-  liftIO $ either AssertFileError constructor <$> runExceptT (readContents location contents)
+readTestOutput _ (TestOutputInline assertion) =
+  pure assertion
+readTestOutput location (TestOutputFromFile constructor contents) =
+  liftIO $ either AssertFileError constructor <$> runExceptT (readPath location contents)
 
-readContents :: ToFixture a => Path Resolved Dir -> Contents a -> ExceptT SmokeFileError IO a
-readContents _ (Inline value) =
-  return value
-readContents location (FileLocation path) =
+readPath :: ToFixture a => Path Resolved Dir -> Path Relative File -> ExceptT SmokeFileError IO a
+readPath location path =
   deserializeFixture
     <$> withExceptT
       (handleMissingFileError path)

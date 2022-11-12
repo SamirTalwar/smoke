@@ -40,8 +40,8 @@ instance (Eq actual, ToFixture actual, FromFixture actual, FromJSON actual) => F
           expected <- v .: "contains" <|> (contents >>= (.: "contains"))
           parseTestOutput AssertContains expected
         matches :: Parser (TestOutput actual) = do
-          expected <- v .: "matches" <|> (contents >>= (.: "matches"))
-          parseTestOutput AssertMatches expected
+          expected <- v .: "matches"
+          TestOutputInline . AssertMatches <$> parseJSON expected
         fallback :: Parser (TestOutput actual) =
           parseTestOutput AssertEquals value
      in equals <|> contains <|> matches <|> fallback

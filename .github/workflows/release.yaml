@@ -103,7 +103,9 @@ jobs:
       - name: Install Haskell
         run: "stack --no-terminal setup"
       - name: Update MSYS2
-        run: "stack exec -- pacman --noconfirm -Syuu"
+        run: "stack --no-terminal exec -- pacman --noconfirm -Syuu"
+      - name: Install pkgconfig
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-pkg-config"
       - name: Install ICU
         run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
       - name: Build for release

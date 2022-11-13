@@ -124,7 +124,7 @@ jobs:
       - name: Test
         run: "stack --no-terminal test"
       - name: Spec
-        run: '.\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+        run: 'stack --no-terminal exec -- .\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
 
   lint:
     name: Lint

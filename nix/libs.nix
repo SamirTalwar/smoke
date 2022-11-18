@@ -8,6 +8,7 @@ let
 in
 [
   gmp6
+  pkgs.icu
   libiconv
   openssl
   zlib

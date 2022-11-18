@@ -1,0 +1,66 @@
+command:
+  - ruby
+  - fixtures/encrypter.rb
+
+tests:
+  - name: simple
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches: |-
+        dhvf abfgehq rkrepvgngvba hyynzpb ynobevf
+
+  - name: case-sensitive
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches: |-
+        yberz vcfhz
+
+  - name: case-insensitive
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches:
+        regex: |-
+          yberz vcfhz
+        options:
+          - case-insensitive
+
+  - name: erroneous-comments
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches:
+        regex: |
+          Yberz  # Lorem
+          \ vcfhz  # ipsum
+        options: []
+
+  - name: comments
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches:
+        regex: |-
+          Yberz  # Lorem
+          \ vcfhz  # ipsum
+        options:
+          - comments
+
+  - name: dot-without-dot-all
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches: |-
+        Yberz vcfhz qbybe fvg nzrg, .* fhag va phycn dhv bssvpvn qrfrehag zbyyvg navz vq rfg ynobehz\.
+
+  - name: dot-with-dot-all
+    stdin:
+      file: io/lorem-ipsum.in
+    stdout:
+      matches:
+        regex: |-
+          Yberz vcfhz qbybe fvg nzrg, .* fhag va phycn dhv bssvpvn qrfrehag zbyyvg navz vq rfg ynobehz\.
+        options:
+          - dot-all

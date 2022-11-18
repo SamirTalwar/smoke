@@ -46,10 +46,10 @@ tests:
     stderr:
       - |
         The test specification "fixtures/malformed-specs/wrong-type.yaml" is invalid:
-          Error in $.tests[0].stdout[0]: expected "contents" or a "file", but encountered Number
+          Error in $.tests[0].stdout[0]: expected String, or Object containing "contents" or a "file", but encountered Number
       - |
         The test specification "fixtures\malformed-specs\wrong-type.yaml" is invalid:
-          Error in $.tests[0].stdout[0]: expected "contents" or a "file", but encountered Number
+          Error in $.tests[0].stdout[0]: expected String, or Object containing "contents" or a "file", but encountered Number
 
   - name: unknown-matcher
     args:

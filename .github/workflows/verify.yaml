@@ -113,12 +113,18 @@ jobs:
         run: "choco install --yes --no-progress haskell-stack"
       - name: Install Haskell
         run: "stack --no-terminal setup"
+      - name: Update MSYS2
+        run: "stack --no-terminal exec -- pacman --noconfirm -Syuu"
+      - name: Install pkgconfig
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-pkg-config"
+      - name: Install ICU
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
       - name: Build
         run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
       - name: Test
         run: "stack --no-terminal test"
       - name: Spec
-        run: '.\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+        run: 'stack --no-terminal exec -- .\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
 
   lint:
     name: Lint

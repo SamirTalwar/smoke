@@ -102,6 +102,12 @@ jobs:
         run: "choco install --yes --no-progress haskell-stack"
       - name: Install Haskell
         run: "stack --no-terminal setup"
+      - name: Update MSYS2
+        run: "stack --no-terminal exec -- pacman --noconfirm -Syuu"
+      - name: Install pkgconfig
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-pkg-config"
+      - name: Install ICU
+        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
       - name: Build for release
         run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
       - id: asset

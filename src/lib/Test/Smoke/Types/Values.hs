@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Test.Smoke.Types.Values (Contents (..), TestInput (..), TestOutput (..)) where
+module Test.Smoke.Types.Values (TestInput (..), TestOutput (..)) where
 
 import Control.Applicative ((<|>))
 import Data.Aeson
@@ -12,39 +12,22 @@ import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Filters
 
-data Contents a where
-  Inline :: a -> Contents a
-  FileLocation :: Path Relative File -> Contents a
-
-instance FromJSON a => FromJSON (Contents a) where
-  parseJSON s@(String _) =
-    Inline <$> parseJSON s
-  parseJSON (Object v) = do
-    maybeContents <- v .:? "contents"
-    maybeFile <- v .:? "file"
-    case (maybeContents, maybeFile) of
-      (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both"
-      (Just contents, Nothing) -> pure $ Inline contents
-      (Nothing, Just file) -> pure $ FileLocation file
-      (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\""
-  parseJSON invalid = typeMismatch "\"contents\" or a \"file\"" invalid
-
 data TestInput a where
-  TestInput :: Contents a -> TestInput a
-  TestInputFiltered :: Filter -> Contents a -> TestInput a
+  TestInputInline :: a -> TestInput a
+  TestInputFromFile :: Path Relative File -> TestInput a
+  TestInputFiltered :: TestInput a -> Filter -> TestInput a
 
 instance FromJSON a => FromJSON (TestInput a) where
-  parseJSON value@(Object v) =
-    maybe TestInput TestInputFiltered <$> v .:? "filter" <*> parseJSON value
-  parseJSON value =
-    TestInput <$> parseJSON value
+  parseJSON value = do
+    (inner, contentFilter) <- parseContentsOrFile value
+    let testInput = case inner of
+          Left contents -> TestInputInline contents
+          Right file -> TestInputFromFile file
+    pure $ maybe testInput (TestInputFiltered testInput) contentFilter
 
-data TestOutput actual = forall expected.
-  ToFixture expected =>
-  TestOutput
-  { testOutputAssertionConstructor :: expected -> Assert actual,
-    testOutputContents :: Contents expected
-  }
+data TestOutput actual where
+  TestOutputInline :: Assert actual -> TestOutput actual
+  TestOutputFromFile :: ToFixture expected => (expected -> Assert actual) -> Path Relative File -> TestOutput actual
 
 instance (Eq actual, ToFixture actual, FromFixture actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
@@ -52,26 +35,45 @@ instance (Eq actual, ToFixture actual, FromFixture actual, FromJSON actual) => F
           v .: "contents"
         equals :: Parser (TestOutput actual) = do
           expected <- v .: "equals" <|> (contents >>= (.: "equals"))
-          parseFiltered AssertEquals expected
+          parseTestOutput AssertEquals expected
         contains :: Parser (TestOutput actual) = do
           expected <- v .: "contains" <|> (contents >>= (.: "contains"))
-          parseFiltered AssertContains expected
+          parseTestOutput AssertContains expected
+        matches :: Parser (TestOutput actual) = do
+          expected <- v .: "matches"
+          TestOutputInline . AssertMatches <$> parseJSON expected
         fallback :: Parser (TestOutput actual) =
-          parseFiltered AssertEquals value
-     in equals <|> contains <|> fallback
+          parseTestOutput AssertEquals value
+     in equals <|> contains <|> matches <|> fallback
   parseJSON value =
-    parseFiltered AssertEquals value
+    parseTestOutput AssertEquals value
 
-parseFiltered ::
+parseTestOutput ::
   (ToFixture expected, FromJSON expected, ToFixture actual, FromFixture actual, FromJSON actual) =>
   (expected -> Assert actual) ->
   Value ->
   Parser (TestOutput actual)
-parseFiltered assertion value@(Object v) =
-  TestOutput
-    <$> (maybe assertion filteredAssertion <$> v .:? "filter")
-    <*> parseJSON value
+parseTestOutput assertion value = do
+  (inner, contentFilter) <- parseContentsOrFile value
+  let assertion' = maybe assertion filteredAssertion contentFilter
+  pure $ case inner of
+    Left contents -> TestOutputInline (assertion' contents)
+    Right file -> TestOutputFromFile assertion' file
   where
     filteredAssertion fixtureFilter expected = AssertFiltered fixtureFilter (assertion expected)
-parseFiltered assertion value =
-  TestOutput assertion <$> parseJSON value
+
+parseContentsOrFile :: FromJSON a => Value -> Parser (Either a (Path Relative File), Maybe Filter)
+parseContentsOrFile s@(String _) = do
+  contents <- parseJSON s
+  pure (Left contents, Nothing)
+parseContentsOrFile (Object v) = do
+  contentFilter <- v .:? "filter"
+  maybeContents <- v .:? "contents"
+  maybeFile <- v .:? "file"
+  case (maybeContents, maybeFile) of
+    (Just _, Just _) -> fail "Expected \"contents\" or a \"file\", not both"
+    (Nothing, Nothing) -> fail "Expected \"contents\" or a \"file\""
+    (Just contents, Nothing) -> pure (Left contents, contentFilter)
+    (Nothing, Just file) -> pure (Right file, contentFilter)
+parseContentsOrFile invalid =
+  typeMismatch "String, or Object containing \"contents\" or a \"file\"" invalid

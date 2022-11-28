@@ -58,6 +58,8 @@
 
       devShells.default = pkgs.mkShell {
         buildInputs = deps ++ [ ghc.ghc ] ++ extraLibs;
+
+        # Necessary until https://github.com/commercialhaskell/stack/issues/5008 is fixed.
         STACK_IN_NIX_SHELL = true;
       };
     }

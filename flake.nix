@@ -35,6 +35,7 @@
     let
       pkgs = import nixpkgs { inherit system; };
       deps = import ./nix/deps.nix { inherit pkgs; };
+      extraLibs = import ./nix/libs.nix { inherit pkgs; };
       ghc = import ./nix/ghc.nix {
         inherit (pkgs) lib haskell;
         ghcVersion = pkgs.lib.strings.fileContents ./ghc.version;
@@ -56,7 +57,10 @@
       formatter = pkgs.nixpkgs-fmt;
 
       devShells.default = pkgs.mkShell {
-        buildInputs = deps;
+        buildInputs = deps ++ [ ghc.ghc ] ++ extraLibs;
+
+        # Necessary until https://github.com/commercialhaskell/stack/issues/5008 is fixed.
+        STACK_IN_NIX_SHELL = true;
       };
     }
     );

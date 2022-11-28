@@ -4,7 +4,7 @@ packages:
 ghc-options:
   $everything: -haddock
 nix:
-  shell-file: ./nix/stack.nix
+  shell-file: ./shell.nix
 extra-deps:
   # There was a bug in the `tar` package that is fixed in https://github.com/haskell/tar/pull/26.
   # However, this code has not been released, so we need to grab the latest commit instead.

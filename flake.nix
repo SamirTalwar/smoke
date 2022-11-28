@@ -6,8 +6,12 @@
     nixpkgs.url = github:NixOS/nixpkgs/master;
     haskellTar.url = github:haskell/tar/dbf8c995153c8a80450724d9f94cf33403740c80;
     haskellTar.flake = false;
-    flake-compat.url = "github:edolstra/flake-compat";
+    flake-compat.url = github:edolstra/flake-compat;
     flake-compat.flake = false;
+    pre-commit-hooks.url = github:cachix/pre-commit-hooks.nix;
+    pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
+    pre-commit-hooks.inputs.flake-utils.follows = "flake-utils";
+    pre-commit-hooks.inputs.flake-compat.follows = "flake-compat";
   };
 
   outputs =
@@ -16,6 +20,7 @@
     , nixpkgs
     , haskellTar
     , flake-compat
+    , pre-commit-hooks
     }:
     flake-utils.lib.eachDefaultSystem (system:
     let
@@ -59,9 +64,21 @@
         };
       };
 
+      checks = {
+        pre-commit-check = pre-commit-hooks.lib.${system}.run {
+          src = ./.;
+          hooks = {
+            nixpkgs-fmt.enable = true;
+            ormolu.enable = true;
+            hlint.enable = true;
+          };
+        };
+      };
+
       formatter = pkgs.nixpkgs-fmt;
 
       devShells.default = pkgs.mkShell {
+        inherit (self.checks.${system}.pre-commit-check) shellHook;
         buildInputs = with pkgs; [
           coreutils
           dos2unix

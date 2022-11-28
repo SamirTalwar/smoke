@@ -14,6 +14,11 @@
       url = github:haskell/tar/dbf8c995153c8a80450724d9f94cf33403740c80;
       flake = false;
     };
+
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
   outputs =
@@ -21,6 +26,7 @@
     , flake-utils
     , nixpkgs
     , haskellTar
+    , flake-compat
     }:
     let
       name = "smoke";

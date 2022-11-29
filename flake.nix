@@ -6,7 +6,7 @@
     nixpkgs.url = github:NixOS/nixpkgs/master;
     haskellTar.url = github:haskell/tar/dbf8c995153c8a80450724d9f94cf33403740c80;
     haskellTar.flake = false;
-    flake-compat.url = "github:edolstra/flake-compat";
+    flake-compat.url = github:edolstra/flake-compat;
     flake-compat.flake = false;
   };
 

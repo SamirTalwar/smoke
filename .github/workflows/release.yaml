@@ -44,10 +44,10 @@ jobs:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - name: Cache ~/.stack
+      - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
-          path: ~/.stack
+          path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install dependencies
         run: make smoke.cabal
@@ -76,36 +76,23 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Cache chocolatey/bin
+      - name: Set up Haskell
+        id: haskell-setup
+        uses: haskell/actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          enable-stack: true
+      - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
-          path: 'C:\ProgramData\chocolatey\bin'
-          key: v1-windows-latest-chocolatey-bin
-      - name: Cache chocolatey/lib/haskell-stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\ProgramData\chocolatey\lib\haskell-stack'
-          key: v1-windows-latest-chocolatey-lib-haskell-stack
-      - name: Cache ~/AppData/Local/Programs/stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Local\Programs\stack'
-          key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
-          restore-keys: v1-windows-latest-programs-stack-
-      - name: Cache ~/AppData/Roaming/stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Roaming\stack'
-          key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
-          restore-keys: v1-windows-latest-appdata-stack-
-      - name: Install Stack
-        run: "choco install --yes --no-progress haskell-stack"
+          path: ${{ steps.haskell-setup.outputs.stack-root }}
+          key: v1-windows-latest-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install Haskell
         run: "stack --no-terminal setup"
       - name: Update MSYS2
-        run: "stack --no-terminal exec -- pacman --noconfirm -Syuu"
-      - name: Install pkgconfig
-        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-pkg-config"
+        run: |
+          stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring
+          stack --no-terminal exec -- pacman --noconfirm -Syuu
       - name: Install ICU
         run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
       - name: Build for release

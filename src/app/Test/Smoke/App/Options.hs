@@ -44,7 +44,7 @@ optionParser isTTY foundDiffEngine = do
   color <- colorParser isTTY
   diffEngine <- diffEngineParser foundDiffEngine
   testLocation <- testLocationParser
-  return
+  pure
     AppOptions
       { optionsExecution =
           Options
@@ -58,16 +58,16 @@ optionParser isTTY foundDiffEngine = do
 
 commandParser :: Parser (Maybe Command)
 commandParser = do
-  commandString <-
-    optional $
-      strOption (long "command" <> help "Specify or override the command to run")
-  return $ constructCommand <$> commandString
+  optional $
+    option
+      (str >>= readCommand)
+      (long "command" <> help "Specify or override the command to run")
   where
-    constructCommand :: String -> Command
-    constructCommand commandString =
-      let (program : args) = words commandString
-       in CommandArgs
-            (CommandLine (parseFile program) (Args (Vector.fromList args)))
+    readCommand :: String -> ReadM Command
+    readCommand commandString =
+      case words commandString of
+        [] -> readerError "Empty command."
+        (program : args) -> pure $ CommandArgs (CommandLine (parseFile program) (Args (Vector.fromList args)))
 
 modeParser :: Parser Mode
 modeParser =
@@ -91,7 +91,7 @@ diffEngineParser foundDiffEngine =
   where
     readDiffEngine :: String -> ReadM Diff.Engine
     readDiffEngine =
-      maybe (readerError ("Valid diff engines are: " ++ validDiffEngine)) return
+      maybe (readerError ("Valid diff engines are: " ++ validDiffEngine)) pure
         . Diff.getEngine
     validDiffEngine = intercalate ", " Diff.engineNames
 

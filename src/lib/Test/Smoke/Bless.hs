@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -29,9 +30,9 @@ blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdE
     foldM
       (\r f -> f r)
       result
-      ( writeFixture serializedStdOut (\a r -> r {resultStdOut = a})
-          : writeFixture serializedStdErr (\a r -> r {resultStdErr = a})
-          : map (\(path, serializedFile) -> writeFixture serializedFile (\a r -> r {resultFiles = Map.insert path a (resultFiles r)})) (Map.assocs serializedFiles)
+      ( writeFixture serializedStdOut (\a -> \case r@TestResult {} -> r {resultStdOut = a}; r -> r)
+          : writeFixture serializedStdErr (\a -> \case r@TestResult {} -> r {resultStdErr = a}; r -> r)
+          : map (\(path, serializedFile) -> writeFixture serializedFile (\a -> \case r@TestResult {} -> r {resultFiles = Map.insert path a (resultFiles r)}; r -> r)) (Map.assocs serializedFiles)
       )
     `catch` (\(e :: SmokeBlessError) -> failed test e)
     `catch` (failed test . BlessIOException)

@@ -2,26 +2,56 @@
   description = "Smoke";
 
   inputs = {
+    flake-compat.url = github:edolstra/flake-compat;
+    flake-compat.flake = false;
     flake-utils.url = github:numtide/flake-utils;
     nixpkgs.url = github:NixOS/nixpkgs/master;
     haskellTar.url = github:haskell/tar/dbf8c995153c8a80450724d9f94cf33403740c80;
     haskellTar.flake = false;
-    flake-compat.url = github:edolstra/flake-compat;
-    flake-compat.flake = false;
   };
 
   outputs =
     { self
+    , flake-compat
     , flake-utils
     , nixpkgs
     , haskellTar
-    , flake-compat
     }:
     flake-utils.lib.eachDefaultSystem (system:
     let
-      pkgs = import nixpkgs { inherit system; };
+      ghcVersion = lib.strings.fileContents ./ghc.version;
+      ghcName = "ghc" + lib.strings.stringAsChars (c: if c == "." then "" else c) ghcVersion;
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          (self: super: {
+            haskell = super.haskell // {
+              packages = super.haskell.packages // {
+                # haskell package set from the version of GHC specified by `./ghc.version`
+                ${ghcName} = super.haskell.packages.${ghcName}.override {
+                  overrides = hself: hsuper: {
+                    # This is due to a GHC 9.2.5 regression.
+                    # see https://gitlab.haskell.org/ghc/ghc/-/issues/22425
+                    ListLike = super.haskell.lib.dontCheck hsuper.ListLike;
+
+                    # On aarch64-darwin, this creates a cycle.
+                    # see https://github.com/NixOS/nixpkgs/issues/140774
+                    ormolu = super.haskell.lib.overrideCabal hsuper.ormolu (drv: { enableSeparateBinOutput = false; });
+
+                    # Override tar with the patched version; see stack.yaml for details.
+                    # The tests don't work.
+                    tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { };
+                  };
+                };
+              };
+            };
+          })
+        ];
+      };
+
       inherit (pkgs) lib haskell;
       inherit (haskell.lib) overrideCabal justStaticExecutables doStrip;
+      hsPkgs = haskell.packages.${ghcName};
 
       # required libraries with static linking enabled
       staticLibs = with pkgs; [
@@ -32,22 +62,11 @@
         zlib.static
       ];
 
-      # haskell package set from ghc specified by `./ghc.version` and
-      # tar package with tests disabled
-      hsPkgs =
-        let
-          ghcVersion = lib.strings.fileContents ./ghc.version;
-          compiler = "ghc" + lib.strings.stringAsChars (c: if c == "." then "" else c) ghcVersion;
-          overrides = hself: hsuper: { tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { }; };
-        in
-        haskell.packages."${compiler}".override { inherit overrides; };
-
       smoke =
         let
           drv = hsPkgs.callCabal2nix "smoke" (pkgs.nix-gitignore.gitignoreSource [ ] ./.) { };
         in
         haskell.lib.addExtraLibraries drv staticLibs;
-
     in
     {
       packages.default = smoke;
@@ -66,17 +85,25 @@
           coreutils
           dos2unix
           findutils
-          git
           gnumake
           gnused
+          nixpkgs-fmt
+          yq
+
+          # Haskell development
           hsPkgs.haskell-language-server
           hsPkgs.hlint
           hsPkgs.hspec-discover
-          nixpkgs-fmt
-          ormolu
-          ruby
+          hsPkgs.ormolu
           stack
-          yq
+
+          # ICU
+          icu
+          pkg-config
+
+          # testing
+          git
+          ruby
         ];
         STACK_IN_NIX_SHELL = true;
       };

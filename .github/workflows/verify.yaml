@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  GHC_VERSION: "9.0.2"
+  GHC_VERSION: "9.2.5"
 
 jobs:
   build-unix:

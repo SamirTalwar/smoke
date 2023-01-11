@@ -18,7 +18,7 @@ default-extensions:
   - ScopedTypeVariables
 
 dependencies:
-  - base >= 4.13 && < 5
+  - base >= 4.16 && < 5
   - aeson
   - containers
   - data-default

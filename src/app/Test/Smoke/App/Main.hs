@@ -44,11 +44,11 @@ runSuite :: ShowSuiteNames -> SuitePlan -> Output SuiteResult
 runSuite showSuiteNames (SuitePlanError suiteName suiteError) = do
   printTitle showSuiteNames suiteName Nothing
   printSuiteError suiteError
-  return $ SuiteResultError suiteName suiteError
+  pure $ SuiteResultError suiteName suiteError
 runSuite showSuiteNames (SuitePlan suiteName location testPlans) = do
   testResults <-
     forM testPlans $ runTestPlanOutcome showSuiteNames suiteName location
-  return $ SuiteResult suiteName location testResults
+  pure $ SuiteResult suiteName location testResults
 
 runTestPlanOutcome ::
   ShowSuiteNames ->
@@ -60,7 +60,7 @@ runTestPlanOutcome showSuiteNames suiteName _ (TestPlanError test planningError)
   printTitle showSuiteNames suiteName (Just (testName test))
   let testError = PlanningError planningError
   printTestError testError
-  return $ TestError test testError
+  pure $ TestErrored test testError
 runTestPlanOutcome showSuiteNames suiteName location (TestPlanSuccess testPlan@TestPlan {planTest = test}) = do
   printTitle showSuiteNames suiteName (Just (testName test))
   runTestPlan location testPlan
@@ -72,10 +72,10 @@ runTestPlan location testPlan = do
   testResult <- liftIO $ assertResult location testPlan executionResult
   modifiedTestResult <-
     case mode of
-      Check -> return testResult
+      Check -> pure testResult
       Bless -> liftIO $ blessResult location testResult
   printResult modifiedTestResult
-  return modifiedTestResult
+  pure modifiedTestResult
 
 withOptions :: AppOptions -> ReaderT AppOptions m a -> m a
 withOptions = flip runReaderT

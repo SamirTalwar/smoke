@@ -19,31 +19,35 @@ import Test.Smoke.Paths
 import Test.Smoke.Types
 
 blessResult :: Path Resolved Dir -> TestResult -> IO TestResult
-blessResult _ (TestResult TestPlan {planTest = test} (EqualityFailure _ (Actual (Status actualStatus))) _ _ _) =
+blessResult location (TestFinished testPlan finishedTest) = blessFinishedTest location testPlan finishedTest
+blessResult _ result = pure result
+
+blessFinishedTest :: Path Resolved Dir -> TestPlan -> FinishedTest -> IO TestResult
+blessFinishedTest _ TestPlan {planTest = test} (FinishedTest (EqualityFailure _ (Actual (Status actualStatus))) _ _ _) =
   failed test $ CouldNotBlessInlineFixture "status" (Text.pack (show actualStatus))
-blessResult location result@(TestResult TestPlan {planTest = test} _ stdOut stdErr files) =
+blessFinishedTest location testPlan@(TestPlan {planTest = test}) result@(FinishedTest _ stdOut stdErr files) =
   do
     serializedStdOut <- serialize (testStdOut test) stdOut
     serializedStdErr <- serialize (testStdErr test) stdErr
     serializedFiles <- Map.traverseWithKey (\path fileResult -> serialize (testFiles test ! path) fileResult) files
-    foldM
-      (\r f -> f r)
-      result
-      ( writeFixture serializedStdOut (\a r -> r {resultStdOut = a})
-          : writeFixture serializedStdErr (\a r -> r {resultStdErr = a})
-          : map (\(path, serializedFile) -> writeFixture serializedFile (\a r -> r {resultFiles = Map.insert path a (resultFiles r)})) (Map.assocs serializedFiles)
-      )
+    TestFinished testPlan
+      <$> foldM
+        (\r f -> f r)
+        result
+        ( writeFixture serializedStdOut (\a r -> r {finishedTestStdOut = a})
+            : writeFixture serializedStdErr (\a r -> r {finishedTestStdErr = a})
+            : map (\(path, serializedFile) -> writeFixture serializedFile (\a r -> r {finishedTestFiles = Map.insert path a (finishedTestFiles r)})) (Map.assocs serializedFiles)
+        )
     `catch` (\(e :: SmokeBlessError) -> failed test e)
     `catch` (failed test . BlessIOException)
   where
-    writeFixture :: Maybe (Path Relative File, Text) -> (AssertionResult a -> TestResult -> TestResult) -> TestResult -> IO TestResult
+    writeFixture :: Maybe (Path Relative File, Text) -> (AssertionResult a -> FinishedTest -> FinishedTest) -> FinishedTest -> IO FinishedTest
     writeFixture Nothing _ before =
       return before
     writeFixture (Just (path, text)) makeAfter before = do
       createParent (location </> path)
       writeToPath (location </> path) text
       return $ makeAfter AssertionSuccess before
-blessResult _ result = return result
 
 serialize :: forall a. FromFixture a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
 serialize _ AssertionSuccess =
@@ -76,4 +80,4 @@ serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
 failed :: Applicative f => Test -> SmokeBlessError -> f TestResult
-failed test = pure . TestError test . BlessError
+failed test = pure . TestErrored test . BlessError

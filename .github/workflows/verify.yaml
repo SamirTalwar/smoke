@@ -4,7 +4,7 @@ on:
   push:
 
 env:
-  GHC_VERSION: "9.0.2"
+  GHC_VERSION: "9.2.5"
 
 jobs:
   build-unix:
@@ -20,18 +20,29 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Set up Haskell
+        id: haskell-setup
         uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - name: Cache ~/.stack
+      - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
-          path: ~/.stack
+          path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
+      - name: Install ICU4C
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          brew install icu4c
+          brew link icu4c --force
       - name: Install dependencies
-        run: make smoke.cabal
+        run: |
+          # On macOS, the pkg-config directory for ICU4C must be specified explicitly
+          if [[ '${{ matrix.os }}' =~ ^macos- ]]; then
+            export PKG_CONFIG_PATH="$(brew --prefix)/opt/icu4c/lib/pkgconfig"
+          fi
+          make smoke.cabal
       - name: Build
         run: make build
 
@@ -49,18 +60,29 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Set up Haskell
+        id: haskell-setup
         uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
-      - name: Cache ~/.stack
+      - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
-          path: ~/.stack
+          path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
+      - name: Install ICU4C
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          brew install icu4c
+          brew link icu4c --force
       - name: Install dependencies
-        run: make smoke.cabal
+        run: |
+          # On macOS, the pkg-config directory for ICU4C must be specified explicitly
+          if [[ '${{ matrix.os }}' =~ ^macos- ]]; then
+            export PKG_CONFIG_PATH="$(brew --prefix)/opt/icu4c/lib/pkgconfig"
+          fi
+          make smoke.cabal
       - name: Test
         run: make test
 
@@ -87,38 +109,29 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Cache chocolatey/bin
+      - name: Set up Haskell
+        id: haskell-setup
+        uses: haskell/actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          enable-stack: true
+      - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
-          path: 'C:\ProgramData\chocolatey\bin'
-          key: v1-windows-latest-chocolatey-bin
-      - name: Cache chocolatey/lib/haskell-stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\ProgramData\chocolatey\lib\haskell-stack'
-          key: v1-windows-latest-chocolatey-lib-haskell-stack
-      - name: Cache ~/AppData/Local/Programs/stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Local\Programs\stack'
-          key: v1-windows-latest-programs-stack-${{ hashFiles('stack.yaml') }}
-          restore-keys: v1-windows-latest-programs-stack-
-      - name: Cache ~/AppData/Roaming/stack
-        uses: actions/cache@v3
-        with:
-          path: 'C:\Users\runneradmin\AppData\Roaming\stack'
-          key: v1-windows-latest-appdata-stack-${{ hashFiles('stack.yaml') }}
-          restore-keys: v1-windows-latest-appdata-stack-
-      - name: Install Stack
-        run: "choco install --yes --no-progress haskell-stack"
+          path: ${{ steps.haskell-setup.outputs.stack-root }}
+          key: v1-windows-latest-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install Haskell
         run: "stack --no-terminal setup"
       - name: Update MSYS2
-        run: "stack --no-terminal exec -- pacman --noconfirm -Syuu"
-      - name: Install pkgconfig
-        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-pkg-config"
+        run: |
+          stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring
+          stack --no-terminal exec -- pacman --noconfirm -Syuu
+      - name: Install pkg-config
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-x86_64-pkg-config"
+      - name: Install Clang for aarch64
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-clang-aarch64-clang"
       - name: Install ICU
-        run: "stack --no-terminal exec -- pacman --noconfirm -S mingw-w64-x86_64-icu"
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-x86_64-icu"
       - name: Build
         run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
       - name: Test

@@ -17,7 +17,7 @@ packages:
     git: https://github.com/haskell/tar.git
 snapshots:
 - completed:
-    sha256: ae630fb633086fb5128ec338a40a60c0f2b0a0f1bcfa9920c15855df2001338e
-    size: 619204
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/32.yaml
-  original: lts-19.32
+    sha256: 4905c93319aa94aa53da8f41d614d7bacdbfe6c63a8c6132d32e6e62f24a9af4
+    size: 649315
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/6.yaml
+  original: lts-20.6

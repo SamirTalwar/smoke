@@ -24,10 +24,9 @@ summarizeResults results = Summary successes failures ignored
     ignored = length $ filter (== Ignored) allResults
 
 summarizeResult :: TestResult -> SummaryResult
-summarizeResult result@TestResult {}
-  | isSuccess result = Success
-  | otherwise = Failure
-summarizeResult TestError {} = Failure
+summarizeResult result@TestFinished {} =
+  if isSuccess result then Success else Failure
+summarizeResult TestErrored {} = Failure
 summarizeResult TestIgnored {} = Ignored
 
 summaryTotal :: Summary -> Int

@@ -23,23 +23,28 @@ data SuiteResult
   | SuiteResult SuiteName (Path Resolved Dir) [TestResult]
 
 data TestResult
-  = TestResult
-      { resultPlan :: TestPlan,
-        resultStatus :: EqualityResult Status,
-        resultStdOut :: AssertionResult StdOut,
-        resultStdErr :: AssertionResult StdErr,
-        resultFiles :: Map (Path Relative File) (AssertionResult TestFileContents)
-      }
-  | TestError Test SmokeError
+  = TestFinished TestPlan FinishedTest
+  | TestErrored Test SmokeError
   | TestIgnored Test
 
 instance IsSuccess TestResult where
-  isSuccess (TestResult _ statusResult stdOutResult stdErrResult filesResults) =
-    isSuccess statusResult && isSuccess stdOutResult && isSuccess stdErrResult && all isSuccess (Map.elems filesResults)
-  isSuccess TestError {} =
+  isSuccess (TestFinished _ finishedTest) =
+    isSuccess finishedTest
+  isSuccess TestErrored {} =
     False
   isSuccess TestIgnored {} =
     False
+
+data FinishedTest = FinishedTest
+  { finishedTestStatus :: EqualityResult Status,
+    finishedTestStdOut :: AssertionResult StdOut,
+    finishedTestStdErr :: AssertionResult StdErr,
+    finishedTestFiles :: Map (Path Relative File) (AssertionResult TestFileContents)
+  }
+
+instance IsSuccess FinishedTest where
+  isSuccess (FinishedTest statusResult stdOutResult stdErrResult filesResults) =
+    isSuccess statusResult && isSuccess stdOutResult && isSuccess stdErrResult && all isSuccess (Map.elems filesResults)
 
 data EqualityResult a
   = EqualitySuccess

@@ -27,7 +27,7 @@ import Text.Printf (printf)
 data PartName = ShortName String | LongName String
 
 printResult :: TestResult -> Output ()
-printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult stdOutResult stdErrResult fileResults)
+printResult result@(TestFinished testPlan@TestPlan {planTest = test} (FinishedTest statusResult stdOutResult stdErrResult fileResults))
   | isSuccess result =
       putGreenLn "  succeeded"
   | otherwise = do
@@ -37,7 +37,7 @@ printResult result@(TestResult testPlan@TestPlan {planTest = test} statusResult 
       printFailingOutput stdOutResult
       printFailingOutput stdErrResult
       printFailingFilesOutput fileResults
-printResult (TestError _ testError) = printTestError testError
+printResult (TestErrored _ testError) = printTestError testError
 printResult (TestIgnored _) = putYellowLn "  ignored"
 
 printFailingInput :: forall f a. (Foldable f, FromFixture a) => f a -> Output ()

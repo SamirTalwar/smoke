@@ -17,14 +17,14 @@ type Asserting = ExceptT SmokeAssertionError IO
 assertResult ::
   Path Resolved Dir -> TestPlan -> ExecutionResult -> IO TestResult
 assertResult _ TestPlan {planTest = test} ExecutionIgnored =
-  return $ TestIgnored test
+  pure $ TestIgnored test
 assertResult _ TestPlan {planTest = test} (ExecutionFailed exception) =
-  return $ TestError test (ExecutionError exception)
+  pure $ TestErrored test (ExecutionError exception)
 assertResult location testPlan@TestPlan {planTest = test} (ExecutionSucceeded actualOutputs) =
-  either (TestError test . AssertionError) id <$> runExceptT (processOutputs location testPlan actualOutputs)
+  either (TestErrored test . AssertionError) (TestFinished testPlan) <$> runExceptT (processOutputs location testPlan actualOutputs)
 
-processOutputs :: Path Resolved Dir -> TestPlan -> ActualOutputs -> Asserting TestResult
-processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
+processOutputs :: Path Resolved Dir -> TestPlan -> ActualOutputs -> Asserting FinishedTest
+processOutputs location (TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr
@@ -32,7 +32,7 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
     Map.traverseWithKey
       (\relativePath assertions -> assertFile assertions (actualFiles ! (location </> relativePath)))
       expectedFiles
-  return $ TestResult testPlan statusResult stdOutResult stdErrResult fileResults
+  pure $ FinishedTest statusResult stdOutResult stdErrResult fileResults
   where
     assertEqual :: Eq a => a -> a -> EqualityResult a
     assertEqual expected actual
@@ -41,17 +41,17 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
 
     assert :: Assert a -> a -> Asserting (Maybe (AssertionFailure a))
     assert (AssertEquals expected) actual =
-      return $
+      pure $
         if expected == actual
           then Nothing
           else Just $ AssertionFailureDiff (Expected expected) (Actual actual)
     assert (AssertContains expected) actual =
-      return $
+      pure $
         if Text.isInfixOf expected (serializeFixture actual)
           then Nothing
           else Just $ AssertionFailureContains (Expected expected) (Actual actual)
     assert (AssertMatches expected) actual =
-      return $
+      pure $
         if Pattern.matches expected (serializeFixture actual)
           then Nothing
           else Just $ AssertionFailureMatches (Expected expected) (Actual actual)
@@ -59,18 +59,18 @@ processOutputs location testPlan@(TestPlan _ _ fallbackShell _ _ _ expectedStatu
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual
     assert (AssertFileError fileError) actual =
-      return $ Just $ AssertionFailureExpectedFileError fileError (Actual actual)
+      pure $ Just $ AssertionFailureExpectedFileError fileError (Actual actual)
 
     assertAll :: Vector (Assert a) -> a -> Asserting (AssertionResult a)
     assertAll expecteds actual = do
       maybeFailures <- sequence <$> Vector.mapM (`assert` actual) expecteds
-      return $ maybe AssertionSuccess (AssertionFailure . collapseAssertionFailures) maybeFailures
+      pure $ maybe AssertionSuccess (AssertionFailure . collapseAssertionFailures) maybeFailures
 
     assertFile :: Vector (Assert TestFileContents) -> ActualFile -> Asserting (AssertionResult TestFileContents)
     assertFile assertions (ActualFileContents contents) =
       assertAll assertions contents
     assertFile _ (ActualFileError fileError) =
-      return . AssertionFailure . SingleAssertionFailure $ AssertionFailureActualFileError fileError
+      pure . AssertionFailure . SingleAssertionFailure $ AssertionFailureActualFileError fileError
 
     collapseAssertionFailures :: Vector (AssertionFailure a) -> AssertionFailures a
     collapseAssertionFailures failures =

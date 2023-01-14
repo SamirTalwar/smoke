@@ -82,8 +82,8 @@ jobs:
       - name: Spec
         run: ./out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec
 
-  test-windows:
-    name: Build and Test (windows-latest)
+  build-windows:
+    name: Build (windows-latest)
     runs-on: windows-latest
     steps:
       - name: Check out
@@ -107,10 +107,27 @@ jobs:
           stack --no-terminal exec -- pacman --noconfirm -Syuu
       - name: Build
         run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
-      - name: Test
+      - name: Upload Smoke
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-windows-latest
+          path: 'out\build\debug\smoke.exe'
+      - name: Run unit tests
         run: "stack --no-terminal test"
+
+  spec-windows:
+    name: Spec (windows-latest)
+    needs: build-windows
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+      - name: Download Smoke
+        uses: actions/download-artifact@v3
+        with:
+          name: smoke-windows-latest
       - name: Spec
-        run: 'stack --no-terminal exec -- .\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+        run: '.\smoke.exe --command=.\smoke.exe spec'
 
   lint:
     name: Lint

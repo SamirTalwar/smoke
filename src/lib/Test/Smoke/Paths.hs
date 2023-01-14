@@ -63,7 +63,7 @@ toFilePath :: Path f o -> FilePath
 toFilePath (Path filePath) = filePath
 
 instance FromJSON (Path f o) where
-  parseJSON = withText "path" (return . fromFilePath . Text.unpack)
+  parseJSON = withText "path" (pure . fromFilePath . Text.unpack)
 
 -- Construct
 parseDir :: FilePath -> Path Relative Dir
@@ -115,7 +115,7 @@ parent (Path filePath) = fromFilePath (FilePath.dropFileName filePath)
 resolve :: Path Relative t -> IO (Path Resolved t)
 resolve path = do
   currentWorkingDirectory <- getCurrentWorkingDirectory
-  return $ currentWorkingDirectory </> path
+  pure $ currentWorkingDirectory </> path
 
 getCurrentWorkingDirectory :: IO (Path Resolved Dir)
 getCurrentWorkingDirectory = Path <$> Directory.getCurrentDirectory

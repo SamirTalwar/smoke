@@ -4,4 +4,4 @@ module Test.Smoke.App.Shell
 where
 
 isTTY :: IO Bool
-isTTY = return False
+isTTY = pure False

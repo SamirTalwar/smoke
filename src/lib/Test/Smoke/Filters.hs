@@ -19,7 +19,7 @@ applyFilters fallbackShell (Filter command) value = do
         tryIOError $
           runExecutable executable mempty (StdIn (serializeFixture value)) Nothing
   case exitCode of
-    ExitSuccess -> return $ deserializeFixture processStdOut
+    ExitSuccess -> pure $ deserializeFixture processStdOut
     ExitFailure code ->
       throwE $
         FilterExecutionFailed

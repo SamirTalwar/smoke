@@ -39,8 +39,8 @@ render command@(executable :| args) left right =
           (args ++ [leftFilePath, rightFilePath])
           ""
       case exitCode of
-        ExitSuccess -> return stdout
-        ExitFailure 1 -> return stdout
+        ExitSuccess -> pure stdout
+        ExitFailure 1 -> pure stdout
         ExitFailure code ->
           throwIO $
             userError $

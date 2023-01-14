@@ -27,7 +27,7 @@ type Execution = ExceptT SmokeExecutionError IO
 runTest :: Path Resolved Dir -> TestPlan -> IO ExecutionResult
 runTest location testPlan =
   if testIgnored (planTest testPlan)
-    then return ExecutionIgnored
+    then pure ExecutionIgnored
     else either ExecutionFailed ExecutionSucceeded <$> runExceptT (executeTest location testPlan)
 
 executeTest :: Path Resolved Dir -> TestPlan -> Execution ActualOutputs
@@ -43,7 +43,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
       tryIO (CouldNotExecuteCommand executable) $
         runExecutable executable args processStdIn (Just workingDirectory)
     actualFiles <- Map.fromList <$> mapM (liftIO . readTestFile) (Map.keys files)
-    return $ ActualOutputs (convertExitCode exitCode) (StdOut processStdOut) (StdErr processStdErr) actualFiles
+    pure $ ActualOutputs (convertExitCode exitCode) (StdOut processStdOut) (StdErr processStdErr) actualFiles
   where
     readTestFile :: Path Relative File -> IO (Path Resolved File, ActualFile)
     readTestFile path = do
@@ -53,7 +53,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
           (ActualFileError . CouldNotReadFile path)
           (ActualFileContents . TestFileContents)
           <$> tryIOError (readFromPath absolutePath)
-      return (absolutePath, contents)
+      pure (absolutePath, contents)
 
 revertingDirectories :: Vector (Path Resolved Dir) -> Execution a -> Execution a
 revertingDirectories paths execution =
@@ -71,7 +71,7 @@ revertingDirectory path execution = do
       removeDirectoryRecursive filePath
       createDirectory path
       Tar.extract filePath tarFile
-    return result
+    pure result
 
 tryIO :: (IOError -> SmokeExecutionError) -> IO a -> Execution a
 tryIO handleIOError = withExceptT handleIOError . ExceptT . tryIOError

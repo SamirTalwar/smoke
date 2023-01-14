@@ -34,10 +34,17 @@ jobs:
       - name: Install dependencies
         run: make deps
       - name: Build
-        run: make build
+        run: make ./out/build/debug/smoke
+      - name: Upload Smoke
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-${{ matrix.os }}
+          path: out/build/debug/smoke
+      - name: Run unit tests
+        run: make unit-test
 
-  test-unix:
-    name: Build and Test
+  spec-unix:
+    name: Spec
     needs: build-unix
     strategy:
       fail-fast: false
@@ -49,22 +56,14 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Set up Haskell
-        id: haskell-setup
-        uses: haskell/actions/setup@v2
+      - name: Download Smoke
+        uses: actions/download-artifact@v3
         with:
-          ghc-version: ${{ env.GHC_VERSION }}
-          enable-stack: true
-          stack-no-global: true
-      - name: Cache the Stack directory
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.haskell-setup.outputs.stack-root }}
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
-      - name: Install dependencies
-        run: make deps
-      - name: Test
-        run: make test
+          name: smoke-${{ matrix.os }}
+      - name: Make Smoke executable
+        run: chmod +x smoke
+      - name: Spec
+        run: ./smoke --command=./smoke spec
 
   text-nix:
     name: Build and Test with Nix

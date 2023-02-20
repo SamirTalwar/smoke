@@ -50,7 +50,7 @@ jobs:
           path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install dependencies
-        run: make smoke.cabal
+        run: make deps
       - name: Build for release
         run: make out/build/release/smoke
       - id: asset

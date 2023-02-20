@@ -34,14 +34,20 @@
                     # see https://gitlab.haskell.org/ghc/ghc/-/issues/22425
                     ListLike = super.haskell.lib.dontCheck hsuper.ListLike;
 
-                    # On aarch64-darwin, this creates a cycle.
-                    # see https://github.com/NixOS/nixpkgs/issues/140774
-                    ormolu = super.haskell.lib.overrideCabal hsuper.ormolu (drv: { enableSeparateBinOutput = false; });
-
                     # Override tar with the patched version; see stack.yaml for details.
                     # The tests don't work.
                     tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { };
-                  };
+                  } // (if super.stdenv.targetPlatform.isDarwin
+                  then
+                  # macOS-specific overrides:
+                    {
+                      # On aarch64-darwin, this creates a cycle.
+                      # see https://github.com/NixOS/nixpkgs/issues/140774
+                      ormolu = super.haskell.lib.overrideCabal hsuper.ormolu (drv: { enableSeparateBinOutput = false; });
+                    }
+                  else
+                  # We don't need to override anything on Linux:
+                    { });
                 };
               };
             };
@@ -93,17 +99,23 @@
           # Haskell development
           hsPkgs.haskell-language-server
           hsPkgs.hlint
+          hsPkgs.hpack
           hsPkgs.hspec-discover
           hsPkgs.ormolu
           stack
 
-          # ICU
-          icu
-          pkg-config
-
           # testing
           git
           ruby
+        ];
+        STACK_IN_NIX_SHELL = true;
+      };
+
+      devShells.lint = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          hsPkgs.hlint
+          hsPkgs.hpack
+          hsPkgs.ormolu
         ];
         STACK_IN_NIX_SHELL = true;
       };

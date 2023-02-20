@@ -75,7 +75,7 @@ bless: build
 	$(BIN_DEBUG) --command=$(BIN_DEBUG) --bless spec
 
 .PHONY: lint
-lint: $(NIX_FILES) $(SRC)
+lint: $(NIX_FILES) smoke.cabal $(SRC)
 	@ echo >&2 '> hlint'
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
@@ -92,8 +92,12 @@ reformat: $(NIX_FILES) $(SRC)
 	ormolu --mode=inplace $(SRC)
 	nix fmt -- $(NIX_FILES)
 
-smoke.cabal: $(CONF)
+.PHONY: deps
+deps: $(CONF)
 	$(STACK) install --fast --only-dependencies --test --no-run-tests
+
+smoke.cabal: $(CONF)
+	hpack
 	touch $@
 
 .PHONY: update-resolver

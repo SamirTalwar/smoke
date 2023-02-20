@@ -26,7 +26,7 @@ class FromFixture a where
   serializeFixture :: a -> Text
 
 parseFixtureJSON :: ToFixture a => String -> Value -> Parser a
-parseFixtureJSON name = withText name (pure . deserializeFixture)
+parseFixtureJSON name = withText name (return . deserializeFixture)
 
 instance ToFixture Text where
   deserializeFixture = id

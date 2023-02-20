@@ -34,14 +34,20 @@
                     # see https://gitlab.haskell.org/ghc/ghc/-/issues/22425
                     ListLike = super.haskell.lib.dontCheck hsuper.ListLike;
 
-                    # On aarch64-darwin, this creates a cycle.
-                    # see https://github.com/NixOS/nixpkgs/issues/140774
-                    ormolu = super.haskell.lib.overrideCabal hsuper.ormolu (drv: { enableSeparateBinOutput = false; });
-
                     # Override tar with the patched version; see stack.yaml for details.
                     # The tests don't work.
                     tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { };
-                  };
+                  } // (if super.stdenv.targetPlatform.isDarwin
+                  then
+                  # macOS-specific overrides:
+                    {
+                      # On aarch64-darwin, this creates a cycle.
+                      # see https://github.com/NixOS/nixpkgs/issues/140774
+                      ormolu = super.haskell.lib.overrideCabal hsuper.ormolu (drv: { enableSeparateBinOutput = false; });
+                    }
+                  else
+                  # We don't need to override anything on Linux:
+                    { });
                 };
               };
             };

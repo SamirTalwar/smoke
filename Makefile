@@ -92,6 +92,10 @@ reformat: $(NIX_FILES) $(SRC)
 	ormolu --mode=inplace $(SRC)
 	nix fmt -- $(NIX_FILES)
 
+.PHONY: deps
+deps: $(CONF)
+	$(STACK) install --fast --only-dependencies --test --no-run-tests
+
 smoke.cabal: $(CONF)
 	hpack
 	touch $@

@@ -311,6 +311,18 @@ In order to run tests against an application, you simply invoke Smoke with the d
 smoke test
 ```
 
+You can provide individual file names instead:
+
+```sh
+smoke test/one.yaml test/two.yaml
+```
+
+If you want to run all tests matching a pattern, you can use `find` to find the files, and then pass them to Smoke (type `man find` for help):
+
+```sh
+smoke $(find test -name '*.smoke.yaml')
+```
+
 Tests can also be passed on an individual basis:
 
 ```sh

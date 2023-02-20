@@ -97,10 +97,6 @@
           hsPkgs.ormolu
           stack
 
-          # ICU
-          icu
-          pkg-config
-
           # testing
           git
           ruby

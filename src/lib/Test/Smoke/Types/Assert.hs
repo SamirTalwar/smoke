@@ -9,12 +9,10 @@ import Data.Vector (Vector)
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Filters
-import Test.Smoke.Types.Pattern
 
 data Assert a where
   AssertEquals :: Eq a => a -> Assert a
   AssertContains :: FromFixture a => Text -> Assert a
-  AssertMatches :: FromFixture a => Pattern -> Assert a
   AssertFiltered :: (FromFixture a, ToFixture a) => Filter -> Assert a -> Assert a
   AssertFileError :: SmokeFileError -> Assert a
 
@@ -30,7 +28,6 @@ newtype Actual a = Actual a
 data AssertionFailure a
   = AssertionFailureDiff (Expected a) (Actual a)
   | AssertionFailureContains (Expected Text) (Actual a)
-  | AssertionFailureMatches (Expected Pattern) (Actual a)
   | AssertionFailureExpectedFileError SmokeFileError (Actual a)
   | AssertionFailureActualFileError SmokeFileError
   deriving (Functor)

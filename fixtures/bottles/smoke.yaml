@@ -75,21 +75,3 @@ tests:
       contents:
         contains: |
           9 bottles of beer on the wall, 9 bottles of beer.
-
-  - name: "10-matches"
-    args:
-      - "10"
-    stdout:
-      matches: 5 bottles .* 5 bottles
-
-  - name: "10000-matches"
-    args:
-      - "10000"
-    stdout:
-      matches: 6543 bottles .* 6543 bottles
-
-  - name: "10-does-not-match-multiple-lines"
-    args:
-      - "10"
-    stdout:
-      matches: 4 bottles .* 2 bottles

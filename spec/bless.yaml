@@ -1,21 +1,11 @@
 tests:
-  - name: encrypter-simple
+  - name: encrypter
     args:
       - --bless
-      - fixtures/encrypter/simple.yaml
+      - fixtures/encrypter
     exit-status: 0
     stdout:
-      file: io/encrypter-simple-bless-success.out
-    revert:
-      - ../fixtures/encrypter
-
-  - name: encrypter-regex
-    args:
-      - --bless
-      - fixtures/encrypter/regex.yaml
-    exit-status: 1
-    stdout:
-      file: io/encrypter-regex-bless-failure.out
+      file: io/encrypter-bless-success.out
     revert:
       - ../fixtures/encrypter
 

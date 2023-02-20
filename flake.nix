@@ -103,5 +103,13 @@
         ];
         STACK_IN_NIX_SHELL = true;
       };
+
+      devShells.lint = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          hsPkgs.hlint
+          hsPkgs.ormolu
+        ];
+        STACK_IN_NIX_SHELL = true;
+      };
     });
 }

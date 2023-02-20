@@ -127,4 +127,4 @@ jobs:
         with:
           name: samirtalwar
       - name: Lint
-        run: nix develop --command make lint
+        run: nix develop .#lint --command make lint

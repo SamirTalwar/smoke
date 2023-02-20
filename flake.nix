@@ -99,6 +99,7 @@
           # Haskell development
           hsPkgs.haskell-language-server
           hsPkgs.hlint
+          hsPkgs.hpack
           hsPkgs.hspec-discover
           hsPkgs.ormolu
           stack
@@ -113,6 +114,7 @@
       devShells.lint = pkgs.mkShell {
         buildInputs = with pkgs; [
           hsPkgs.hlint
+          hsPkgs.hpack
           hsPkgs.ormolu
         ];
         STACK_IN_NIX_SHELL = true;

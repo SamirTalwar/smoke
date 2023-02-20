@@ -89,7 +89,6 @@ printFailureName (LongName name) _ = do
 failureIsInline :: AssertionFailure a -> Bool
 failureIsInline AssertionFailureDiff {} = True
 failureIsInline AssertionFailureContains {} = False
-failureIsInline AssertionFailureMatches {} = False
 failureIsInline AssertionFailureExpectedFileError {} = True
 failureIsInline AssertionFailureActualFileError {} = True
 
@@ -100,12 +99,6 @@ printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do
   putPlainLn ""
   putRedLn "    expected to contain:"
   putRedLn $ indentedAll nestedOutputIndentation expected
-  putRed "    actual: "
-  putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
-printFailure (AssertionFailureMatches (Expected expected) (Actual actual)) = do
-  putPlainLn ""
-  putRedLn "    expected to match:"
-  putRedLn $ indentedAll nestedOutputIndentation (serializeFixture expected)
   putRed "    actual: "
   putRedLn $ indented nestedOutputIndentation (serializeFixture actual)
 printFailure (AssertionFailureExpectedFileError fileError (Actual actual)) = do

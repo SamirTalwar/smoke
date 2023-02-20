@@ -68,12 +68,6 @@ printTestError (BlessError (CouldNotBlessWithMultipleValues (FixtureName fixture
     "There are multiple expected "
       <> quoteString fixtureName'
       <> " values, so the result cannot be blessed.\n"
-printTestError (BlessError (CouldNotBlessMatchesAssertion (FixtureName fixtureName') propertyValue)) =
-  printError $
-    "The fixture "
-      <> quoteString fixtureName'
-      <> " is matching a pattern, so the result cannot be blessed.\nActual value:\n"
-      <> indentedAll messageIndentation propertyValue
 printTestError (BlessError (CouldNotBlessContainsAssertion (FixtureName fixtureName') propertyValue)) =
   printError $
     "The fixture "

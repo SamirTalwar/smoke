@@ -120,8 +120,6 @@ tests:
         -2
 ```
 
-### Matchers
-
 We don't always want to check the full output; sometimes checking that it contains a given substring is more useful. We can use the `contains:` operator to specify this:
 
 ```yaml
@@ -135,34 +133,6 @@ tests:
 ```
 
 Note that we don't use `|` here, as we don't want to capture the trailing newline, which would make this test fail. Instead we use quotes around the value to ensure that the YAML parser treats it as a string, not a number.
-
-Or we can use a regular expression with the `matches:` operator:
-
-```yaml
-tests:
-  - name: lorem ipsum
-    stdout:
-      matches: |-
-        ^Lorem ipsum .* dolore magna aliqua\.$
-```
-
-Here we're using `|-` to similar effect; the `-` means "don't add a trailing newline". Unlike quotes, it doesn't interpret escape sequences (such as `\n`), so we can use `\` without trouble.
-
-You may want to provide options to the regular expression. The currently-supported options are `case-insensitive` (`i`), `comments` (`x`), and `dot-all` (`s`). You can add them as follows:
-
-```yaml
-tests:
-  - name: lorem ipsum
-    stdout:
-      matches:
-        regex: |-
-          Lorem ipsum .* fugiat nulla pariatur\.
-        options:
-          - case-insensitive
-          - dot-all
-```
-
-The variant of regular expressions supported is from the ICU library; see [the ICU documentation on Regular Expressions](https://unicode-org.github.io/icu/userguide/strings/regexp.html) for syntax and functionality, including how the options work.
 
 You can also use `equals:` to explicitly specify that we're checking equality, though this is the default.
 

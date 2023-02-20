@@ -10,7 +10,6 @@ import qualified Data.Vector as Vector
 import Test.Smoke.Filters
 import Test.Smoke.Paths
 import Test.Smoke.Types
-import qualified Test.Smoke.Types.Pattern as Pattern
 
 type Asserting = ExceptT SmokeAssertionError IO
 
@@ -50,11 +49,6 @@ processOutputs location (TestPlan _ _ fallbackShell _ _ _ expectedStatus expecte
         if Text.isInfixOf expected (serializeFixture actual)
           then Nothing
           else Just $ AssertionFailureContains (Expected expected) (Actual actual)
-    assert (AssertMatches expected) actual =
-      pure $
-        if Pattern.matches expected (serializeFixture actual)
-          then Nothing
-          else Just $ AssertionFailureMatches (Expected expected) (Actual actual)
     assert (AssertFiltered fixtureFilter expected) actual = do
       filteredActual <- withExceptT AssertionFilterError $ applyFilters fallbackShell fixtureFilter actual
       assert expected filteredActual

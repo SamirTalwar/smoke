@@ -65,7 +65,7 @@ jobs:
       - name: Spec
         run: ./smoke --command=./smoke spec
 
-  text-nix:
+  build-test-nix:
     name: Build and Test with Nix
     runs-on: ubuntu-20.04
     steps:

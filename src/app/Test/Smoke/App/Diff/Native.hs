@@ -21,11 +21,11 @@ name :: String
 name = "native"
 
 enabled :: IO Bool
-enabled = return True
+enabled = pure True
 
 render :: PrintDiff
 render _ left right =
-  return $
+  pure $
     mconcat $
       map prettyPrintOperation $
         diffToLineRanges $

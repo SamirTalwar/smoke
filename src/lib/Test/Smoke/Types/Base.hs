@@ -69,7 +69,7 @@ instance FromJSON CommandLine where
     withArray "command line" $ \v -> do
       line <- mapM parseJSON v
       when (Vector.null line) $ fail "empty command line"
-      return $
+      pure $
         CommandLine (parseFile (Vector.head line)) (Args (Vector.tail line))
 
 data Command
@@ -79,7 +79,7 @@ data Command
 
 instance FromJSON Command where
   parseJSON (Object v) = CommandScript <$> v .:? "shell" <*> v .: "script"
-  parseJSON (String script) = return $ CommandScript Nothing (Script script)
+  parseJSON (String script) = pure $ CommandScript Nothing (Script script)
   parseJSON args@(Array _) = CommandArgs <$> parseJSON args
   parseJSON invalid = typeMismatch "command" invalid
 

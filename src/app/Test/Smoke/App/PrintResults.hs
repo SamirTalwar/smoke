@@ -53,7 +53,7 @@ printFailingFilesOutput ::
   Map (Path Relative File) (AssertionResult TestFileContents) -> Output ()
 printFailingFilesOutput fileResults =
   if all isSuccess (Map.elems fileResults)
-    then return ()
+    then pure ()
     else do
       putRedLn "  files:"
       forM_ (Map.assocs fileResults) $ uncurry printFailingFileOutput
@@ -63,7 +63,7 @@ printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
 printFailures :: FromFixture a => PartName -> AssertionResult a -> Output ()
 printFailures _ AssertionSuccess =
-  return ()
+  pure ()
 printFailures name (AssertionFailure (SingleAssertionFailure failure)) = do
   printFailureName name (failureIsInline failure)
   printFailure failure

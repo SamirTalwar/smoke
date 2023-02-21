@@ -10,4 +10,4 @@ defaultShellScriptName = "smoke.sh"
 defaultShell :: ExceptT PathError IO Shell
 defaultShell = do
   sh <- findExecutable $ parseFile "sh"
-  return $ Shell sh mempty
+  pure $ Shell sh mempty

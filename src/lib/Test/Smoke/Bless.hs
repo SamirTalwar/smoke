@@ -43,15 +43,15 @@ blessFinishedTest location testPlan@(TestPlan {planTest = test}) result@(Finishe
   where
     writeFixture :: Maybe (Path Relative File, Text) -> (AssertionResult a -> FinishedTest -> FinishedTest) -> FinishedTest -> IO FinishedTest
     writeFixture Nothing _ before =
-      return before
+      pure before
     writeFixture (Just (path, text)) makeAfter before = do
       createParent (location </> path)
       writeToPath (location </> path) text
-      return $ makeAfter AssertionSuccess before
+      pure $ makeAfter AssertionSuccess before
 
 serialize :: forall a. FromFixture a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
 serialize _ AssertionSuccess =
-  return Nothing
+  pure Nothing
 serialize outputs (AssertionFailure result) =
   case Vector.length outputs of
     1 ->
@@ -63,17 +63,17 @@ serialize outputs (AssertionFailure result) =
 
 serializeFailure :: forall a. FromFixture a => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
 serializeFailure (TestOutputFromFile _ path) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
-  return $ Just (path, serializeFixture actual)
+  pure $ Just (path, serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureContains _ (Actual actual))) =
   throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
 serializeFailure (TestOutputFromFile _ path) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
-  return $ Just (path, serializeFixture actual)
+  pure $ Just (path, serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureActualFileError _)) =
-  return Nothing
+  pure Nothing
 serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 

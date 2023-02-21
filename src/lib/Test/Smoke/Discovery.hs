@@ -42,16 +42,16 @@ discoverTestsInLocations locations = do
       DirectoryRoot path -> do
         specificationFiles <- liftIO $ findFilesInPath yamlFiles path
         mapM discoverTestsInSpecificationFile specificationFiles
-      FileRoot path -> return <$> discoverTestsInSpecificationFile path
-      SingleRoot path selectedTestName -> return <$> discoverSingleTest path selectedTestName
-  return $ List.sortOn suiteMetaName $ concat testsBySuite
+      FileRoot path -> pure <$> discoverTestsInSpecificationFile path
+      SingleRoot path selectedTestName -> pure <$> discoverSingleTest path selectedTestName
+  pure $ List.sortOn suiteMetaName $ concat testsBySuite
 
 discoverTestsInSpecificationFile :: Path Relative File -> Discovery SuiteWithMetadata
 discoverTestsInSpecificationFile path = do
   let (directory, suiteName) = splitSuitePath path
   location <- liftIO $ resolve directory
   suite <- decodeSpecificationFile path
-  return $ SuiteWithMetadata suiteName location suite
+  pure $ SuiteWithMetadata suiteName location suite
 
 discoverSingleTest :: Path Relative File -> TestName -> Discovery SuiteWithMetadata
 discoverSingleTest path selectedTestName = do
@@ -60,7 +60,7 @@ discoverSingleTest path selectedTestName = do
     onNothingThrow (NoSuchTest path selectedTestName) $
       List.find ((== selectedTestName) . testName) (suiteTests fullSuite)
   let suite = fullSuite {suiteTests = [selectedTest]}
-  return $ SuiteWithMetadata suiteName location suite
+  pure $ SuiteWithMetadata suiteName location suite
 
 splitSuitePath :: Path Relative File -> (Path Relative Dir, SuiteName)
 splitSuitePath path =
@@ -99,11 +99,11 @@ parseRoot location = do
           then Just $ parseFile path
           else Nothing
   case (parsedDir, parsedFile, selectedTestName) of
-    (Just dir, Nothing, Nothing) -> return $ DirectoryRoot dir
+    (Just dir, Nothing, Nothing) -> pure $ DirectoryRoot dir
     (Just dir, Nothing, Just selected) ->
       throwE $ CannotSelectTestInDirectory dir selected
-    (Nothing, Just file, Nothing) -> return $ FileRoot file
-    (Nothing, Just file, Just selected) -> return $ SingleRoot file selected
+    (Nothing, Just file, Nothing) -> pure $ FileRoot file
+    (Nothing, Just file, Just selected) -> pure $ SingleRoot file selected
     (_, _, _) -> throwE $ NoSuchLocation path
 
 strip :: String -> String

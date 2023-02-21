@@ -12,4 +12,4 @@ defaultShell :: ExceptT PathError IO Shell
 defaultShell = do
   cmd <- findExecutable $ parseFile "cmd"
   let args = Args (Vector.fromList ["/q", "/c"])
-  return $ Shell cmd args
+  pure $ Shell cmd args

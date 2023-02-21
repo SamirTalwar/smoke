@@ -31,7 +31,7 @@ planTests (TestSpecification specificationCommand suites) = do
         runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
       case shell of
         Left exception ->
-          return $ SuitePlanError suiteName $ SuitePathError exception
+          pure $ SuitePlanError suiteName $ SuitePathError exception
         Right fallbackShell -> do
           let fallbackWorkingDirectory = determineWorkingDirectory location thisSuiteWorkingDirectory currentWorkingDirectory
           testPlans <-
@@ -47,8 +47,8 @@ planTests (TestSpecification specificationCommand suites) = do
                         fallbackCommand
                         test
                   )
-          return $ SuitePlan suiteName location testPlans
-  return $ Plan suitePlans
+          pure $ SuitePlan suiteName location testPlans
+  pure $ Plan suitePlans
 
 validateTest :: Maybe Command -> Test -> Planning ()
 validateTest fallbackCommand test = do
@@ -67,7 +67,7 @@ readTest ::
 readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
   let workingDirectory = determineWorkingDirectory location (testWorkingDirectory test) fallbackWorkingDirectory
   command <-
-    maybe (throwE NoCommand) return (testCommand test <|> fallbackCommand)
+    maybe (throwE NoCommand) pure (testCommand test <|> fallbackCommand)
   executable <-
     withExceptT PlanningPathError $
       convertCommandToExecutable fallbackShell command
@@ -78,7 +78,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
   stdErr <- readStdErr location test
   files <- readFiles location test
   let revert = Vector.map (location </>) (testRevert test)
-  return $
+  pure $
     TestPlan
       { planTest = test,
         planWorkingDirectory = workingDirectory,

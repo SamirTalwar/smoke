@@ -44,17 +44,17 @@ convertCommandToExecutable ::
   Maybe Shell -> Command -> ExceptT PathError IO Executable
 convertCommandToExecutable _ (CommandArgs (CommandLine executableName commandArgs)) = do
   executablePath <- findExecutable executableName
-  return $ ExecutableProgram executablePath commandArgs
+  pure $ ExecutableProgram executablePath commandArgs
 convertCommandToExecutable Nothing (CommandScript Nothing script) = do
   shell <- defaultShell
-  return $ ExecutableScript shell script
+  pure $ ExecutableScript shell script
 convertCommandToExecutable (Just shell) (CommandScript Nothing script) =
-  return $ ExecutableScript shell script
+  pure $ ExecutableScript shell script
 convertCommandToExecutable _ (CommandScript (Just commandLine) script) = do
   shell <- shellFromCommandLine commandLine
-  return $ ExecutableScript shell script
+  pure $ ExecutableScript shell script
 
 shellFromCommandLine :: CommandLine -> ExceptT PathError IO Shell
 shellFromCommandLine (CommandLine shellName shellArgs) = do
   shellCommand <- findExecutable shellName
-  return $ Shell shellCommand shellArgs
+  pure $ Shell shellCommand shellArgs

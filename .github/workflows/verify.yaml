@@ -34,10 +34,17 @@ jobs:
       - name: Install dependencies
         run: make deps
       - name: Build
-        run: make build
+        run: make ./out/build/debug/smoke
+      - name: Upload Smoke
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-${{ matrix.os }}
+          path: out/build/debug/smoke
+      - name: Run unit tests
+        run: make unit-test
 
-  test-unix:
-    name: Build and Test
+  spec-unix:
+    name: Spec
     needs: build-unix
     strategy:
       fail-fast: false
@@ -49,24 +56,16 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
-      - name: Set up Haskell
-        id: haskell-setup
-        uses: haskell/actions/setup@v2
+      - name: Download Smoke
+        uses: actions/download-artifact@v3
         with:
-          ghc-version: ${{ env.GHC_VERSION }}
-          enable-stack: true
-          stack-no-global: true
-      - name: Cache the Stack directory
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.haskell-setup.outputs.stack-root }}
-          key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
-      - name: Install dependencies
-        run: make deps
-      - name: Test
-        run: make test
+          name: smoke-${{ matrix.os }}
+      - name: Make Smoke executable
+        run: chmod +x smoke
+      - name: Spec
+        run: ./smoke --command=./smoke spec
 
-  text-nix:
+  build-test-nix:
     name: Build and Test with Nix
     runs-on: ubuntu-20.04
     steps:
@@ -83,8 +82,8 @@ jobs:
       - name: Spec
         run: ./out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec
 
-  test-windows:
-    name: Build and Test (windows-latest)
+  build-windows:
+    name: Build (windows-latest)
     runs-on: windows-latest
     steps:
       - name: Check out
@@ -108,10 +107,27 @@ jobs:
           stack --no-terminal exec -- pacman --noconfirm -Syuu
       - name: Build
         run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
-      - name: Test
+      - name: Upload Smoke
+        uses: actions/upload-artifact@v3
+        with:
+          name: smoke-windows-latest
+          path: 'out\build\debug\smoke.exe'
+      - name: Run unit tests
         run: "stack --no-terminal test"
+
+  spec-windows:
+    name: Spec (windows-latest)
+    needs: build-windows
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+      - name: Download Smoke
+        uses: actions/download-artifact@v3
+        with:
+          name: smoke-windows-latest
       - name: Spec
-        run: 'stack --no-terminal exec -- .\out\build\debug\smoke.exe --command=.\out\build\debug\smoke.exe spec'
+        run: '.\smoke.exe --command=.\smoke.exe spec'
 
   lint:
     name: Lint

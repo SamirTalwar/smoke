@@ -33,16 +33,16 @@ jobs:
           path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Install dependencies
-        run: make deps
+        run: stack --no-terminal install --only-dependencies --test --no-run-tests
       - name: Build
-        run: make ./out/build/debug/smoke
+        run: stack --no-terminal install --test --no-run-tests --local-bin-path=./out/build/release
       - name: Upload Smoke
         uses: actions/upload-artifact@v3
         with:
           name: smoke-${{ matrix.os }}
-          path: out/build/debug/smoke
+          path: out/build/release/smoke
       - name: Run unit tests
-        run: make unit-test
+        run: stack --no-terminal test
 
   spec-unix:
     name: Spec
@@ -79,7 +79,7 @@ jobs:
         with:
           name: samirtalwar
       - name: Build and Test
-        run: make out/build/nix/bin/smoke
+        run: nix build --out-link ./out/build/nix
       - name: Spec
         run: ./out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec
 
@@ -107,12 +107,12 @@ jobs:
           stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring
           stack --no-terminal exec -- pacman --noconfirm -Syuu
       - name: Build
-        run: 'stack --no-terminal install --fast --test --no-run-tests --local-bin-path=.\out\build\debug'
+        run: 'stack --no-terminal install --test --no-run-tests --local-bin-path=.\out\build\release'
       - name: Upload Smoke
         uses: actions/upload-artifact@v3
         with:
           name: smoke-windows-latest
-          path: 'out\build\debug\smoke.exe'
+          path: 'out\build\release\smoke.exe'
       - name: Run unit tests
         run: "stack --no-terminal test"
 

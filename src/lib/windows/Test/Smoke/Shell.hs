@@ -1,7 +1,7 @@
 module Test.Smoke.Shell where
 
 import Control.Monad.Trans.Except (ExceptT)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types
 

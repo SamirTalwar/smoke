@@ -3,10 +3,10 @@ module Test.Smoke.Assert (assertResult) where
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, withExceptT)
 import Data.Default
 import Data.Map.Strict ((!))
-import qualified Data.Map.Strict as Map
-import qualified Data.Text as Text
+import Data.Map.Strict qualified as Map
+import Data.Text qualified as Text
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Test.Smoke.Filters
 import Test.Smoke.Paths
 import Test.Smoke.Types

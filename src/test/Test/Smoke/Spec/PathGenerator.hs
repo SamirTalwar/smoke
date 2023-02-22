@@ -7,11 +7,11 @@ module Test.Smoke.Spec.PathGenerator
   )
 where
 
-import qualified Data.List as List
+import Data.List qualified as List
 import Hedgehog
-import qualified Hedgehog.Gen as Gen
-import qualified Hedgehog.Range as Range
-import qualified System.FilePath as FilePath
+import Hedgehog.Gen qualified as Gen
+import Hedgehog.Range qualified as Range
+import System.FilePath qualified as FilePath
 import Test.Smoke.Paths
 import Test.Smoke.Spec.RootDirectory
 

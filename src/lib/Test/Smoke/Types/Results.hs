@@ -3,7 +3,7 @@
 module Test.Smoke.Types.Results where
 
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Test.Smoke.Paths
 import Test.Smoke.Types.Assert
 import Test.Smoke.Types.Base

@@ -10,9 +10,9 @@ where
 
 import Control.Monad (filterM)
 import Data.List (find)
-import qualified Test.Smoke.App.Diff.DiffUtility as DiffUtility
-import qualified Test.Smoke.App.Diff.GitDiff as GitDiff
-import qualified Test.Smoke.App.Diff.Native as Native
+import Test.Smoke.App.Diff.DiffUtility qualified as DiffUtility
+import Test.Smoke.App.Diff.GitDiff qualified as GitDiff
+import Test.Smoke.App.Diff.Native qualified as Native
 import Test.Smoke.App.Diff.Types
 
 type Engine = DiffEngine

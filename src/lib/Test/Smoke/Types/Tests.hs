@@ -5,9 +5,9 @@ module Test.Smoke.Types.Tests where
 import Data.Aeson
 import Data.Default (def)
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Values

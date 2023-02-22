@@ -13,9 +13,10 @@ synopsis: An integration test framework for console applications.
 category: Testing
 description: Please see README.md
 
+language: GHC2021
+
 default-extensions:
   - DataKinds
-  - ScopedTypeVariables
 
 dependencies:
   - base >= 4.16 && < 5

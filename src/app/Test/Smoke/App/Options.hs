@@ -7,7 +7,7 @@ where
 
 import Data.List (intercalate)
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Options.Applicative
 import Test.Smoke
   ( Args (..),
@@ -16,9 +16,9 @@ import Test.Smoke
     Mode (..),
     Options (..),
   )
-import qualified Test.Smoke.App.Diff as Diff
+import Test.Smoke.App.Diff qualified as Diff
 import Test.Smoke.App.OptionTypes
-import qualified Test.Smoke.App.Shell as Shell
+import Test.Smoke.App.Shell qualified as Shell
 import Test.Smoke.Paths (parseFile)
 
 type IsTTY = Bool

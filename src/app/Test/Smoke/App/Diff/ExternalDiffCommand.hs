@@ -9,10 +9,10 @@ where
 
 import Control.Exception (throwIO)
 import Data.List.NonEmpty (NonEmpty ((:|)))
-import qualified Data.List.NonEmpty as NonEmpty
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (isJust)
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text.IO
+import Data.Text qualified as Text
+import Data.Text.IO qualified as Text.IO
 import System.Directory (findExecutable)
 import System.Exit (ExitCode (..))
 import System.IO (hClose)

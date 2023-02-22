@@ -6,11 +6,11 @@ module Test.Smoke.App.Print where
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask)
-import qualified Data.Maybe as Maybe
+import Data.Maybe qualified as Maybe
 import Data.String (IsString (..))
 import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text.IO
+import Data.Text qualified as Text
+import Data.Text.IO qualified as Text.IO
 import System.Console.ANSI
 import System.IO (Handle, stderr, stdout)
 import Test.Smoke (Executable (..), Shell (..))

@@ -8,7 +8,7 @@ import Control.Exception (catch)
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
-import qualified Data.Set as Set
+import Data.Set qualified as Set
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.OptionTypes

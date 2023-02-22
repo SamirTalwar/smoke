@@ -26,6 +26,7 @@ jobs:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
           stack-no-global: true
+          stack-setup-ghc: true
       - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
@@ -94,13 +95,13 @@ jobs:
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           enable-stack: true
+          stack-no-global: true
+          stack-setup-ghc: true
       - name: Cache the Stack directory
         uses: actions/cache@v3
         with:
           path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-windows-latest-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
-      - name: Install Haskell
-        run: "stack --no-terminal setup"
       - name: Update MSYS2
         run: |
           stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring

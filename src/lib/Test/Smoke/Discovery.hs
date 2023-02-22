@@ -8,15 +8,15 @@ where
 import Control.Monad (forM, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), except, throwE, withExceptT)
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Internal as Aeson.Internal
-import qualified Data.List as List
-import qualified Data.Text as Text
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Internal qualified as Aeson.Internal
+import Data.List qualified as List
+import Data.Text qualified as Text
 import Data.Vector (Vector)
-import qualified Data.Yaml as Yaml
+import Data.Yaml qualified as Yaml
 import System.Directory (doesDirectoryExist, doesFileExist)
-import qualified System.FilePath as FilePath
-import qualified System.FilePath.Glob as Glob
+import System.FilePath qualified as FilePath
+import System.FilePath.Glob qualified as Glob
 import Test.Smoke.Errors
 import Test.Smoke.Paths
 import Test.Smoke.Types

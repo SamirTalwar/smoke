@@ -2,8 +2,8 @@ module Test.Smoke.Executable where
 
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Text (Text)
-import qualified Data.Text.IO as Text.IO
-import qualified Data.Vector as Vector
+import Data.Text.IO qualified as Text.IO
+import Data.Vector qualified as Vector
 import System.Exit (ExitCode)
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)

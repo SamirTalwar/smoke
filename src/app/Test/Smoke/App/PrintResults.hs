@@ -10,11 +10,11 @@ import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ask)
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.String (fromString)
 import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Vector as Vector
+import Data.Text qualified as Text
+import Data.Vector qualified as Vector
 import System.IO.Error (ioeGetErrorString)
 import Test.Smoke
 import Test.Smoke.App.Diff

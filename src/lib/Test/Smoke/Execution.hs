@@ -3,13 +3,13 @@ module Test.Smoke.Execution
   )
 where
 
-import qualified Codec.Archive.Tar as Tar
+import Codec.Archive.Tar qualified as Tar
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), runExceptT, throwE, withExceptT)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import System.Directory
   ( doesDirectoryExist,
     removeDirectoryRecursive,

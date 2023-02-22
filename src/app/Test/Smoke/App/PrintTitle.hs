@@ -4,8 +4,8 @@ module Test.Smoke.App.PrintTitle
 where
 
 import Control.Monad.IO.Class (liftIO)
-import qualified Data.List as List
-import qualified Data.Maybe as Maybe
+import Data.List qualified as List
+import Data.Maybe qualified as Maybe
 import Test.Smoke
 import Test.Smoke.App.OptionTypes
 import Test.Smoke.App.Print

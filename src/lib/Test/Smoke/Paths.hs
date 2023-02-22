@@ -34,11 +34,11 @@ import Control.Monad.Trans.Except (ExceptT, throwE)
 import Data.Aeson
 import Data.Kind
 import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.IO as Text.IO
-import qualified System.Directory as Directory
-import qualified System.FilePath as FilePath
-import qualified System.FilePath.Glob as Glob
+import Data.Text qualified as Text
+import Data.Text.IO qualified as Text.IO
+import System.Directory qualified as Directory
+import System.FilePath qualified as FilePath
+import System.FilePath.Glob qualified as Glob
 
 data PathFormat = Relative | Resolved
   deriving (Eq, Ord, Show)

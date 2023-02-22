@@ -6,7 +6,7 @@ where
 import Data.Algorithm.Diff (Diff, PolyDiff (..), getGroupedDiff)
 import Data.Algorithm.DiffOutput (DiffOperation (..))
 import Data.String (fromString)
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 import Test.Smoke.App.Diff.Types
 
 data LineRange

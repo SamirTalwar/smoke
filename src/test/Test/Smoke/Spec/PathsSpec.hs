@@ -2,8 +2,8 @@ module Test.Smoke.Spec.PathsSpec where
 
 import Control.Monad.IO.Class (liftIO)
 import Hedgehog
-import qualified Hedgehog.Range as Range
-import qualified System.Directory as Directory
+import Hedgehog.Range qualified as Range
+import System.Directory qualified as Directory
 import Test.Hspec
 import Test.Hspec.Hedgehog
 import Test.Smoke.Paths

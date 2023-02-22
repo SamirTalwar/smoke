@@ -10,9 +10,9 @@ import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Default
 import Data.String (IsString)
 import Data.Text (Text)
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Test.Smoke.Paths
 
 newtype FixtureName = FixtureName {unFixtureName :: String}

@@ -89,6 +89,11 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+      - name: Cache Stack
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Programs\stack
+          key: v1-windows-latest-stack-${{ hashFiles('stack.yaml') }}
       - name: Set up Haskell
         id: haskell-setup
         uses: haskell/actions/setup@v2
@@ -97,11 +102,11 @@ jobs:
           enable-stack: true
           stack-no-global: true
           stack-setup-ghc: true
-      - name: Cache the Stack directory
+      - name: Cache the Stack root
         uses: actions/cache@v3
         with:
           path: ${{ steps.haskell-setup.outputs.stack-root }}
-          key: v1-windows-latest-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
+          key: v1-windows-latest-stack-root-${{ hashFiles('stack.yaml', 'package.yaml') }}
       - name: Update MSYS2
         run: |
           stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring

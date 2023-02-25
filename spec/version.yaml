@@ -1,0 +1,7 @@
+tests:
+  - name: version
+    args:
+      - --version
+    exit-status: 0
+    stdout: |
+      Smoke v2.3.1

@@ -9,6 +9,8 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import Data.Set qualified as Set
+import Data.Version qualified
+import Paths_smoke qualified
 import System.Exit
 import Test.Smoke
 import Test.Smoke.App.OptionTypes
@@ -23,9 +25,13 @@ import Test.Smoke.Paths
 main :: IO ()
 main = do
   options <- parseOptions
-  run options `catch` \discoveryError -> do
-    withOptions options $ printDiscoveryError putError discoveryError
-    exitWith (ExitFailure 2)
+  case options of
+    ShowVersionText ->
+      putStrLn $ "Smoke v" <> Data.Version.showVersion Paths_smoke.version
+    InitAppOptions appOptions ->
+      run appOptions `catch` \discoveryError -> do
+        withOptions appOptions $ printDiscoveryError putError discoveryError
+        exitWith (ExitFailure 2)
 
 run :: AppOptions -> IO ()
 run options = do

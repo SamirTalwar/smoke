@@ -13,6 +13,7 @@ import Test.Smoke.App.OptionColorOutput
 data InitOptions
   = InitAppOptions AppOptions
   | ShowVersionText
+  | ShowVersionNumeric
 
 data AppOptions = AppOptions
   { optionsExecution :: Options,

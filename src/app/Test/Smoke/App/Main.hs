@@ -28,6 +28,8 @@ main = do
   case options of
     ShowVersionText ->
       putStrLn $ "Smoke v" <> Data.Version.showVersion Paths_smoke.version
+    ShowVersionNumeric ->
+      putStrLn $ Data.Version.showVersion Paths_smoke.version
     InitAppOptions appOptions ->
       run appOptions `catch` \discoveryError -> do
         withOptions appOptions $ printDiscoveryError putError discoveryError

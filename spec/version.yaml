@@ -5,3 +5,10 @@ tests:
     exit-status: 0
     stdout: |
       Smoke v2.3.1
+
+  - name: version-numeric
+    args:
+      - --version-numeric
+    exit-status: 0
+    stdout: |
+      2.3.1

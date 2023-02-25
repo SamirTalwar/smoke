@@ -40,7 +40,9 @@ options isTTY foundDiffEngine =
     )
 
 versionParser :: Parser InitOptions
-versionParser = flag' ShowVersionText (long "version" <> help "Show the version string" <> hidden)
+versionParser =
+  flag' ShowVersionText (long "version" <> help "Show the version string" <> hidden)
+    <|> flag' ShowVersionNumeric (long "version-numeric" <> help "Show the version number" <> hidden)
 
 optionParser :: IsTTY -> Diff.Engine -> Parser InitOptions
 optionParser isTTY foundDiffEngine = do

@@ -55,6 +55,17 @@ jobs:
         run: stack --no-terminal install --only-dependencies --test --no-run-tests
       - name: Build for release
         run: stack --no-terminal install --local-bin-path=./out/build/release
+      - name: Check version
+        run: |
+          TAG='${{ github.ref }}'
+          EXPECTED_VERSION_STRING="Smoke ${TAG##*/}"
+          ACTUAL_VERSION_STRING="$(./out/build/release/smoke --version)"
+          if [[ "$ACTUAL_VERSION_STRING" != "$EXPECTED_VERSION_STRING" ]]; then
+            echo "Invalid version!"
+            echo "Expected: ${EXPECTED_VERSION_STRING}"
+            echo "Actual:   ${ACTUAL_VERSION_STRING}"
+            exit 1
+          fi
       - id: asset
         name: Set the asset information
         run: |
@@ -102,6 +113,16 @@ jobs:
           stack --no-terminal exec -- pacman --noconfirm -Syuu
       - name: Build for release
         run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
+      - name: Check version
+        run: |
+          $ExpectedVersionString = '${{ github.ref }}' -replace '.+/', ''
+          $ActualVersionString = ./out/build/release/smoke --version
+          if ( $ActualVersionString -ne $ExpectedVersionString ) {
+            echo "Invalid version!"
+            echo "Expected: ${ExpectedVersionString}"
+            echo "Actual:   ${ActualVersionString}"
+            exit 1
+          }
       - id: asset
         name: Set the asset information
         run: |

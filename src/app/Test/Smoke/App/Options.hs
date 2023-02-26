@@ -23,38 +23,46 @@ import Test.Smoke.Paths (parseFile)
 
 type IsTTY = Bool
 
-parseOptions :: IO AppOptions
+parseOptions :: IO InitOptions
 parseOptions = do
   isTTY <- Shell.isTTY
   foundDiffEngine <- Diff.findEngine
   execParser (options isTTY foundDiffEngine)
 
-options :: IsTTY -> Diff.Engine -> ParserInfo AppOptions
+options :: IsTTY -> Diff.Engine -> ParserInfo InitOptions
 options isTTY foundDiffEngine =
   info
-    (optionParser isTTY foundDiffEngine <**> helper)
+    ( (optionParser isTTY foundDiffEngine <|> versionParser)
+        <**> helper
+    )
     ( fullDesc
         <> header "Smoke: a framework for testing most things from the very edges."
     )
 
-optionParser :: IsTTY -> Diff.Engine -> Parser AppOptions
+versionParser :: Parser InitOptions
+versionParser =
+  flag' ShowVersionText (long "version" <> help "Show the version string" <> hidden)
+    <|> flag' ShowVersionNumeric (long "version-numeric" <> help "Show the version number" <> hidden)
+
+optionParser :: IsTTY -> Diff.Engine -> Parser InitOptions
 optionParser isTTY foundDiffEngine = do
   executionCommand <- commandParser
   mode <- modeParser
   color <- colorParser isTTY
   diffEngine <- diffEngineParser foundDiffEngine
   testLocation <- testLocationParser
-  pure
-    AppOptions
-      { optionsExecution =
-          Options
-            { optionsCommand = executionCommand,
-              optionsTestLocations = testLocation
-            },
-        optionsColor = color,
-        optionsMode = mode,
-        optionsDiffEngine = diffEngine
-      }
+  pure $
+    InitAppOptions
+      AppOptions
+        { optionsExecution =
+            Options
+              { optionsCommand = executionCommand,
+                optionsTestLocations = testLocation
+              },
+          optionsColor = color,
+          optionsMode = mode,
+          optionsDiffEngine = diffEngine
+        }
 
 commandParser :: Parser (Maybe Command)
 commandParser = do

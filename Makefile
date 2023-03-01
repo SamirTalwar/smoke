@@ -101,18 +101,11 @@ smoke.cabal: $(CONF)
 	touch $@
 
 .PHONY: update-resolver
-update-resolver: update-resolver-in-stack.yaml update-ghc-version
+update-resolver: update-resolver-in-stack.yaml ghc.version
 
 .PHONY: update-resolver-in-stack.yaml
 update-resolver-in-stack.yaml:
 	sed -i -r "s/^(resolver:) .*/\1 $$(curl -fsSI 'https://www.stackage.org/lts' | grep '^location: ' | sed 's#^location: /##' | dos2unix)/" stack.yaml
-
-.PHONY: update-ghc-version
-update-ghc-version: ghc.version update-github-workflow-ghc-version
-
-.PHONY: update-github-workflow-ghc-version
-update-github-workflow-ghc-version:
-	sed -i -r "s/^  GHC_VERSION: \".*\"$$/  GHC_VERSION: \"$$(cat ghc.version)\"/" .github/workflows/*.yaml
 
 ghc.version: $(CONF)
 	curl -fsSL "https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/$$(yq -r '.resolver | gsub("[-\\.]"; "/")' stack.yaml).yaml" \

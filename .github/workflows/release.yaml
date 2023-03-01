@@ -115,8 +115,8 @@ jobs:
         run: 'stack --no-terminal install --local-bin-path=.\out\build\release'
       - name: Check version
         run: |
-          $ExpectedVersionString = '${{ github.ref }}' -replace '.+/', ''
-          $ActualVersionString = ./out/build/release/smoke --version
+          $ExpectedVersionString = 'Smoke ' + ('${{ github.ref }}' -replace '.+/', '')
+          $ActualVersionString = .\out\build\release\smoke.exe --version
           if ( $ActualVersionString -ne $ExpectedVersionString ) {
             echo "Invalid version!"
             echo "Expected: ${ExpectedVersionString}"

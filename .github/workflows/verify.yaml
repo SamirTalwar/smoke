@@ -73,7 +73,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Install Nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v20
       - name: Set up the Nix cache
         uses: cachix/cachix-action@v12
         with:
@@ -147,7 +147,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Install Nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v20
       - name: Set up the Nix cache
         uses: cachix/cachix-action@v12
         with:

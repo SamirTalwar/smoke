@@ -127,8 +127,8 @@ jobs:
         name: Set the asset information
         run: |
           $Tag = '${{ github.ref }}' -replace '.+/', ''
-          echo "asset_name=smoke-${Tag}-windows-x64.exe" >> "$GITHUB_OUTPUT"
-          echo "asset_path=out\build\release\smoke.exe" >> "$GITHUB_OUTPUT"
+          echo "asset_name=smoke-${Tag}-windows-x64.exe" >> "$Env:GITHUB_OUTPUT"
+          echo "asset_path=out\build\release\smoke.exe" >> "$Env:GITHUB_OUTPUT"
       - name: Upload the asset
         uses: actions/upload-release-asset@v1
         env:

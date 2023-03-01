@@ -5,7 +5,7 @@ on:
       - "v*"
 
 env:
-  GHC_VERSION: "9.2.5"
+  GHC_VERSION: "9.2.6"
 
 jobs:
   release:

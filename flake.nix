@@ -30,10 +30,6 @@
                 # haskell package set from the version of GHC specified by `./ghc.version`
                 ${ghcName} = super.haskell.packages.${ghcName}.override {
                   overrides = hself: hsuper: {
-                    # This is due to a GHC 9.2.5 regression.
-                    # see https://gitlab.haskell.org/ghc/ghc/-/issues/22425
-                    ListLike = super.haskell.lib.dontCheck hsuper.ListLike;
-
                     # Override tar with the patched version; see stack.yaml for details.
                     # The tests don't work.
                     tar = hsuper.callCabal2nixWithOptions "tar" haskellTar "--no-check" { };

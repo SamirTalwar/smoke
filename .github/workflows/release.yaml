@@ -4,9 +4,6 @@ on:
     tags:
       - "v*"
 
-env:
-  GHC_VERSION: "9.2.5"
-
 jobs:
   release:
     name: Release
@@ -38,11 +35,14 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v3
+      - name: Get GHC version
+        id: ghc-version
+        run: echo "ghc-version=$(cat ghc.version)" >> "$GITHUB_OUTPUT"
       - name: Set up Haskell
         id: haskell-setup
         uses: haskell/actions/setup@v2
         with:
-          ghc-version: ${{ env.GHC_VERSION }}
+          ghc-version: ${{ steps.ghc-version.outputs.ghc-version }}
           enable-stack: true
           stack-no-global: true
           stack-setup-ghc: true
@@ -94,11 +94,14 @@ jobs:
         with:
           path: C:\Users\runneradmin\AppData\Local\Programs\stack
           key: v1-windows-latest-stack-${{ hashFiles('stack.yaml') }}
+      - name: Get GHC version
+        id: ghc-version
+        run: echo "ghc-version=$(Get-Content ghc.version)" >> "$Env:GITHUB_OUTPUT"
       - name: Set up Haskell
         id: haskell-setup
         uses: haskell/actions/setup@v2
         with:
-          ghc-version: ${{ env.GHC_VERSION }}
+          ghc-version: ${{ steps.ghc-version.outputs.ghc-version }}
           enable-stack: true
           stack-no-global: true
           stack-setup-ghc: true

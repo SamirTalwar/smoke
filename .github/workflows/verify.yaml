@@ -32,8 +32,18 @@ jobs:
         with:
           path: ${{ steps.haskell-setup.outputs.stack-root }}
           key: v1-${{ matrix.os }}-stack-${{ hashFiles('stack.yaml', 'package.yaml') }}
+      - name: Install ICU4C
+        if: startsWith(matrix.os, 'macos-')
+        run: |
+          brew install icu4c
+          brew link icu4c --force
       - name: Install dependencies
-        run: stack --no-terminal install --only-dependencies --test --no-run-tests
+        run: |
+          # On macOS, the pkg-config directory for ICU4C must be specified explicitly
+          if [[ '${{ matrix.os }}' =~ ^macos- ]]; then
+            export PKG_CONFIG_PATH="$(brew --prefix)/opt/icu4c/lib/pkgconfig"
+          fi
+          stack --no-terminal install --only-dependencies --test --no-run-tests
       - name: Build
         run: stack --no-terminal install --test --no-run-tests --local-bin-path=./out/build/release
       - name: Upload Smoke
@@ -115,6 +125,12 @@ jobs:
         run: |
           stack --no-terminal exec -- pacman --noconfirm -Sy msys2-keyring
           stack --no-terminal exec -- pacman --noconfirm -Syuu
+      - name: Install pkg-config
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-x86_64-pkg-config"
+      - name: Install Clang for aarch64
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-clang-aarch64-clang"
+      - name: Install ICU
+        run: "stack --no-terminal exec -- pacman --noconfirm -Sy mingw-w64-x86_64-icu"
       - name: Build
         run: 'stack --no-terminal install --test --no-run-tests --local-bin-path=.\out\build\release'
       - name: Upload Smoke

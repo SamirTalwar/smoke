@@ -68,6 +68,8 @@ serializeFailure _ (SingleAssertionFailure (AssertionFailureDiff _ (Actual actua
   throwIO $ CouldNotBlessInlineFixture (fixtureName @a) (serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureContains _ (Actual actual))) =
   throwIO $ CouldNotBlessContainsAssertion (fixtureName @a) (serializeFixture actual)
+serializeFailure _ (SingleAssertionFailure (AssertionFailureMatches _ (Actual actual))) =
+  throwIO $ CouldNotBlessMatchesAssertion (fixtureName @a) (serializeFixture actual)
 serializeFailure (TestOutputFromFile _ path) (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =
   pure $ Just (path, serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureExpectedFileError _ (Actual actual))) =

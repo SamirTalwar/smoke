@@ -32,6 +32,7 @@ dependencies:
   - tar
   - temporary
   - text
+  - text-icu
   - transformers
   - vector
   - yaml

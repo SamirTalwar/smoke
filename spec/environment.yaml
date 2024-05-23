@@ -1,0 +1,8 @@
+tests:
+  - name: shell
+    environment:
+      TEST_ENV: "test-value"
+    command: |
+      echo $TEST_ENV
+    stdout: |
+      test-value

@@ -23,7 +23,7 @@ assertResult location testPlan@TestPlan {planTest = test} (ExecutionSucceeded ac
   either (TestErrored test . AssertionError) (TestFinished testPlan) <$> runExceptT (processOutputs location testPlan actualOutputs)
 
 processOutputs :: Path Resolved Dir -> TestPlan -> ActualOutputs -> Asserting FinishedTest
-processOutputs location (TestPlan _ _ fallbackShell _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
+processOutputs location (TestPlan _ _ fallbackShell _ _ _ _ expectedStatus expectedStdOuts expectedStdErrs expectedFiles _) (ActualOutputs actualStatus actualStdOut actualStdErr actualFiles) = do
   let statusResult = assertEqual expectedStatus actualStatus
   stdOutResult <- assertAll (defaultIfEmpty expectedStdOuts) actualStdOut
   stdErrResult <- assertAll (defaultIfEmpty expectedStdErrs) actualStdErr

@@ -85,6 +85,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         planShell = fallbackShell,
         planExecutable = executable,
         planArgs = args,
+        planEnvironment = testEnvironment test,
         planStdIn = stdIn,
         planStatus = status,
         planStdOut = stdOut,

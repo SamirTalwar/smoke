@@ -1,6 +1,7 @@
 module Test.Smoke.Executable where
 
 import Control.Monad.Trans.Except (ExceptT)
+import Data.Map.Strict qualified as Map
 import Data.Text (Text)
 import Data.Text.IO qualified as Text.IO
 import Data.Vector qualified as Vector
@@ -17,19 +18,21 @@ runExecutable ::
   Executable ->
   Args ->
   StdIn ->
+  Maybe EnvVars ->
   Maybe WorkingDirectory ->
   IO (ExitCode, Text, Text)
-runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdIn) workingDirectory =
+runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdIn) env workingDirectory =
   readCreateProcessWithExitCode
     ( ( proc
           (toFilePath executablePath)
           (Vector.toList (unArgs (executableArgs <> args)))
       )
-        { cwd = toFilePath . unWorkingDirectory <$> workingDirectory
+        { cwd = toFilePath . unWorkingDirectory <$> workingDirectory,
+          env = fmap Map.toList (unEnvVars <$> env)
         }
     )
     stdIn
-runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) args stdIn workingDirectory =
+runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) args stdIn env workingDirectory =
   withSystemTempFile defaultShellScriptName $ \scriptPath scriptHandle -> do
     Text.IO.hPutStr scriptHandle script
     hClose scriptHandle
@@ -38,6 +41,7 @@ runExecutable (ExecutableScript (Shell shellPath shellArgs) (Script script)) arg
       (ExecutableProgram shellPath executableArgs)
       args
       stdIn
+      env
       workingDirectory
 
 convertCommandToExecutable ::

@@ -45,6 +45,7 @@ data Test = Test
     testWorkingDirectory :: Maybe (Path Relative Dir),
     testCommand :: Maybe Command,
     testArgs :: Maybe Args,
+    testEnvironment :: Maybe EnvVars,
     testStdIn :: Maybe (TestInput StdIn),
     testStatus :: Status,
     testStdOut :: Vector (TestOutput StdOut),
@@ -62,6 +63,7 @@ instance FromJSON Test where
         <*> (v .:? "working-directory")
         <*> (v .:? "command")
         <*> (v .:? "args")
+        <*> (v .:? "environment")
         <*> (v .:? "stdin")
         <*> (v .:? "exit-status" .!= def)
         <*> (manyMaybe <$> (v .:? "stdout"))

@@ -26,6 +26,7 @@ data TestPlan = TestPlan
     planShell :: Maybe Shell,
     planExecutable :: Executable,
     planArgs :: Args,
+    planEnvironment :: Maybe EnvVars,
     planStdIn :: StdIn,
     planStatus :: Status,
     planStdOut :: Vector (Assert StdOut),

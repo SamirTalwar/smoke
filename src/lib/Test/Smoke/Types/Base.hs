@@ -59,7 +59,7 @@ instance FromFixture Args where
 newtype EnvVars = EnvVars
   { unEnvVars :: Map String String
   }
-  deriving (FromJSON)
+  deriving (Semigroup, FromJSON)
 
 newtype Script = Script
   { unScript :: Text

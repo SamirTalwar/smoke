@@ -1,8 +1,10 @@
 tests:
-  - name: shell
+  - name: environment
+    args:
+      - fixtures/environment/smoke.yaml
+    exit-code: 0
     environment:
-      TEST_ENV: "test-value"
-    command: |
-      echo $TEST_ENV
-    stdout: |
-      test-value
+      OVERWRITE_IN_FIXTURE: "not_overwritten"
+      ONLY_DEFINED_IN_SPEC: "defined_in_spec"
+    stdout:
+      - file: io/environment.out

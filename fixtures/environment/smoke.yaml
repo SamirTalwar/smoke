@@ -1,38 +1,41 @@
+command:
+  - ruby
+  - fixtures/environment.rb
+
 tests:
   - name: environment
     environment:
       TEST_ENV: "test-value"
-    command: |
-      echo $TEST_ENV
+    args:
+      - TEST_ENV
     stdout: |
       test-value
 
   - name: inherits
-    command: |
-      echo $ONLY_DEFINED_IN_SPEC
+    args:
+      - ONLY_DEFINED_IN_SPEC
     stdout: |
       defined_in_spec
 
   - name: overwrites
     environment:
       OVERWRITE_IN_FIXTURE: "overwritten"
-    command: |
-      echo $OVERWRITE_IN_FIXTURE
+    args:
+      - OVERWRITE_IN_FIXTURE
     stdout: |
       overwritten
 
   - name: not-defined
-    command: |
-      echo $NOT_DEFINED
+    args:
+      - NOT_DEFINED
     stdout: "\n"
 
   - name: spec-is-merged-into-fixture-not-replaced
     environment:
       OVERWRITE_IN_FIXTURE: "overwritten"
-    command: |
-      echo $OVERWRITE_IN_FIXTURE
-      echo $ONLY_DEFINED_IN_SPEC
+    args:
+      - OVERWRITE_IN_FIXTURE
+      - ONLY_DEFINED_IN_SPEC
     stdout: |
       overwritten
       defined_in_spec
-      

@@ -27,6 +27,7 @@ data Suite = Suite
   { suiteWorkingDirectory :: Maybe (Path Relative Dir),
     suiteShell :: Maybe CommandLine,
     suiteCommand :: Maybe Command,
+    suiteEnvironment :: Maybe EnvVars,
     suiteTests :: [Test]
   }
 
@@ -37,6 +38,7 @@ instance FromJSON Suite where
         <$> (v .:? "working-directory")
         <*> (v .:? "shell")
         <*> (v .:? "command")
+        <*> (v .:? "environment")
         <*> (v .: "tests")
 
 data Test = Test

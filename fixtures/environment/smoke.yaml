@@ -2,6 +2,10 @@ command:
   - ruby
   - fixtures/environment.rb
 
+environment:
+  ONLY_DEFINED_IN_FIXTURE_DEFAULT: "defined_in_fixture_default"
+  OVERWRITTEN_IN_FIXTURE_FROM_DEFAULT: "not_overwritten"
+
 tests:
   - name: environment
     environment:
@@ -14,14 +18,24 @@ tests:
   - name: inherits
     args:
       - ONLY_DEFINED_IN_SPEC
+      - ONLY_DEFINED_IN_FIXTURE_DEFAULT
     stdout: |
       defined_in_spec
+      defined_in_fixture_default
 
   - name: overwrites
     environment:
       OVERWRITE_IN_FIXTURE: "overwritten"
     args:
       - OVERWRITE_IN_FIXTURE
+    stdout: |
+      overwritten
+
+  - name: overwrites-from-default
+    environment:
+      OVERWRITTEN_IN_FIXTURE_FROM_DEFAULT: "overwritten"
+    args:
+      - OVERWRITTEN_IN_FIXTURE_FROM_DEFAULT
     stdout: |
       overwritten
 
@@ -36,6 +50,8 @@ tests:
     args:
       - OVERWRITE_IN_FIXTURE
       - ONLY_DEFINED_IN_SPEC
+      - ONLY_DEFINED_IN_FIXTURE_DEFAULT
     stdout: |
       overwritten
       defined_in_spec
+      defined_in_fixture_default

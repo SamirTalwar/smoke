@@ -25,7 +25,7 @@ planTests :: TestSpecification -> IO Plan
 planTests (TestSpecification specificationCommand suites) = do
   currentWorkingDirectory <- WorkingDirectory <$> getCurrentWorkingDirectory
   suitePlans <-
-    forM suites $ \(SuiteWithMetadata suiteName location (Suite thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand tests)) -> do
+    forM suites $ \(SuiteWithMetadata suiteName location (Suite thisSuiteWorkingDirectory thisSuiteShellCommandLine thisSuiteCommand thisSuiteEnvVars tests)) -> do
       let fallbackCommand = thisSuiteCommand <|> specificationCommand
       shell <-
         runExceptT $ mapM shellFromCommandLine thisSuiteShellCommandLine
@@ -45,6 +45,7 @@ planTests (TestSpecification specificationCommand suites) = do
                         fallbackWorkingDirectory
                         fallbackShell
                         fallbackCommand
+                        thisSuiteEnvVars
                         test
                   )
           pure $ SuitePlan suiteName location testPlans
@@ -62,9 +63,10 @@ readTest ::
   WorkingDirectory ->
   Maybe Shell ->
   Maybe Command ->
+  Maybe EnvVars ->
   Test ->
   Planning TestPlan
-readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = do
+readTest location fallbackWorkingDirectory fallbackShell fallbackCommand fallbackEnvironment test = do
   let workingDirectory = determineWorkingDirectory location (testWorkingDirectory test) fallbackWorkingDirectory
   command <-
     maybe (throwE NoCommand) pure (testCommand test <|> fallbackCommand)
@@ -78,6 +80,11 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
   stdErr <- readStdErr location test
   files <- readFiles location test
   let revert = Vector.map (location </>) (testRevert test)
+  let environment = case (testEnvironment test, fallbackEnvironment) of
+        (Nothing, Nothing) -> Nothing
+        (Just env, Nothing) -> Just env
+        (Nothing, Just fallbackEnv) -> Just fallbackEnv
+        (Just env, Just fallbackEnv) -> Just (env <> fallbackEnv)
   pure $
     TestPlan
       { planTest = test,
@@ -85,7 +92,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand test = 
         planShell = fallbackShell,
         planExecutable = executable,
         planArgs = args,
-        planEnvironment = testEnvironment test,
+        planEnvironment = environment,
         planStdIn = stdIn,
         planStatus = status,
         planStdOut = stdOut,

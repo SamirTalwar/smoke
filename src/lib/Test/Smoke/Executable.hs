@@ -28,7 +28,7 @@ runExecutable (ExecutableProgram executablePath executableArgs) args (StdIn stdI
           (Vector.toList (unArgs (executableArgs <> args)))
       )
         { cwd = toFilePath . unWorkingDirectory <$> workingDirectory,
-          env = fmap Map.toList (unEnvVars <$> env)
+          env = Map.toList . unEnvVars <$> env
         }
     )
     stdIn

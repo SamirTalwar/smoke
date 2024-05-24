@@ -216,6 +216,28 @@ You can find more examples in the [local shell fixture][] and [global shell fixt
 [local shell fixture]: ./fixtures/shell/local.yaml
 [global shell fixture]: ./fixtures/shell/global.yaml
 
+### Setting environment variables
+
+It is possible to set environment variables, both as defaults for a suite, and for a specific test. Environment variables inherit from the suite, and the suite inherits from the environment `smoke` is started in.
+
+```yaml
+environment:
+  CI: "0"
+
+tests:
+  - name:
+    environment:
+      CI: "1"
+    command: echo ${CI}
+    stdout: |
+      1
+```
+
+You can find more examples in the [environment fixture][]
+
+[environment fixture]: ./fixtures/environment/smoke.yaml
+
+
 ### Filtering output
 
 Sometimes, things aren't quite so deterministic. When some of the output (or input) is meaningless, or if there's just too much, you can specify filters to transform the data.

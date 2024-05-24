@@ -80,11 +80,6 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand fallbac
   stdErr <- readStdErr location test
   files <- readFiles location test
   let revert = Vector.map (location </>) (testRevert test)
-  let environment = case (testEnvironment test, fallbackEnvironment) of
-        (Nothing, Nothing) -> Nothing
-        (Just env, Nothing) -> Just env
-        (Nothing, Just fallbackEnv) -> Just fallbackEnv
-        (Just env, Just fallbackEnv) -> Just (env <> fallbackEnv)
   pure $
     TestPlan
       { planTest = test,
@@ -92,7 +87,7 @@ readTest location fallbackWorkingDirectory fallbackShell fallbackCommand fallbac
         planShell = fallbackShell,
         planExecutable = executable,
         planArgs = args,
-        planEnvironment = environment,
+        planEnvironment = testEnvironment test <> fallbackEnvironment,
         planStdIn = stdIn,
         planStatus = status,
         planStdOut = stdOut,

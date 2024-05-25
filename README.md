@@ -237,7 +237,6 @@ You can find more examples in the [environment fixture][].
 
 [environment fixture]: ./fixtures/environment/smoke.yaml
 
-
 ### Filtering output
 
 Sometimes, things aren't quite so deterministic. When some of the output (or input) is meaningless, or if there's just too much, you can specify filters to transform the data.

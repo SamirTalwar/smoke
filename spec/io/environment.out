@@ -1,0 +1,14 @@
+environment
+  succeeded
+inherits
+  succeeded
+overwrites
+  succeeded
+overwrites-from-default
+  succeeded
+not-defined
+  succeeded
+spec-is-merged-into-fixture-not-replaced
+  succeeded
+
+6 tests, 0 failures

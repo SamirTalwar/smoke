@@ -1,0 +1,10 @@
+tests:
+  - name: environment
+    args:
+      - fixtures/environment/smoke.yaml
+    exit-code: 0
+    environment:
+      OVERWRITE_IN_FIXTURE: "not_overwritten"
+      ONLY_DEFINED_IN_SPEC: "defined_in_spec"
+    stdout:
+      - file: io/environment.out

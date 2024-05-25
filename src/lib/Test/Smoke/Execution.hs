@@ -31,7 +31,7 @@ runTest location testPlan =
     else either ExecutionFailed ExecutionSucceeded <$> runExceptT (executeTest location testPlan)
 
 executeTest :: Path Resolved Dir -> TestPlan -> Execution ActualOutputs
-executeTest location (TestPlan _ workingDirectory _ executable args processStdIn _ _ _ files revert) = do
+executeTest location (TestPlan _ workingDirectory _ executable args env processStdIn _ _ _ files revert) = do
   let workingDirectoryFilePath =
         toFilePath $ unWorkingDirectory workingDirectory
   workingDirectoryExists <- liftIO $ doesDirectoryExist workingDirectoryFilePath
@@ -41,7 +41,7 @@ executeTest location (TestPlan _ workingDirectory _ executable args processStdIn
   revertingDirectories revert $ do
     (exitCode, processStdOut, processStdErr) <-
       tryIO (CouldNotExecuteCommand executable) $
-        runExecutable executable args processStdIn (Just workingDirectory)
+        runExecutable executable args processStdIn env (Just workingDirectory)
     actualFiles <- Map.fromList <$> mapM (liftIO . readTestFile) (Map.keys files)
     pure $ ActualOutputs (convertExitCode exitCode) (StdOut processStdOut) (StdErr processStdErr) actualFiles
   where

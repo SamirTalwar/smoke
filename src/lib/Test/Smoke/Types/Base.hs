@@ -8,6 +8,7 @@ import Control.Monad (when)
 import Data.Aeson
 import Data.Aeson.Types (Parser, typeMismatch)
 import Data.Default
+import Data.Map.Strict (Map)
 import Data.String (IsString)
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -54,6 +55,11 @@ newtype Args = Args
 instance FromFixture Args where
   fixtureName = "args"
   serializeFixture = Text.unlines . Vector.toList . Vector.map Text.pack . unArgs
+
+newtype EnvVars = EnvVars
+  { unEnvVars :: Map String String
+  }
+  deriving (Semigroup, FromJSON)
 
 newtype Script = Script
   { unScript :: Text

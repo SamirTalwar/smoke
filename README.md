@@ -233,7 +233,7 @@ tests:
       1
 ```
 
-You can find more examples in the [environment fixture][]
+You can find more examples in the [environment fixture][].
 
 [environment fixture]: ./fixtures/environment/smoke.yaml
 

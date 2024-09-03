@@ -58,7 +58,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Download Smoke
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: smoke-${{ matrix.os }}
       - name: Make Smoke executable
@@ -133,7 +133,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v3
       - name: Download Smoke
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: smoke-windows-latest
       - name: Spec

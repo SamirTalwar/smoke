@@ -17,7 +17,7 @@ data TestInput a where
   TestInputFromFile :: Path Relative File -> TestInput a
   TestInputFiltered :: TestInput a -> Filter -> TestInput a
 
-instance FromJSON a => FromJSON (TestInput a) where
+instance (FromJSON a) => FromJSON (TestInput a) where
   parseJSON value = do
     (inner, contentFilter) <- parseContentsOrFile value
     let testInput = case inner of
@@ -27,7 +27,7 @@ instance FromJSON a => FromJSON (TestInput a) where
 
 data TestOutput actual where
   TestOutputInline :: Assert actual -> TestOutput actual
-  TestOutputFromFile :: ToFixture expected => (expected -> Assert actual) -> Path Relative File -> TestOutput actual
+  TestOutputFromFile :: (ToFixture expected) => (expected -> Assert actual) -> Path Relative File -> TestOutput actual
 
 instance (Eq actual, ToFixture actual, FromFixture actual, FromJSON actual) => FromJSON (TestOutput actual) where
   parseJSON value@(Object v) =
@@ -59,7 +59,7 @@ parseTestOutput assertion value = do
   where
     filteredAssertion fixtureFilter expected = AssertFiltered fixtureFilter (assertion expected)
 
-parseContentsOrFile :: FromJSON a => Value -> Parser (Either a (Path Relative File), Maybe Filter)
+parseContentsOrFile :: (FromJSON a) => Value -> Parser (Either a (Path Relative File), Maybe Filter)
 parseContentsOrFile s@(String _) = do
   contents <- parseJSON s
   pure (Left contents, Nothing)

@@ -9,7 +9,7 @@ import Control.Monad (forM, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT (..), except, throwE, withExceptT)
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Internal qualified as Aeson.Internal
+import Data.Aeson.Types qualified as Aeson.Types
 import Data.List qualified as List
 import Data.Text qualified as Text
 import Data.Vector (Vector)
@@ -75,9 +75,9 @@ decodeSpecificationFile path = withExceptT (InvalidSpecification path) $ do
     withExceptT Yaml.prettyPrintParseException $
       ExceptT $
         Yaml.decodeFileEither (toFilePath resolvedPath)
-  except $ case Aeson.Internal.ifromJSON value of
-    Aeson.Internal.IError jsonPath message -> Left $ Aeson.Internal.formatError jsonPath message
-    Aeson.Internal.ISuccess suite -> Right suite
+  except $ case Aeson.Types.ifromJSON value of
+    Aeson.Types.IError jsonPath message -> Left $ Aeson.Types.formatError jsonPath message
+    Aeson.Types.ISuccess suite -> Right suite
 
 parseRoot :: String -> Discovery Root
 parseRoot location = do

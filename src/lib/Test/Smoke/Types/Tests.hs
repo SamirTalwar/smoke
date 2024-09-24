@@ -87,10 +87,10 @@ instance FromJSON TestFile where
 
 newtype Many a = Many {unMany :: Vector a}
 
-instance FromJSON a => FromJSON (Many a) where
+instance (FromJSON a) => FromJSON (Many a) where
   parseJSON a@(Array _) = Many <$> parseJSON a
   parseJSON v = Many . Vector.singleton <$> parseJSON v
 
-manyMaybe :: FromJSON a => Maybe (Many a) -> Vector a
+manyMaybe :: (FromJSON a) => Maybe (Many a) -> Vector a
 manyMaybe Nothing = Vector.empty
 manyMaybe (Just v) = unMany v

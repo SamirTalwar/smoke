@@ -128,7 +128,7 @@ readTestOutput _ (TestOutputInline assertion) =
 readTestOutput location (TestOutputFromFile constructor contents) =
   liftIO $ either AssertFileError constructor <$> runExceptT (readPath location contents)
 
-readPath :: ToFixture a => Path Resolved Dir -> Path Relative File -> ExceptT SmokeFileError IO a
+readPath :: (ToFixture a) => Path Resolved Dir -> Path Relative File -> ExceptT SmokeFileError IO a
 readPath location path =
   deserializeFixture
     <$> withExceptT

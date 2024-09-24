@@ -11,8 +11,8 @@ import Test.Smoke.Types.Errors
 import Test.Smoke.Types.Filters
 
 data Assert a where
-  AssertEquals :: Eq a => a -> Assert a
-  AssertContains :: FromFixture a => Text -> Assert a
+  AssertEquals :: (Eq a) => a -> Assert a
+  AssertContains :: (FromFixture a) => Text -> Assert a
   AssertFiltered :: (FromFixture a, ToFixture a) => Filter -> Assert a -> Assert a
   AssertFileError :: SmokeFileError -> Assert a
 

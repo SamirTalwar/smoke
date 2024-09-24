@@ -49,7 +49,7 @@ blessFinishedTest location testPlan@(TestPlan {planTest = test}) result@(Finishe
       writeToPath (location </> path) text
       pure $ makeAfter AssertionSuccess before
 
-serialize :: forall a. FromFixture a => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
+serialize :: forall a. (FromFixture a) => Vector (TestOutput a) -> AssertionResult a -> IO (Maybe (Path Relative File, Text))
 serialize _ AssertionSuccess =
   pure Nothing
 serialize outputs (AssertionFailure result) =
@@ -61,7 +61,7 @@ serialize outputs (AssertionFailure result) =
     _ ->
       throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
-serializeFailure :: forall a. FromFixture a => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
+serializeFailure :: forall a. (FromFixture a) => TestOutput a -> AssertionFailures a -> IO (Maybe (Path Relative File, Text))
 serializeFailure (TestOutputFromFile _ path) (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
   pure $ Just (path, serializeFixture actual)
 serializeFailure _ (SingleAssertionFailure (AssertionFailureDiff _ (Actual actual))) =
@@ -77,5 +77,5 @@ serializeFailure _ (SingleAssertionFailure (AssertionFailureActualFileError _)) 
 serializeFailure _ (MultipleAssertionFailures _) =
   throwIO $ CouldNotBlessWithMultipleValues (fixtureName @a)
 
-failed :: Applicative f => Test -> SmokeBlessError -> f TestResult
+failed :: (Applicative f) => Test -> SmokeBlessError -> f TestResult
 failed test = pure . TestErrored test . BlessError

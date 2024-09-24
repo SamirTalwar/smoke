@@ -33,7 +33,7 @@ processOutputs location (TestPlan _ _ fallbackShell _ _ _ _ expectedStatus expec
       expectedFiles
   pure $ FinishedTest statusResult stdOutResult stdErrResult fileResults
   where
-    assertEqual :: Eq a => a -> a -> EqualityResult a
+    assertEqual :: (Eq a) => a -> a -> EqualityResult a
     assertEqual expected actual
       | expected == actual = EqualitySuccess
       | otherwise = EqualityFailure (Expected expected) (Actual actual)
@@ -77,5 +77,5 @@ ifEmpty x xs
   | Vector.null xs = Vector.singleton x
   | otherwise = xs
 
-defaultIfEmpty :: Default a => Vector a -> Vector a
+defaultIfEmpty :: (Default a) => Vector a -> Vector a
 defaultIfEmpty = ifEmpty def

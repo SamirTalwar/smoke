@@ -46,7 +46,7 @@ printFailingInput value =
     putRed $ fromString $ indentedKey ("  " ++ unFixtureName (fixtureName @a) ++ ":")
     putPlainLn $ indented outputIndentation (serializeFixture v)
 
-printFailingOutput :: forall a. FromFixture a => AssertionResult a -> Output ()
+printFailingOutput :: forall a. (FromFixture a) => AssertionResult a -> Output ()
 printFailingOutput = printFailures (ShortName (unFixtureName (fixtureName @a)))
 
 printFailingFilesOutput ::
@@ -58,10 +58,10 @@ printFailingFilesOutput fileResults =
       putRedLn "  files:"
       forM_ (Map.assocs fileResults) $ uncurry printFailingFileOutput
 
-printFailingFileOutput :: FromFixture a => Path Relative File -> AssertionResult a -> Output ()
+printFailingFileOutput :: (FromFixture a) => Path Relative File -> AssertionResult a -> Output ()
 printFailingFileOutput path = printFailures (LongName ("  " ++ toFilePath path))
 
-printFailures :: FromFixture a => PartName -> AssertionResult a -> Output ()
+printFailures :: (FromFixture a) => PartName -> AssertionResult a -> Output ()
 printFailures _ AssertionSuccess =
   pure ()
 printFailures name (AssertionFailure (SingleAssertionFailure failure)) = do
@@ -92,7 +92,7 @@ failureIsInline AssertionFailureContains {} = False
 failureIsInline AssertionFailureExpectedFileError {} = True
 failureIsInline AssertionFailureActualFileError {} = True
 
-printFailure :: FromFixture a => AssertionFailure a -> Output ()
+printFailure :: (FromFixture a) => AssertionFailure a -> Output ()
 printFailure (AssertionFailureDiff (Expected expected) (Actual actual)) =
   printDiff (serializeFixture expected) (serializeFixture actual)
 printFailure (AssertionFailureContains (Expected expected) (Actual actual)) = do

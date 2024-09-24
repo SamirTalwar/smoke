@@ -1,4 +1,4 @@
-resolver: lts-20.12
+resolver: lts-22.35
 packages:
   - .
 ghc-options:
@@ -7,6 +7,5 @@ nix:
   shell-file: ./shell.nix
 extra-deps:
   # There was a bug in the `tar` package that is fixed in https://github.com/haskell/tar/pull/26.
-  # However, this code has not been released, so we need to grab the latest commit instead.
-  - git: https://github.com/haskell/tar.git
-    commit: dbf8c995153c8a80450724d9f94cf33403740c80
+  # This has been released in tar v6.0.0.0 and up, but these versions are not in the current Stackage LTS (above).
+  - tar-0.6.3.0

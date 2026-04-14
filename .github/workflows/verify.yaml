@@ -80,7 +80,7 @@ jobs:
           name: smoke
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Build and Test
-        run: nix build --out-link ./out/build/nix
+        run: make ./out/build/nix/bin/smoke
       - name: Spec
         run: nix-shell --run './out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec'
 
@@ -153,4 +153,4 @@ jobs:
         with:
           name: samirtalwar
       - name: Lint
-        run: nix develop .#lint --command make lint
+        run: nix-shell --run 'make lint'

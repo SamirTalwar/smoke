@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
+          - ubuntu-24.04
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
@@ -21,7 +21,7 @@ jobs:
         run: echo "ghc-version=$(cat ghc.version)" >> "$GITHUB_OUTPUT"
       - name: Set up Haskell
         id: haskell-setup
-        uses: haskell/actions/setup@v2
+        uses: haskell-actions/setup@v2
         with:
           ghc-version: ${{ steps.ghc-version.outputs.ghc-version }}
           enable-stack: true
@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
+          - ubuntu-24.04
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
@@ -68,7 +68,7 @@ jobs:
 
   build-test-nix:
     name: Build and Test with Nix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out
         uses: actions/checkout@v3
@@ -82,7 +82,7 @@ jobs:
       - name: Build and Test
         run: nix build --out-link ./out/build/nix
       - name: Spec
-        run: ./out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec
+        run: nix-shell --run './out/build/nix/bin/smoke --command=./out/build/nix/bin/smoke spec'
 
   build-windows:
     name: Build (windows-latest)
@@ -100,7 +100,7 @@ jobs:
         run: echo "ghc-version=$(Get-Content ghc.version)" >> "$Env:GITHUB_OUTPUT"
       - name: Set up Haskell
         id: haskell-setup
-        uses: haskell/actions/setup@v2
+        uses: haskell-actions/setup@v2
         with:
           ghc-version: ${{ steps.ghc-version.outputs.ghc-version }}
           enable-stack: true
@@ -142,7 +142,7 @@ jobs:
   lint:
     name: Lint
     needs: build-unix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out
         uses: actions/checkout@v3

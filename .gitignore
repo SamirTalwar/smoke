@@ -1,9 +1,12 @@
 # Artifacts
 out
 
-# Local
+# Direnv
 .direnv
 .envrc.local
+
+# Nix
+/result
 
 # Stack
 /.stack-work

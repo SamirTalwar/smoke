@@ -2,90 +2,55 @@
   description = "Smoke";
 
   inputs = {
-    flake-compat.url = "github:edolstra/flake-compat";
-    flake-compat.flake = false;
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
   outputs =
-    { self
-    , flake-compat
-    , flake-utils
-    , nixpkgs
-    }:
-    flake-utils.lib.eachDefaultSystem (system:
-    let
-      ghcVersion = lib.strings.fileContents ./ghc.version;
-      ghcName = "ghc" + lib.strings.stringAsChars (c: if c == "." then "" else c) ghcVersion;
-      pkgs = import nixpkgs { inherit system; };
-
-      inherit (pkgs) lib haskell;
-      inherit (haskell.lib) overrideCabal justStaticExecutables doStrip;
-      hsPkgs = haskell.packages.${ghcName};
-
-      # required libraries with static linking enabled
-      staticLibs = with pkgs; [
-        (gmp6.override { withStatic = true; })
-        (libffi.overrideAttrs (old: { dontDisableStatic = true; }))
-        (libiconv.overrideAttrs (old: { enableStatic = true; enableShared = false; }))
-        (openssl.override { static = true; })
-        zlib.static
-      ];
-
-      smoke =
-        let
-          drv = hsPkgs.callCabal2nix "smoke" (pkgs.nix-gitignore.gitignoreSource [ ] ./.) {
-            # Override tar with the patched version; see stack.yaml for details.
-            tar = hsPkgs.tar_0_6_3_0;
-          };
-        in
-        haskell.lib.addExtraLibraries drv staticLibs;
-    in
-    {
-      packages.default = smoke;
-
-      apps.default = flake-utils.lib.mkApp {
-        drv = overrideCabal (justStaticExecutables (doStrip smoke)) {
-          enableSharedExecutables = false;
-          enableSharedLibraries = false;
+    { self, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        sources = import ./nix/npins;
+        pkgs = import sources.nixpkgs { inherit system; };
+        haskell = import ./nix/haskell.nix { inherit system sources pkgs; };
+        smoke = import ./. {
+          inherit
+            system
+            sources
+            pkgs
+            haskell
+            ;
         };
-      };
+      in
+      {
+        packages.default = smoke;
 
-      formatter = pkgs.nixpkgs-fmt;
+        apps.default = flake-utils.lib.mkApp {
+          drv = haskell.lib.overrideCabal (haskell.lib.justStaticExecutables (haskell.lib.doStrip smoke)) {
+            enableSharedExecutables = false;
+            enableSharedLibraries = false;
+          };
+        };
 
-      devShells.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          coreutils
-          dos2unix
-          findutils
-          gnumake
-          gnused
-          nixpkgs-fmt
-          yq
+        formatter = pkgs.nixpkgs-fmt;
 
-          # Haskell development
-          hsPkgs.haskell-language-server
-          hsPkgs.hlint
-          hsPkgs.hpack
-          hsPkgs.hspec-discover
-          hsPkgs.ormolu
-          stack
+        devShells.default = import ./shell.nix {
+          inherit
+            system
+            sources
+            pkgs
+            haskell
+            ;
+        };
 
-          # testing
-          git
-          ruby
-        ];
-        STACK_IN_NIX_SHELL = true;
-      };
-
-      devShells.lint = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          hsPkgs.hlint
-          hsPkgs.hpack
-          hsPkgs.ormolu
-        ];
-        STACK_IN_NIX_SHELL = true;
-      };
-    });
+        devShells.lint = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            haskell.packages.hlint
+            haskell.packages.hpack
+            haskell.packages.ormolu
+          ];
+          STACK_IN_NIX_SHELL = true;
+        };
+      }
+    );
 }

@@ -42,7 +42,7 @@ $(OUT)/smoke-$(OS): $(BIN_RELEASE)
 	cp $(BIN_RELEASE) $(OUT)/smoke-$(OS)
 
 $(BIN_NIX): $(CONF) $(SRC)
-	nix build --out-link $(OUT_NIX)
+	nix-build --out-link $(OUT_NIX)
 
 $(BIN_DEBUG): $(CONF) $(SRC)
 	$(STACK) install --fast --test --no-run-tests --local-bin-path=$(OUT_DEBUG)
@@ -80,8 +80,8 @@ lint: $(NIX_FILES) smoke.cabal $(SRC)
 	@ hlint $(SRC_DIR)
 	@ echo >&2 '> ormolu'
 	@ ormolu --mode=check $(SRC)
-	@ echo >&2 'nix fmt'
-	@ nix fmt -- --check $(NIX_FILES)
+	@ echo >&2 'nixpkgs-fmt'
+	@ nixpkgs-fmt --check $(NIX_FILES)
 	@ echo >&2 'Linting succeeded.'
 
 .PHONY: check
@@ -90,7 +90,7 @@ check: test lint
 .PHONY: reformat
 reformat: $(NIX_FILES) $(SRC)
 	ormolu --mode=inplace $(SRC)
-	nix fmt -- $(NIX_FILES)
+	nixpkgs-fmt $(NIX_FILES)
 
 .PHONY: deps
 deps: $(CONF)

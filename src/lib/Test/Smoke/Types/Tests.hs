@@ -12,6 +12,9 @@ import Test.Smoke.Paths
 import Test.Smoke.Types.Base
 import Test.Smoke.Types.Values
 
+-- for `instance FromJSON Test`
+{-# ANN module ("HLint: ignore Functor law" :: String) #-}
+
 data TestSpecification
   = TestSpecification (Maybe Command) Suites
 

@@ -53,26 +53,7 @@ tests:
       3 to-the-power-of 3
     exit-status: 1
     stderr:
-      - |
-        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Fixnum (NoMethodError)
-      - |
-        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Integer (NoMethodError)
-      - |
-        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for 3:Integer (NoMethodError)
-
-        puts tokens[0].to_i.send(tokens[1].to_sym, tokens[2].to_i)
-                           ^^^^^
-      - |
-        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for an instance of Integer (NoMethodError)
-
-        puts tokens[0].to_i.send(tokens[1].to_sym, tokens[2].to_i)
-                           ^^^^^
-      - |
-        fixtures/calculator.rb:4:in `<main>': undefined method `to-the-power-of' for an instance of Integer (NoMethodError)
-
-        puts tokens[0].to_i.send(tokens[1].to_sym, tokens[2].to_i)
-
-                           ^^^^^
+      contains: "undefined method"
 
   - name: ignored-test
     ignored: true

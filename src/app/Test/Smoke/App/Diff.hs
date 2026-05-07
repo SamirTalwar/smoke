@@ -24,7 +24,11 @@ engineNames :: [String]
 engineNames = map engineName engines
 
 findEngine :: IO DiffEngine
-findEngine = head <$> filterM engineEnabled engines
+findEngine = do
+  enabled <- filterM engineEnabled engines
+  pure $ case enabled of
+    [] -> Native.engine
+    (engine : _) -> engine
 
 getEngine :: String -> Maybe DiffEngine
 getEngine name = find (\engine -> name == engineName engine) engines

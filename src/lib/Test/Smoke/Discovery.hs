@@ -84,9 +84,9 @@ parseRoot location = do
   let (p, s) = List.break (== '@') location
   let path = strip p
   let selectedTestName =
-        if null s
-          then Nothing
-          else Just (TestName (strip (tail s)))
+        case s of
+          [] -> Nothing
+          (_ : t) -> Just (TestName (strip t))
   directoryExists <- liftIO $ doesDirectoryExist path
   fileExists <- liftIO $ doesFileExist path
   unless (directoryExists || fileExists) $ throwE $ NoSuchLocation path
